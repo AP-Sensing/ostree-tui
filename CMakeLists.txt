@@ -16,6 +16,22 @@ if(NOT ftxui_POPULATED)
   add_subdirectory(${ftxui_SOURCE_DIR} ${ftxui_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+# Fetch Clip
+
+include(FetchContent)
+
+set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
+FetchContent_Declare(clip
+  GIT_REPOSITORY https://github.com/dacap/clip.git
+  GIT_TAG v1.7
+)
+
+FetchContent_GetProperties(clip)
+if(NOT clip_POPULATED)
+  FetchContent_Populate(clip)
+  add_subdirectory(${clip_SOURCE_DIR} ${clip_BINARY_DIR})
+endif()
+
 # project
 
 project(ostree-tui
@@ -30,6 +46,7 @@ target_link_libraries(ostree-tui
   PRIVATE ftxui::screen
   PRIVATE ftxui::dom
   PRIVATE ftxui::component
+  PRIVATE clip
 )
 
 if (EMSCRIPTEN) 
