@@ -29,6 +29,11 @@ struct Commit {
     std::string subject;
 };
 
+std::vector<Commit> parseCommitsAllBranches() {
+	std::vector<Commit> commitList;
+	return commitList;
+}
+
 std::vector<Commit> parseCommits(std::string ostreeLogOutput){
   	std::vector<Commit> commitList;
   
@@ -66,15 +71,8 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput){
 }
 
 auto commitRender(std::vector<Commit> commits) {
-
-	auto firstcom = commits.size() > 0 ? commits.at(0).hash : "error";
-
 	int selected = 0;
-  	auto menu = Container::Vertical(
-      	{
-    	},
-      	&selected
-	);
+  	auto menu = Container::Vertical({},&selected);
 
 	for (auto commit : commits) {
     	auto commitentry = MenuEntry(commit.hash);
@@ -115,19 +113,35 @@ auto ostreeLog() {
 int main(void) {
   	auto screen = ScreenInteractive::Fullscreen();
 	
+	std::string input;
+
   	auto log = ostreeLog();
   	auto right = Renderer([] { return text("manager") | center; });
   	auto header = Renderer([] { return text("OSTree TUI") | center; });
-  	//auto bottom = Renderer([] { return text("bottom") | center; });
+
+	// shell	
+	std::vector<std::string> input_entries;
+  	int input_selected = 0;
+  	Component shell_in = Menu(&input_entries, &input_selected);
+ 
+  	auto input_option = InputOption();
+  	std::string input_add_content;
+  	input_option.on_enter = [&] {
+    	input_entries.push_back(input_add_content);
+		input_entries.push_back(exec(input_add_content.c_str()));
+    	input_add_content = "";
+  	};
+  	Component shell = Input(&input_add_content, "input files", input_option);
 	
   	int right_size = 30;
   	int top_size = 1;
-  	//int bottom_size = 1;
+  	int bottom_size = 1;
 	
   	auto container = log;
   	container = ResizableSplitRight(right, container, &right_size);
   	container = ResizableSplitTop(header, container, &top_size);
-  	//container = ResizableSplitBottom(bottom, container, &bottom_size);
+	container = ResizableSplitBottom(shell_in, container, &bottom_size);
+  	container = ResizableSplitBottom(shell, container, &bottom_size);
 	
   	auto renderer =
   	    Renderer(container, [&] { return container->Render() | border; });
