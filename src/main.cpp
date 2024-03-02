@@ -27,20 +27,16 @@ struct Commit {
     std::string contentChecksum;
     std::string date;
     std::string subject;
+	std::string branch;
 };
 
-std::vector<Commit> parseCommitsAllBranches() {
-	std::vector<Commit> commitList;
-	return commitList;
-}
-
-std::vector<Commit> parseCommits(std::string ostreeLogOutput){
+std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch){
   	std::vector<Commit> commitList;
   
   	std::stringstream log(ostreeLogOutput);
   	std::string word;
 
-	Commit cur = {"error", "couldn't read commit", "", "", ""};
+	Commit cur = {"error", "couldn't read commit", "", "", "", branch};
 
   	size_t mode = 0;
 	bool ready = false;
@@ -51,7 +47,7 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput){
 			}
 			ready = true;
 			// create new commit
-			cur = {"", "", "", "", ""};
+			cur = {"", "", "", "", "", branch};
 			log >> word;
 			cur.hash = word;
 		} else if (word == "Parent:") {
@@ -74,14 +70,83 @@ auto commitRender(std::vector<Commit> commits) {
 	int selected = 0;
   	auto menu = Container::Vertical({},&selected);
 
-	for (auto commit : commits) {
-    	auto commitentry = MenuEntry(commit.hash);
-    	menu->Add(commitentry);
-		auto seperator = Renderer([] { return separator(); });
-		menu->Add(seperator);
-  	}
+	// TODO sort by date descending
 
-	return menu;
+	// TODO determine all branches, divide them into 'branch slots' & determine max size
+	std::unordered_map<std::string,size_t> branch_map;
+	size_t branch_map_size{0};
+	for (auto commit : commits) {
+		if (! branch_map.count(commit.branch)) {
+			branch_map[commit.branch] = branch_map_size;
+			branch_map_size++;
+		}
+	}
+
+	std::vector<bool> used_branches(branch_map_size);
+	for (int i=0; i<branch_map.size(); i++) {
+		used_branches[i] = false;
+	}
+
+	// left tree, right commits
+	auto tree = Container::Vertical({});
+	auto comm = Container::Vertical({});
+
+	for (auto commit : commits) {
+		// mark branch as now used
+		used_branches.at(branch_map[commit.branch]) = true;
+		// render branches
+		std::string tree_root;
+		for (auto branch : used_branches) {
+			if (branch) {
+				tree_root += " |";
+			} else {
+				tree_root += "  ";
+			}
+		}
+
+		std::string tree_top = tree_root;
+		if (tree_top.size() > 0) {
+			tree_top.at(2 * branch_map[commit.branch] + 1) = 'O';
+		}
+
+		tree->Add(MenuEntry(tree_top));
+		tree->Add(MenuEntry(tree_root));
+		tree->Add(MenuEntry(tree_root)); // TODO check parent commit
+
+		// render commit
+		comm->Add(MenuEntry("commit " + commit.hash.substr(commit.hash.size() - 8)));
+		comm->Add(MenuEntry("  " + commit.date));
+		comm->Add(MenuEntry(""));
+
+    	// TODO beautify render
+		auto commitentry = MenuEntry(commit.hash);
+
+		/*|brnchs||-----------commits-----------|       not shown, comment
+
+		//   top  commit: 0934afg1                      // top commit of branch
+		//    |     "some commit message cut o..."
+		//    |
+		//    O   commit: 3b34afg1                      // one branch only
+		//    |    "some different commit mess..."
+		//    |
+		//  O |   commit: 2734aaa5                      // multiple branches shown
+		//  | |    "some commit message cut o..."
+		//  | |
+		//  | O   commit: 09fee6g2	                    // parent on other branch
+		//  | |    "a commit message that is c..."        -> set used_branches false
+		//  |/
+		//  O     commit: 09fee6g2                      // branc
+		//  |      "a commit message that is c..."
+		//  |
+
+		*/
+	
+    	menu->Add(commitentry);
+  	}
+	auto commitrender = Container::Horizontal({
+		tree, comm
+	});
+	return commitrender;
 }
 
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
@@ -99,15 +164,35 @@ std::string exec(const char* cmd) {
     return result;
 }
 
+std::vector<Commit> parseCommitsAllBranches(std::string repo = "testrepo") {
+	// get all branches
+	std::string branches = exec("ostree refs --repo=testrepo");
+	std::stringstream branches_ss(branches);
+	std::string branch;
+
+	std::vector<Commit> commitList;
+
+	while (branches_ss >> branch) {
+		// get log TODO make generic repo path
+		auto command = "ostree log --repo=" + repo + " " + branch;
+  		std::string ostreeLogOutput = exec(command.c_str());
+		// parse commits
+		auto commits = parseCommits(ostreeLogOutput, branch);
+		commitList.insert(commitList.end(), commits.begin(), commits.end());
+	}
+  	
+	return commitList;
+}
+
 auto ostreeLog() {
   	// get log TODO make generic & for all refs at once
-  	std::string ostreeLogOutput = exec("ostree log --repo=testrepo foo");
+  	//std::string ostreeLogOutput = exec("ostree log --repo=testrepo foo");
 
   	// parse commits
-	auto commits = parseCommits(ostreeLogOutput);
+	auto commits = parseCommitsAllBranches();
 
 	return commitRender(commits);
-  	return Renderer([ostreeLogOutput] { return paragraph(ostreeLogOutput) | center; });
+  	//return Renderer([ostreeLogOutput] { return paragraph(ostreeLogOutput) | center; });
 }
 
 int main(void) {
@@ -140,8 +225,8 @@ int main(void) {
   	auto container = log;
   	container = ResizableSplitRight(right, container, &right_size);
   	container = ResizableSplitTop(header, container, &top_size);
-	container = ResizableSplitBottom(shell_in, container, &bottom_size);
-  	container = ResizableSplitBottom(shell, container, &bottom_size);
+	//container = ResizableSplitBottom(shell_in, container, &bottom_size);
+  	//container = ResizableSplitBottom(shell, container, &bottom_size);
 	
   	auto renderer =
   	    Renderer(container, [&] { return container->Render() | border; });
