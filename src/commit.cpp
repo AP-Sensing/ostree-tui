@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <cstdio>
 #include <iostream>
@@ -6,6 +7,8 @@
 #include <stdexcept> 
 #include <string>
 #include <array>
+#include <vector>
+#include <unordered_map>
  
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
@@ -62,18 +65,45 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
 	return commitList;
 }
 
-auto commitRender(std::vector<Commit> commits) {
+/*|brnchs||-----------commits-----------|       not shown, comment
 
-	// TODO determine all branches, divide them into 'branch slots' & determine max size
+     top  commit: 0934afg1                      // TODO top commit of branch
+      |     "some commit message cut o..."
+      |
+      O   commit: 3b34afg1                      // one branch only
+      |    "some different commit mess..."
+      |
+    O |   commit: 2734aaa5                      // multiple branches shown
+    | |    "some commit message cut o..."
+    | |
+    | O   commit: 09fee6g2	                    // TODO parent on other branch
+    | |    "a commit message that is c..."        -> set used_branches false
+    |/                                            -> maybe not even possible?
+    O     commit: 09fee6g2
+    |      "a commit message that is c..."
+    |
+*/
+auto commitRender(std::vector<Commit> commits, std::vector<std::string> excluded_branches = {}) {
+
+	// filter commits for excluded branches
+	std::vector<Commit> filteredCommits = {};
+	for(const auto & commit : commits) {
+    	bool invalid_branch = false;
+		for(const auto & branch : excluded_branches) {
+			if(commit.branch == branch) {
+        		invalid_branch = true;
+    		}
+		}
+		if (! invalid_branch) {
+			filteredCommits.push_back(commit);
+		}
+	}
+	commits = filteredCommits;
+
+	// determine all branches, divide them into 'branch slots' & determine max size
 	std::unordered_map<std::string,size_t> branch_map;
 	size_t branch_map_size{0};
-	for (auto commit : commits) {// sort commits by parents (TODO validate if this is correct)
-    std::sort(commits.begin(), commits.end(), [](const Commit& lhs, const Commit& rhs) {
-      return lhs.hash.compare(rhs.hash) < 0;
-    });
-    //std::stable_sort(commits.begin(), commits.end(), [](const Commit& lhs, const Commit& rhs) {
-    //  return lhs.parent == rhs.hash;
-    //});
+	for (auto commit : commits) {
 		if (! branch_map.count(commit.branch)) {
 			branch_map[commit.branch] = branch_map_size;
 			branch_map_size++;
@@ -125,26 +155,6 @@ auto commitRender(std::vector<Commit> commits) {
             [&] { std::cout << "test"; }, ButtonOption::Ascii()));
         comm->Add(Renderer([commit] { return text("   " + commit.date); }));
         comm->Add(Renderer([] { return text(""); }));
-
-		/*|brnchs||-----------commits-----------|       not shown, comment
-
-		//   top  commit: 0934afg1                      // TODO top commit of branch
-		//    |     "some commit message cut o..."
-		//    |
-		//    O   commit: 3b34afg1                      // one branch only
-		//    |    "some different commit mess..."
-		//    |
-		//  O |   commit: 2734aaa5                      // multiple branches shown
-		//  | |    "some commit message cut o..."
-		//  | |
-		//  | O   commit: 09fee6g2	                    // TODO parent on other branch
-		//  | |    "a commit message that is c..."        -> set used_branches false
-		//  |/                                            -> maybe not even possible?
-		//  O     commit: 09fee6g2
-		//  |      "a commit message that is c..."
-		//  |
-
-		*/
   	}
 	auto commitrender = Container::Horizontal({
 		tree, comm

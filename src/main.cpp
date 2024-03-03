@@ -30,7 +30,10 @@ auto ostreeLog() {
 	auto commits = parseCommitsAllBranches();
 
 	return commitRender(commits);
-  	//return Renderer([ostreeLogOutput] { return paragraph(ostreeLogOutput) | center; });
+}
+
+auto manager(){ // TODO implement different modes (log, rebase, ...)
+	return Renderer([] { return text("manager") | center; });
 }
 
 int main(void) {
@@ -39,10 +42,10 @@ int main(void) {
 	std::string input;
 
   	auto log = ostreeLog();
-  	auto right = Renderer([] { return text("manager") | center; });
-  	auto header = Renderer([] { return text("OSTree TUI") | center; });
+  	auto right = manager();
+  	auto footer = Renderer([] { return text("OSTree TUI") | center; });
 
-	// shell	
+	/* shell	
 	std::vector<std::string> input_entries;
   	int input_selected = 0;
   	Component shell_in = Menu(&input_entries, &input_selected);
@@ -55,6 +58,7 @@ int main(void) {
     	input_add_content = "";
   	};
   	Component shell = Input(&input_add_content, "input files", input_option);
+	*/
 	
   	int right_size = 30;
   	int top_size = 1;
@@ -62,7 +66,7 @@ int main(void) {
 	
   	auto container = log;
   	container = ResizableSplitRight(right, container, &right_size);
-  	container = ResizableSplitTop(header, container, &top_size);
+  	container = ResizableSplitBottom(footer, container, &top_size);
 	//container = ResizableSplitBottom(shell_in, container, &bottom_size);
   	//container = ResizableSplitBottom(shell, container, &bottom_size);
 	
