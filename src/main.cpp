@@ -27,42 +27,71 @@ using namespace ftxui;
 
 std::vector<std::string> excluded_branches = {};
 
-auto ostreeLog() {
-  	// parse commits
-	auto commits = parseCommitsAllBranches();
-
-	return commitRender(commits, excluded_branches);
-}
-
-auto manager(){ // TODO implement different modes (log, rebase, ...)
-	// TODO get branches
-	auto container = Container::Vertical({});
-	bool foo_shown = false;
-	container->Add(Checkbox("foo", &foo_shown));
-	if (! foo_shown) {
-		excluded_branches = {"foo"};
-	} else {
-		excluded_branches = {};
-	}
-	container->Add(Renderer([foo_shown] { return text(foo_shown ? "true" : "false"); }));
-	return container;
+auto footerRender() {
+	return Renderer([] {
+		return hbox({
+			text("OSTree TUI") | bold,
+			separator(),
+			text("  || exit: q || rebase_mode: r || apply changes: s ||  "),
+		});
+	});
 }
 
 int main(void) {
   	auto screen = ScreenInteractive::Fullscreen();
 	
-	std::string input;
+	// - STATES -
+	std::unordered_map<std::string, bool> branch_visibility_map = {};
+	branch_visibility_map["foo"] = true;
+	branch_visibility_map["oof"] = true;
+	bool foo_bool = true;
+	bool oof_bool = true;
 
-  	auto log = ostreeLog();
-  	auto right = manager();
-  	auto footer = Renderer([] { return text("OSTree TUI") | center; });
+	// - LOG ---------- ----------
+	auto commits = parseCommitsAllBranches();	
+  	commitRender(commits, excluded_branches);
+
+	auto log_renderer = Renderer([&] {
+		// update shown branches
+		excluded_branches = {};
+		std::for_each(branch_visibility_map.begin(), branch_visibility_map.end(),
+				[&](std::pair<std::string, bool> key_value) {
+					if (! key_value.second) {
+						excluded_branches.push_back(key_value.first);
+					}
+		});
+		// render commit log
+		return commitRender(commits, excluded_branches);
+	});
+
+	// - MANAGER ---------- ----------
+		/* TODOs 
+		 * - make generic for branches
+		 * - implement different modes (log, rebase, ...)
+		 * - refactor into own method
+		 * - add bottom part of menu
+		 */
+	auto foo_checkbox = Checkbox("foo", &branch_visibility_map["foo"]);
+	auto oof_checkbox = Checkbox("oof", &branch_visibility_map["oof"]);
+	auto options = Container::Vertical({foo_checkbox, oof_checkbox});
+  	auto manager_renderer = Renderer(options, [&] {
+		auto branch_filter_box = vbox({
+					text(L"filter branches") | bold,
+					filler(),
+					foo_checkbox->Render(),
+					oof_checkbox->Render(),
+				});
+		return branch_filter_box;
+	});
+
+	// - FOOTER ---------- ----------
+  	auto footer_renderer = footerRender();
 
   	int right_size = 30;
-  	int top_size = 1;
-	
-  	auto container = log;
-  	container = ResizableSplitRight(right, container, &right_size);
-  	container = ResizableSplitBottom(footer, container, &top_size);
+  	int footer_size = 1;
+  	auto container = log_renderer;
+  	container = ResizableSplitRight(manager_renderer, container, &right_size);
+  	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
 	// add shortcuts
 	auto main_container = CatchEvent(container | border, [&](Event event) {

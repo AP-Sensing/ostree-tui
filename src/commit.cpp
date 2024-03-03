@@ -159,7 +159,8 @@ auto commitRender(std::vector<Commit> commits, std::vector<std::string> excluded
 	auto commitrender = Container::Horizontal({
 		tree, comm
 	});
-	return commitrender;
+	// TODO this doesn't allow for button usage, fix this
+	return commitrender->Render();
 }
 
 std::vector<Commit> parseCommitsAllBranches(std::string repo = "testrepo") {
