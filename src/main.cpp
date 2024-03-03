@@ -57,35 +57,34 @@ int main(void) {
   	auto right = manager();
   	auto footer = Renderer([] { return text("OSTree TUI") | center; });
 
-	/* shell	
-	std::vector<std::string> input_entries;
-  	int input_selected = 0;
-  	Component shell_in = Menu(&input_entries, &input_selected);
- 
-  	auto input_option = InputOption();
-  	std::string input_add_content;
-  	input_option.on_enter = [&] {
-    	input_entries.push_back(input_add_content);
-		input_entries.push_back(exec(input_add_content.c_str()));
-    	input_add_content = "";
-  	};
-  	Component shell = Input(&input_add_content, "input files", input_option);
-	*/
-
   	int right_size = 30;
   	int top_size = 1;
-  	int bottom_size = 1;
 	
   	auto container = log;
   	container = ResizableSplitRight(right, container, &right_size);
   	container = ResizableSplitBottom(footer, container, &top_size);
-	//container = ResizableSplitBottom(shell_in, container, &bottom_size);
-  	//container = ResizableSplitBottom(shell, container, &bottom_size);
 	
-  	auto renderer =
-  	    Renderer(container, [&] { return container->Render() | border; });
-	
-  	screen.Loop(renderer);
+	// add shortcuts
+	auto main_container = CatchEvent(container | border, [&](Event event) {
+		// apply changes
+    	if (event == Event::Character('s')) {
+    	  std::cout << "apply not implemented yet" << std::endl;
+    	  return true;
+    	}
+		// enter rebase mode
+    	if (event == Event::Character('r')) {
+    	  std::cout << "rebase not implemented yet" << std::endl;
+    	  return true;
+    	}
+		// exit
+    	if (event == Event::Character('q') || event == Event::Escape) {
+    	  screen.ExitLoopClosure()();
+    	  return true;
+    	}
+    	return false;
+  	});
+
+  	screen.Loop(main_container);
 
   	return EXIT_SUCCESS;
 }
