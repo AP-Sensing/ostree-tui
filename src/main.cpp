@@ -25,15 +25,27 @@
 
 using namespace ftxui;
 
+std::vector<std::string> excluded_branches = {};
+
 auto ostreeLog() {
   	// parse commits
 	auto commits = parseCommitsAllBranches();
 
-	return commitRender(commits);
+	return commitRender(commits, excluded_branches);
 }
 
 auto manager(){ // TODO implement different modes (log, rebase, ...)
-	return Renderer([] { return text("manager") | center; });
+	// TODO get branches
+	auto container = Container::Vertical({});
+	bool foo_shown = false;
+	container->Add(Checkbox("foo", &foo_shown));
+	if (! foo_shown) {
+		excluded_branches = {"foo"};
+	} else {
+		excluded_branches = {};
+	}
+	container->Add(Renderer([foo_shown] { return text(foo_shown ? "true" : "false"); }));
+	return container;
 }
 
 int main(void) {
@@ -59,7 +71,7 @@ int main(void) {
   	};
   	Component shell = Input(&input_add_content, "input files", input_option);
 	*/
-	
+
   	int right_size = 30;
   	int top_size = 1;
   	int bottom_size = 1;

@@ -119,7 +119,7 @@ auto commitRender(std::vector<Commit> commits, std::vector<std::string> excluded
 	auto tree = Container::Vertical({});
 	auto comm = Container::Vertical({});
 
-    // sort commits by parents (TODO validate if this is correct)
+    // sort commits by parents (TODO validate)
     std::sort(commits.begin(), commits.end(), [](const Commit& lhs, const Commit& rhs) {
       return lhs.hash.compare(rhs.hash) > 0;
     });
