@@ -41,7 +41,7 @@ auto footerRender() {
 
 int main(int argc, const char** argv) {
 
-	// - PARSE arguments -
+// - PARSE arguments -
 	// parse repository
 	argc--;
 	argv++;
@@ -55,7 +55,7 @@ int main(int argc, const char** argv) {
 
   	auto screen = ScreenInteractive::Fullscreen();
 
-	// - STATES -
+// - STATES -
 	std::unordered_map<std::string, bool> branch_visibility_map = {};
 	// get all branches
 	auto command = "ostree refs --repo=" + repo;
@@ -65,8 +65,10 @@ int main(int argc, const char** argv) {
 	while (branches_ss >> branch) {
 		branch_visibility_map[branch] = true;
 	}
+	// commits
+	size_t selected_commit{0};
 
-	// - LOG ---------- ----------
+// - LOG ---------- ----------
 	auto commits = parseCommitsAllBranches(repo);	
   	commitRender(commits, branches);
 
@@ -80,10 +82,10 @@ int main(int argc, const char** argv) {
 					}
 		});
 		// render commit log
-		return commitRender(commits, branches);
+		return commitRender(commits, branches, &selected_commit);
 	});
 
-	// - MANAGER ---------- ----------
+// - MANAGER ---------- ----------
 		/* TODOs 
 		 * - make generic for branches
 		 * - implement different modes (log, rebase, ...)
@@ -110,7 +112,16 @@ int main(int argc, const char** argv) {
 		auto commit_info_box = vbox({
 					text("commit info") | bold,
 					filler(),
-					text("to be implemented..."),
+					text("hash:     " + commits[selected_commit].hash),
+					filler(),
+					text("subject:  " + commits[selected_commit].subject),
+					filler(),
+					text("date:     " + commits[selected_commit].date),
+					filler(),
+					text("parent:   " + commits[selected_commit].parent),
+					filler(),
+					text("checksum: " + commits[selected_commit].parent),
+					filler(),
 				});
 		// unify boxes
 		return vbox({
@@ -120,15 +131,16 @@ int main(int argc, const char** argv) {
 				});
 	});
 
-	// - FOOTER ---------- ----------
+// - FOOTER ---------- ----------
   	auto footer_renderer = footerRender();
 
-  	int right_size = 30;
+  	int log_size = 30;
   	int footer_size = 1;
   	auto container = log_renderer;
-  	container = ResizableSplitRight(manager_renderer, container, &right_size);
+  	container = ResizableSplitRight(manager_renderer, container, &log_size);
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
+// - FINALIZE ---------- ----------
 	// add shortcuts
 	auto main_container = CatchEvent(container | border, [&](Event event) {
 		// apply changes
@@ -139,6 +151,17 @@ int main(int argc, const char** argv) {
 		// enter rebase mode
     	if (event == Event::Character('r')) {
     	  std::cout << "rebase not implemented yet" << std::endl;
+    	  return true;
+    	}
+		// switch through commits (may be temporary)
+    	if (event == Event::Character('+')) {
+    	  if (selected_commit > 0)
+		  	--selected_commit;
+    	  return true;
+    	}
+    	if (event == Event::Character('-')) {
+    	  if (selected_commit + 1 < commits.size())
+		  	++selected_commit;
     	  return true;
     	}
 		// exit

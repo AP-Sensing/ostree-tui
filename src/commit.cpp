@@ -83,7 +83,7 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
     |      "a commit message that is c..."
     |
 */
-auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}) {
+auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t* selected_commit = 0) {
 
 	// filter commits for excluded branches
 	std::vector<Commit> filteredCommits = {};
