@@ -6,13 +6,14 @@
 #include <stdexcept> 
 #include <string>
 #include <array>
+#include <string>
  
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
-#include "ftxui/dom/table.hpp"
+//#include "ftxui/dom/table.hpp"
 
 #include "ftxui/dom/elements.hpp"
 #include "ftxui/screen/screen.hpp"
@@ -25,43 +26,61 @@
 
 using namespace ftxui;
 
-std::vector<std::string> excluded_branches = {};
+std::vector<std::string> branches = {};
+std::string repo{"repo"};
 
 auto footerRender() {
 	return Renderer([] {
 		return hbox({
-			text("OSTree TUI") | bold,
+			text(" OSTree TUI ") | bold,
 			separator(),
 			text("  || exit: q || rebase_mode: r || apply changes: s ||  "),
 		});
 	});
 }
 
-int main(void) {
+int main(int argc, const char** argv) {
+
+	// - PARSE arguments -
+	// parse repository
+	argc--;
+	argv++;
+	if (argc == 0) {
+		std::cout << "no repository provided" << std::endl;
+		std::cout << "usage: " << argv[-1] << " repository" << std::endl;
+		return 0;
+	}
+	repo = argv[0];
+	//  TODO parse optional branch
+
   	auto screen = ScreenInteractive::Fullscreen();
-	
+
 	// - STATES -
 	std::unordered_map<std::string, bool> branch_visibility_map = {};
-	branch_visibility_map["foo"] = true;
-	branch_visibility_map["oof"] = true;
-	bool foo_bool = true;
-	bool oof_bool = true;
+	// get all branches
+	auto command = "ostree refs --repo=" + repo;
+	std::string br = exec(command.c_str());
+	std::stringstream branches_ss(br);
+	std::string branch;
+	while (branches_ss >> branch) {
+		branch_visibility_map[branch] = true;
+	}
 
 	// - LOG ---------- ----------
-	auto commits = parseCommitsAllBranches();	
-  	commitRender(commits, excluded_branches);
+	auto commits = parseCommitsAllBranches(repo);	
+  	commitRender(commits, branches);
 
 	auto log_renderer = Renderer([&] {
 		// update shown branches
-		excluded_branches = {};
+		branches = {};
 		std::for_each(branch_visibility_map.begin(), branch_visibility_map.end(),
 				[&](std::pair<std::string, bool> key_value) {
-					if (! key_value.second) {
-						excluded_branches.push_back(key_value.first);
+					if (key_value.second) {
+						branches.push_back(key_value.first);
 					}
 		});
 		// render commit log
-		return commitRender(commits, excluded_branches);
+		return commitRender(commits, branches);
 	});
 
 	// - MANAGER ---------- ----------
@@ -71,17 +90,34 @@ int main(void) {
 		 * - refactor into own method
 		 * - add bottom part of menu
 		 */
-	auto foo_checkbox = Checkbox("foo", &branch_visibility_map["foo"]);
-	auto oof_checkbox = Checkbox("oof", &branch_visibility_map["oof"]);
-	auto options = Container::Vertical({foo_checkbox, oof_checkbox});
-  	auto manager_renderer = Renderer(options, [&] {
-		auto branch_filter_box = vbox({
+	// create branch checkboxes
+	auto branch_boxes = Container::Vertical({});
+	std::stringstream br_ss(br);
+	while (br_ss >> branch) { // TODO don't reuse variables (cleaner code)
+		branch_boxes->Add(Checkbox(branch, &branch_visibility_map[branch]));
+	}
+	// create manager
+  	auto manager_renderer = Renderer(branch_boxes, [&] {
+		// branch filter
+		std::vector<Element> bfb_elements = {
 					text(L"filter branches") | bold,
 					filler(),
-					foo_checkbox->Render(),
-					oof_checkbox->Render(),
+					branch_boxes->Render() | vscroll_indicator | frame |
+									size(HEIGHT, LESS_THAN, 10) | border,
+				};
+		auto branch_filter_box = vbox(bfb_elements);
+		// TODO selected commit info
+		auto commit_info_box = vbox({
+					text("commit info") | bold,
+					filler(),
+					text("to be implemented..."),
 				});
-		return branch_filter_box;
+		// unify boxes
+		return vbox({
+					branch_filter_box,
+					separator(),
+					commit_info_box,
+				});
 	});
 
 	// - FOOTER ---------- ----------

@@ -83,22 +83,27 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
     |      "a commit message that is c..."
     |
 */
-auto commitRender(std::vector<Commit> commits, std::vector<std::string> excluded_branches = {}) {
+auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}) {
 
 	// filter commits for excluded branches
 	std::vector<Commit> filteredCommits = {};
 	for(const auto & commit : commits) {
-    	bool invalid_branch = false;
-		for(const auto & branch : excluded_branches) {
+    	bool valid_branch = false;
+		for(const auto & branch : branches) {
 			if(commit.branch == branch) {
-        		invalid_branch = true;
+        		valid_branch = true;
     		}
 		}
-		if (! invalid_branch) {
+		if (valid_branch) {
 			filteredCommits.push_back(commit);
 		}
 	}
 	commits = filteredCommits;
+
+	// check empty commit list
+	if (commits.size() == 0) {
+		return color(Color::RedLight, text(" no commits to be shown ") | bold | center);
+	}
 
 	// determine all branches, divide them into 'branch slots' & determine max size
 	std::unordered_map<std::string,size_t> branch_map;
@@ -156,16 +161,18 @@ auto commitRender(std::vector<Commit> commits, std::vector<std::string> excluded
         comm->Add(Renderer([commit] { return text("   " + commit.date); }));
         comm->Add(Renderer([] { return text(""); }));
   	}
-	auto commitrender = Container::Horizontal({
-		tree, comm
+	auto commitrender = hbox({
+		tree->Render(),
+		comm->Render()
 	});
 	// TODO this doesn't allow for button usage, fix this
-	return commitrender->Render();
+	return commitrender;
 }
 
-std::vector<Commit> parseCommitsAllBranches(std::string repo = "testrepo") {
+std::vector<Commit> parseCommitsAllBranches(std::string repo) {
 	// get all branches
-	std::string branches = exec("ostree refs --repo=testrepo");
+	auto command = "ostree refs --repo=" + repo;
+	std::string branches = exec(command.c_str());
 	std::stringstream branches_ss(branches);
 	std::string branch;
 
