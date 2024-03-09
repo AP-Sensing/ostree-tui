@@ -23,6 +23,8 @@
 #include "/home/timon/Workdir/ostree-tui/build/_deps/clip-src/clip.h" // for Clipboard
 
 #include "commit.cpp"
+#include "manager.cpp"
+#include "footer.cpp"
 
 using namespace ftxui;
 
@@ -66,14 +68,19 @@ int main(int argc, const char** argv) {
 		branch_visibility_map[branch] = true;
 	}
 	// commits
+	auto commits = parseCommitsAllBranches(repo);
 	size_t selected_commit{0};
 
+// - MANAGER ---------- ----------
+	Manager manager = Manager(Container::Vertical({}), br, branch_visibility_map, commits, selected_commit);
+	auto manager_renderer = manager.render();
+
 // - LOG ---------- ----------
-	auto commits = parseCommitsAllBranches(repo);	
   	commitRender(commits, branches);
 
 	auto log_renderer = Renderer([&] {
 		// update shown branches
+		branch_visibility_map = manager.branch_visibility_map;
 		branches = {};
 		std::for_each(branch_visibility_map.begin(), branch_visibility_map.end(),
 				[&](std::pair<std::string, bool> key_value) {
@@ -82,65 +89,19 @@ int main(int argc, const char** argv) {
 					}
 		});
 		// render commit log
-		return commitRender(commits, branches, &selected_commit);
-	});
-
-// - MANAGER ---------- ----------
-		/* TODOs 
-		 * - make generic for branches
-		 * - implement different modes (log, rebase, ...)
-		 * - refactor into own method
-		 * - add bottom part of menu
-		 */
-	// create branch checkboxes
-	auto branch_boxes = Container::Vertical({});
-	std::stringstream br_ss(br);
-	while (br_ss >> branch) { // TODO don't reuse variables (cleaner code)
-		branch_boxes->Add(Checkbox(branch, &branch_visibility_map[branch]));
-	}
-	// create manager
-  	auto manager_renderer = Renderer(branch_boxes, [&] {
-		// branch filter
-		std::vector<Element> bfb_elements = {
-					text(L"filter branches") | bold,
-					filler(),
-					branch_boxes->Render() | vscroll_indicator | frame |
-									size(HEIGHT, LESS_THAN, 10) | border,
-				};
-		auto branch_filter_box = vbox(bfb_elements);
-		// TODO selected commit info
-		auto commit_info_box = vbox({
-					text("commit info") | bold,
-					filler(),
-					text("hash:     " + commits[selected_commit].hash),
-					filler(),
-					text("subject:  " + commits[selected_commit].subject),
-					filler(),
-					text("date:     " + commits[selected_commit].date),
-					filler(),
-					text("parent:   " + commits[selected_commit].parent),
-					filler(),
-					text("checksum: " + commits[selected_commit].parent),
-					filler(),
-				});
-		// unify boxes
-		return vbox({
-					branch_filter_box,
-					separator(),
-					commit_info_box,
-				});
+		return commitRender(commits, branches, selected_commit);
 	});
 
 // - FOOTER ---------- ----------
   	auto footer_renderer = footerRender();
 
+// - FINALIZE ---------- ----------
   	int log_size = 30;
   	int footer_size = 1;
   	auto container = log_renderer;
   	container = ResizableSplitRight(manager_renderer, container, &log_size);
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
-// - FINALIZE ---------- ----------
 	// add shortcuts
 	auto main_container = CatchEvent(container | border, [&](Event event) {
 		// apply changes
@@ -157,11 +118,13 @@ int main(int argc, const char** argv) {
     	if (event == Event::Character('+')) {
     	  if (selected_commit > 0)
 		  	--selected_commit;
+		  manager.selected_commit = selected_commit;
     	  return true;
     	}
     	if (event == Event::Character('-')) {
     	  if (selected_commit + 1 < commits.size())
 		  	++selected_commit;
+		  manager.selected_commit = selected_commit;
     	  return true;
     	}
 		// exit

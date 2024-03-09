@@ -12,8 +12,7 @@ mkdir build
 cd build
 cmake ..
 make -j
-cd ../target
-./ftxui-starter
+./ostree-log
 ```
 
 ## Webassembly build:
@@ -25,5 +24,9 @@ make -j
 (visit localhost:8000)
 ```
 
-## Linux snap build:
-Upload your game to github and visit https://snapcraft.io/build.
+## Structure
+main
+- startup & screen
+other
+- other.init() = initialize
+- other.render() = get Renderer([&]{...})

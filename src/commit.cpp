@@ -83,8 +83,9 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
     |      "a commit message that is c..."
     |
 */
-auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t* selected_commit = 0) {
+auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0) {
 
+	std::string marked_string = commits.at(selected_commit).hash;
 	// filter commits for excluded branches
 	std::vector<Commit> filteredCommits = {};
 	for(const auto & commit : commits) {
@@ -135,11 +136,11 @@ auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches
 	for (auto commit : commits) {
 		// mark branch as now used
 		used_branches.at(branch_map[commit.branch]) = true;
-		// render branches
+		// render branchesg
 		std::string tree_root;
 		for (auto branch : used_branches) {
 			if (branch) {
-				tree_root += "  |";
+				tree_root += "  |";//"  │";
 			} else {
 				tree_root += "   ";
 			}
@@ -155,8 +156,12 @@ auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches
 		tree->Add(Renderer([tree_root] { return text(tree_root); })); // TODO check parent commit
 
 		// render commit
+		std::string marked = "";
+		if (marked_string.compare(commit.hash) == 0) {
+			marked = " > ";
+		}
         comm->Add(Button(
-            " commit " + commit.hash.substr(commit.hash.size() - 8) + " ",
+            " commit " + marked + commit.hash.substr(commit.hash.size() - 8) + " ",
             [&] { std::cout << "test"; }, ButtonOption::Ascii()));
         comm->Add(Renderer([commit] { return text("   " + commit.date); }));
         comm->Add(Renderer([] { return text(""); }));
