@@ -22,9 +22,10 @@
 // TODO fix veeeery dirty include...
 #include "/home/timon/Workdir/ostree-tui/build/_deps/clip-src/clip.h" // for Clipboard
 
-#include "commit.cpp"
-#include "manager.cpp"
-#include "footer.cpp"
+#include "core/component/commit.h"
+#include "core/component/manager.cpp"
+#include "core/component/footer.cpp"
+#include "util/commandline.h"
 
 using namespace ftxui;
 
@@ -61,7 +62,7 @@ int main(int argc, const char** argv) {
 	std::unordered_map<std::string, bool> branch_visibility_map = {};
 	// get all branches
 	auto command = "ostree refs --repo=" + repo;
-	std::string br = exec(command.c_str());
+	std::string br = commandline::exec(command.c_str());
 	std::stringstream branches_ss(br);
 	std::string branch;
 	while (branches_ss >> branch) {

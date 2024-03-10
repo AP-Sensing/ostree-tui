@@ -1,3 +1,7 @@
+#include <memory>
+#include <vector>
+#include <string>
+
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
@@ -10,6 +14,8 @@
 #include "ftxui/screen/string.hpp"
 #include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive
 
+#pragma once
+
 using namespace ftxui;
 
 struct Commit {
@@ -21,8 +27,8 @@ struct Commit {
 	std::string branch;
 };
 
-//std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch);
+std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch);
 
-//Component commitRender(std::vector<Commit> commits);
+std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0);
 
-//std::vector<Commit> parseCommitsAllBranches(std::string repo = "testrepo");
+std::vector<Commit> parseCommitsAllBranches(std::string repo = "testrepo");

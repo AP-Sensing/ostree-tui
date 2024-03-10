@@ -28,6 +28,8 @@
 // TODO fix veeeery dirty include...
 #include "/home/timon/Workdir/ostree-tui/build/_deps/clip-src/clip.h" // for Clipboard
 
+#include "commit.h"
+
 using namespace ftxui;
 
 /* TODOs 

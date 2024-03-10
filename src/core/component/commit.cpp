@@ -24,7 +24,7 @@
 #include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive
 
 #include "commit.h"
-#include "commandline.cpp"
+#include "../util/commandline.h"
 
 using namespace ftxui;
 
@@ -37,7 +37,6 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
 
 	Commit cur = {"error", "couldn't read commit", "", "", "", branch};
 
-  	size_t mode = 0;
 	bool ready = false;
   	while (log >> word) {
     	if (word == "commit") {
@@ -76,14 +75,14 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
     O |   commit: 2734aaa5                      // multiple branches shown
     | |    "some commit message cut o..."
     | |
-    | O   commit: 09fee6g2	                    // TODO parent on other branch
-    | |    "a commit message that is c..."        -> set used_branches false
-    |/                                            -> maybe not even possible?
+    | O   commit: 09fee6g2	                    // TODO (?)
+    | |    "a commit message that is c..."        
+    |/                                            
     O     commit: 09fee6g2
     |      "a commit message that is c..."
     |
 */
-auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0) {
+std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) {
 
 	std::string marked_string = commits.at(selected_commit).hash;
 	// filter commits for excluded branches
@@ -177,7 +176,7 @@ auto commitRender(std::vector<Commit> commits, std::vector<std::string> branches
 std::vector<Commit> parseCommitsAllBranches(std::string repo) {
 	// get all branches
 	auto command = "ostree refs --repo=" + repo;
-	std::string branches = exec(command.c_str());
+	std::string branches = commandline::exec(command.c_str());
 	std::stringstream branches_ss(branches);
 	std::string branch;
 
@@ -186,7 +185,7 @@ std::vector<Commit> parseCommitsAllBranches(std::string repo) {
 	while (branches_ss >> branch) {
 		// get log TODO make generic repo path
 		auto command = "ostree log --repo=" + repo + " " + branch;
-  		std::string ostreeLogOutput = exec(command.c_str());
+  		std::string ostreeLogOutput = commandline::exec(command.c_str());
 		// parse commits
 		auto commits = parseCommits(ostreeLogOutput, branch);
 		commitList.insert(commitList.end(), commits.begin(), commits.end());
