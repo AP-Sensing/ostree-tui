@@ -1,21 +1,25 @@
-OSTree TUI
+# OSTree TUI
+A terminal user interface for OSTree.
+
 -------------
-
-[![Build Status](https://travis-ci.com/ArthurSonzogni/ftxui-starter.svg?branch=master)](https://travis-ci.com/ArthurSonzogni/ftxui-starter)
-
-Minimal starter project using the [FTXUI library](https://github.com/ArthurSonzogni/ftxui)
-
+**warning**
+This project is in its earliest stages and is **not ready** to be used, or reviewed in any form. Here are the main ToDos, that would need to be fulfilled to consider it 'ready':
+- integrate conan2 into the project (replace some of the FetchContent)
+- cleanup CMakeLists
+- replace command-line access with libostree
+- *heavily* refactor code
+-------------
 
 # Build instructions:
 ```
 mkdir build
 cd build
 cmake ..
-make -j
-./ostree-log
+cmake --build .
+./bin/ostree-log
 ```
 
-## Webassembly build:
+**Webassembly build:**
 ```
 mkdir build_emscripten && cd build_emscripten
 emcmake cmake ..
@@ -23,10 +27,3 @@ make -j
 ./run_webassembly.py
 (visit localhost:8000)
 ```
-
-## Structure
-main
-- startup & screen
-other
-- other.init() = initialize
-- other.render() = get Renderer([&]{...})
