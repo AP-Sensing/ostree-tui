@@ -1,12 +1,9 @@
 #include <algorithm>
 #include <iostream>
 #include <cstdio>
-#include <iostream>
 #include <sstream>
-#include <memory> // for shared_ptr, allocator, __shared_ptr_access
-#include <stdexcept> 
+#include <memory>
 #include <string>
-#include <array>
 #include <vector>
 #include <unordered_map>
  
@@ -17,11 +14,8 @@
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 #include "ftxui/dom/table.hpp"
-
-#include "ftxui/dom/elements.hpp"
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
-#include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive
 
 #include "commit.h"
 #include "../util/commandline.h"

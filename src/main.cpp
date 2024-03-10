@@ -1,30 +1,23 @@
 #include <iostream>
 #include <cstdio>
-#include <iostream>
 #include <sstream>
-#include <memory> // for shared_ptr, allocator, __shared_ptr_access
-#include <stdexcept> 
+#include <memory>
 #include <string>
-#include <array>
-#include <string>
+#include <unordered_map>
+#include <algorithm>
+#include <vector>
  
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
-//#include "ftxui/dom/table.hpp"
-
-#include "ftxui/dom/elements.hpp"
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
-#include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive
-// TODO fix veeeery dirty include...
-#include "/home/timon/Workdir/ostree-tui/build/_deps/clip-src/clip.h" // for Clipboard
 
-#include "core/component/commit.h"
-#include "core/component/manager.cpp"
-#include "core/component/footer.cpp"
+#include "core/commit.h"
+#include "core/manager.h"
+#include "core/footer.h"
 #include "util/commandline.h"
 
 using namespace ftxui;
@@ -49,8 +42,8 @@ int main(int argc, const char** argv) {
 	argc--;
 	argv++;
 	if (argc == 0) {
-		std::cout << "no repository provided" << std::endl;
-		std::cout << "usage: " << argv[-1] << " repository" << std::endl;
+		std::cout << "no repository provided\n";
+		std::cout << "usage: " << argv[-1] << " repository\n";
 		return 0;
 	}
 	repo = argv[0];

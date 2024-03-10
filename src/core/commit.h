@@ -8,11 +8,8 @@
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 #include "ftxui/dom/table.hpp"
-
-#include "ftxui/dom/elements.hpp"
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
-#include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive
 
 #pragma once
 
