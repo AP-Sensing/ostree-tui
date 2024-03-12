@@ -57,6 +57,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Werror=format-
 
 # Project _____________________________________________________
 add_subdirectory(src)
+install(TARGETS "${PROJECT_NAME}" DESTINATION bin)
 
 # Emscripten __________________________________________________
 if (EMSCRIPTEN) 
