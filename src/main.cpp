@@ -15,6 +15,8 @@
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
 
+#include <ostree.h>
+
 #include "core/commit.h"
 #include "core/manager.h"
 #include "core/footer.h"
