@@ -18,6 +18,7 @@ target_link_libraries(ostree-tui
     PRIVATE ostui::core
     PRIVATE ostui::util
     PRIVATE ostree-1
+    PRIVATE glib-2.0
     PRIVATE ftxui::screen
     PRIVATE ftxui::dom
     PRIVATE ftxui::component
