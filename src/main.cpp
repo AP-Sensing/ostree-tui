@@ -6,6 +6,10 @@
 #include <unordered_map>
 #include <algorithm>
 #include <vector>
+
+#include <cstdio>
+#include <cerrno>
+#include <fcntl.h>
  
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
@@ -16,6 +20,7 @@
 #include "ftxui/screen/string.hpp"
 
 #include <ostree.h>
+#include <ostree-repo.h>
 
 #include "core/commit.h"
 #include "core/manager.h"
@@ -38,6 +43,15 @@ int main(int argc, const char** argv) {
 	}
 	std::string repo = argv[0];
 	//  TODO parse optional branch
+	int dfd;
+	if ((dfd = open(repo.c_str(), O_DIRECTORY | O_RDONLY)) == -1) {
+		std::cout << "couldn't find repository '" + repo + "'\n";
+		return -1;
+	}
+	OstreeRepo* osr = ostree_repo_open_at (dfd,
+                     repo.c_str(),
+                     nullptr,
+                     nullptr);
 
 	return tui_application(repo);
 }
