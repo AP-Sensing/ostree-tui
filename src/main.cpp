@@ -22,21 +22,9 @@
 
 using namespace ftxui;
 
-std::vector<std::string> branches = {};
-std::string repo{"repo"};
-
-auto footerRender() {
-	return Renderer([] {
-		return hbox({
-			text(" OSTree TUI ") | bold,
-			separator(),
-			text("  || exit: q || rebase_mode: r || apply changes: s ||  "),
-		});
-	});
-}
+int tui_application(std::string repo = "repo");
 
 int main(int argc, const char** argv) {
-
 // - PARSE arguments -
 	// parse repository
 	argc--;
@@ -46,9 +34,17 @@ int main(int argc, const char** argv) {
 		std::cout << "usage: " << argv[-1] << " repository\n";
 		return 0;
 	}
-	repo = argv[0];
+	std::string repo = argv[0];
 	//  TODO parse optional branch
 
+	return tui_application(repo);
+}
+
+/* main application
+ * OSTree TUI
+ */
+int tui_application(std::string repo) {
+	std::vector<std::string> branches = {};
   	auto screen = ScreenInteractive::Fullscreen();
 
 // - STATES -
@@ -87,7 +83,7 @@ int main(int argc, const char** argv) {
 	});
 
 // - FOOTER ---------- ----------
-  	auto footer_renderer = footerRender();
+  	auto footer_renderer = footer::footerRender();
 
 // - FINALIZE ---------- ----------
   	int log_size = 30;
