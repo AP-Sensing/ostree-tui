@@ -5,6 +5,7 @@
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 
 #include "commit.h"
+#include "../util/cl_ostree.h"
 
 class Manager {
 public:

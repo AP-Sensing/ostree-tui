@@ -11,22 +11,13 @@
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
 
+#include "../util/cl_ostree.h"
+
 #pragma once
 
 using namespace ftxui;
 
-struct Commit {
-    std::string hash;
-    std::string parent;
-    std::string contentChecksum;
-    std::string date;
-    std::string subject;
-	std::string branch;
-};
-
 std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch);
-
-bool isCommitSigned(Commit commit);
 
 std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0);
 

@@ -21,6 +21,7 @@
 
 #include "commit.h"
 #include "manager.h"
+#include "../util/cl_ostree.h"
 
 using namespace ftxui;
 

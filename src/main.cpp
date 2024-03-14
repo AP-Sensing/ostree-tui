@@ -22,6 +22,7 @@
 #include "core/commit.h"
 #include "core/manager.h"
 #include "core/footer.h"
+#include "util/cl_ostree.h"
 #include "util/commandline.h"
 //#include "util/cpplibostree.h"
 
@@ -60,8 +61,7 @@ int tui_application(std::string repo) {
 // - STATES -
 	std::unordered_map<std::string, bool> branch_visibility_map = {};
 	// get all branches
-	auto command = "ostree refs --repo=" + repo;
-	std::string br = commandline::exec(command.c_str());
+	std::string br = cl_ostree::getAllBranches(repo);
 	std::stringstream branches_ss(br);
 	std::string branch;
 	while (branches_ss >> branch) {

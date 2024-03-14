@@ -18,6 +18,7 @@
 #include "ftxui/screen/string.hpp"
 
 #include "commit.h"
+#include "../util/cl_ostree.h"
 #include "../util/commandline.h"
 
 using namespace ftxui;
@@ -56,12 +57,6 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
 	commitList.push_back(std::move(cur));
 
 	return commitList;
-}
-
-bool isCommitSigned(Commit commit) {
-	std::string cmd = "ostree --repo=testrepo show " + commit.hash + " | grep Signature";
-	std::string out = commandline::exec(cmd.c_str());
-	return out != "";
 }
 
 /*|brnchs||-----------commits-----------|       not shown, comment
@@ -166,7 +161,7 @@ std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std:
 		comm->Add(Renderer([commit_top_text_element] { return commit_top_text_element; }));
         comm->Add(Renderer([commit] { return text("   " + commit.date); }));
 		// signed
-		if (isCommitSigned(commit)) {
+		if (cl_ostree::isCommitSigned("testrepo", commit)) {
 			tree->Add(Renderer([tree_root] { return text(tree_root); }));
 			comm->Add(Renderer([commit] { return text("   signed") | color(Color::Green); }));
 		}
