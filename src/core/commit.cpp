@@ -58,6 +58,11 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
 	return commitList;
 }
 
+bool isCommitSigned(Commit commit) {
+	// TODO
+	return true;
+}
+
 /*|brnchs||-----------commits-----------|       not shown, comment
 
      top  commit: 0934afg1                      // TODO top commit of branch
@@ -149,18 +154,21 @@ std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std:
         tree->Add(Renderer([tree_root] { return text(tree_root); }));
 		tree->Add(Renderer([tree_root] { return text(tree_root); })); // TODO check parent commit
 
-		// check commit signatures
 		// render commit
-		std::string marked = "";
+
+		std::string commit_top_text = "   " + commit.hash.substr(commit.hash.size() - 8);
+		Element commit_top_text_element = text(commit_top_text);
+		// selected
 		if (marked_string.compare(commit.hash) == 0) {
-			comm->Add(Renderer([commit] { return text("   " + commit.hash.substr(commit.hash.size() - 8)) | bold; }));
-		} else {
-			comm->Add(Renderer([commit] { return text("   " + commit.hash.substr(commit.hash.size() - 8)); }));
+			commit_top_text_element = commit_top_text_element | bold;
 		}
-        //comm->Add(Button(
-        //    " commit " + marked + commit.hash.substr(commit.hash.size() - 8) + " ",
-        //    [&] { std::cout << "test"; }, ButtonOption::Ascii()));
+		comm->Add(Renderer([commit_top_text_element] { return commit_top_text_element; }));
         comm->Add(Renderer([commit] { return text("   " + commit.date); }));
+		// signed
+		if (isCommitSigned(commit)) {
+			tree->Add(Renderer([tree_root] { return text(tree_root); }));
+			comm->Add(Renderer([commit] { return text("   signed") | color(Color::Green); }));
+		}
         comm->Add(Renderer([] { return text(""); }));
   	}
 	auto commitrender = hbox({

@@ -26,6 +26,8 @@ struct Commit {
 
 std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch);
 
+bool isCommitSigned(Commit commit);
+
 std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0);
 
 std::vector<Commit> parseCommitsAllBranches(std::string repo = "testrepo");
