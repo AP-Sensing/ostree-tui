@@ -52,7 +52,7 @@ int main(int argc, const char** argv) {
  * OSTree TUI
  */
 int tui_application(std::string repo) {
-	std::cout << "initiate screen...\n";
+	std::cout << "OSTree TUI on '" << repo << "'";
 
 	std::vector<std::string> branches = {};
   	auto screen = ScreenInteractive::Fullscreen();
@@ -79,16 +79,16 @@ int tui_application(std::string repo) {
   	commitRender(commits, branches);
 
 	auto log_renderer = Renderer([&] {
-		// update shown branches
-		branch_visibility_map = manager.branch_visibility_map;
-		branches = {};
-		std::for_each(branch_visibility_map.begin(), branch_visibility_map.end(),
-				[&](std::pair<std::string, bool> key_value) {
-					if (key_value.second) {
-						branches.push_back(key_value.first);
-					}
-		});
-		// render commit log
+			// update shown branches
+			branch_visibility_map = manager.branch_visibility_map;
+			branches = {};
+			std::for_each(branch_visibility_map.begin(), branch_visibility_map.end(),
+					[&](std::pair<std::string, bool> key_value) {
+						if (key_value.second) {
+							branches.push_back(key_value.first);
+						}
+			});
+			// render commit log
 		return commitRender(commits, branches, selected_commit);
 	});
 
