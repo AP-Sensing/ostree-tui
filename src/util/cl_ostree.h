@@ -3,7 +3,7 @@
  |   Offers an interface to execute common functions on ostree
  |   repositories. Depending on the scope of this project, this
  |   file will be changed to an interface to libostree, instead
- |   of the commandline access.
+ |   of the commandline access (see cpplibostree.h).
  |___________________________________________________________*/
 
 #include "commandline.h"
@@ -33,7 +33,13 @@ namespace cl_ostree {
         public:
             explicit OSTreeRepo(std::string repo_path);
 
+            bool updateData();
+
             std::vector<Commit> getCommitList();
+            std::vector<Commit> getCommitListSorted();
+            bool isCommitSigned(Commit commit);
+            
+            std::string getAllBranchesAsString();
     };
 
     bool isCommitSigned(std::string repo_path, Commit commit);
