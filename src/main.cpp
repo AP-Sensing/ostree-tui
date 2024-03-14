@@ -23,7 +23,7 @@
 #include "core/manager.h"
 #include "core/footer.h"
 #include "util/commandline.h"
-#include "util/cpplibostree.h"
+//#include "util/cpplibostree.h"
 
 using namespace ftxui;
 
@@ -43,7 +43,7 @@ int main(int argc, const char** argv) {
 	//  TODO parse optional branch
 
 	// open OSTree Repo
-	cpplibostree::OSTreeRepo osr(repo);
+	//cpplibostree::OSTreeRepo osr(repo);
 
 	return tui_application(repo);
 }
@@ -52,6 +52,8 @@ int main(int argc, const char** argv) {
  * OSTree TUI
  */
 int tui_application(std::string repo) {
+	std::cout << "initiate screen...\n";
+
 	std::vector<std::string> branches = {};
   	auto screen = ScreenInteractive::Fullscreen();
 

@@ -1,6 +1,8 @@
+/*
 #include "cpplibostree.h"
 
 // C++
+#include <cstdlib>
 #include <string>
 #include <iostream>
 // C
@@ -27,3 +29,8 @@ OSTreeRepo::OSTreeRepo(std::string repo_path) {
 OSTreeRepo::~OSTreeRepo() {
     g_free(osr);
 }
+
+OstreeRepo* OSTreeRepo::_c() {
+    return osr;
+}
+*/
