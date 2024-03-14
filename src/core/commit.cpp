@@ -59,8 +59,9 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
 }
 
 bool isCommitSigned(Commit commit) {
-	// TODO
-	return true;
+	std::string cmd = "ostree --repo=testrepo show " + commit.hash + " | grep Signature";
+	std::string out = commandline::exec(cmd.c_str());
+	return out != "";
 }
 
 /*|brnchs||-----------commits-----------|       not shown, comment
