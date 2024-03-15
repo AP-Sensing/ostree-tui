@@ -34,21 +34,12 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	cl_ostree::OSTreeRepo ostree_repo(repo);
 	ostree_repo.setCommitList(parseCommitsAllBranches(ostree_repo));
 	size_t selected_commit{0};
-	std::unordered_map<std::string, bool> branch_visibility_map = {};
-
-	// branch visibility
-	std::string br = ostree_repo.getBranchesAsString();
-	std::stringstream branches_ss(br);
-	std::string branch;
-	while (branches_ss >> branch) {
-		branch_visibility_map[branch] = true;
-	}
 	
 	// Screen
 	auto screen = ScreenInteractive::Fullscreen();
 
 // - MANAGER ---------- ----------
-	Manager manager = Manager(Container::Vertical({}), br, branch_visibility_map, *ostree_repo.getCommitList(), selected_commit);
+	Manager manager = Manager(&ostree_repo, Container::Vertical({}), selected_commit);
 	auto manager_renderer = manager.render();
 
 // - LOG ---------- ----------
@@ -56,9 +47,8 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 
 	auto log_renderer = Renderer([&] {
 			// update shown branches
-			branch_visibility_map = manager.branch_visibility_map;
 			ostree_repo.setBranches({});
-			std::for_each(branch_visibility_map.begin(), branch_visibility_map.end(),
+			std::for_each(manager.branch_visibility_map.begin(), manager.branch_visibility_map.end(),
 					[&](std::pair<std::string, bool> key_value) {
 						if (key_value.second) {
 							ostree_repo.getBranches()->push_back(key_value.first);
@@ -72,7 +62,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
   	auto footer_renderer = footer::footerRender();
 
 // - FINALIZE ---------- ----------
-  	int log_size = 30;
+  	int log_size = 80;
   	int footer_size = 1;
   	auto container = log_renderer;
   	container = ResizableSplitRight(manager_renderer, container, &log_size);

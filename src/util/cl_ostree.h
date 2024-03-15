@@ -41,7 +41,7 @@ namespace cl_ostree {
 
             std::vector<Commit>* getCommitList();
             void setCommitList(std::vector<Commit> commit_list); // TODO replace -> update (don't modify from outside)
-            std::vector<Commit> getCommitListSorted();
+            std::vector<Commit>* getCommitListSorted();
             bool isCommitSigned(const Commit& commit);
 
             std::vector<std::string>* getBranches();

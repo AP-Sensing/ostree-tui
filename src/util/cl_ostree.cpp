@@ -25,14 +25,14 @@ auto cl_ostree::OSTreeRepo::setCommitList(std::vector<Commit> commit_list) -> vo
     this->commit_list = std::move(commit_list); 
 }
 
-auto cl_ostree::OSTreeRepo::getCommitListSorted() -> std::vector<Commit> {
+auto cl_ostree::OSTreeRepo::getCommitListSorted() -> std::vector<Commit>* {
     std::sort(commit_list.begin(), commit_list.end(), [](const Commit& lhs, const Commit& rhs) {
       return lhs.hash.compare(rhs.hash) > 0;
     });
     std::stable_sort(commit_list.begin(), commit_list.end(), [](const Commit& lhs, const Commit& rhs) {
       return lhs.parent == rhs.hash;
     });
-    return commit_list;
+    return &commit_list;
 }
 
 auto cl_ostree::OSTreeRepo::getBranches() -> std::vector<std::string>* {

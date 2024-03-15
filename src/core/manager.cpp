@@ -1,15 +1,8 @@
-/*
- * Manager Window
- */
+#include "manager.h"
 
-#include <iostream>
 #include <cstdio>
 #include <sstream>
-#include <memory>
 #include <string>
-#include <vector>
-#include <unordered_map>
-#include <algorithm>
 
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
@@ -19,35 +12,28 @@
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
 
-#include "commit.h"
-#include "manager.h"
 #include "../util/cl_ostree.h"
 
 using namespace ftxui;
 
-/* TODOs 
-* - implement different modes (log, rebase, ...)
-* - refactor into own method
-* - add bottom part of menu
-*/
 
 void Manager::init() {
-	std::sort(commits.begin(), commits.end(), [](const Commit& lhs, const Commit& rhs) {
-      return lhs.hash.compare(rhs.hash) > 0;
-    });
-    std::stable_sort(commits.begin(), commits.end(), [](const Commit& lhs, const Commit& rhs) {
-      return lhs.parent == rhs.hash;
-    });
-
-    std::stringstream br_ss(branches);
-    std::string branch;
-    while (br_ss >> branch) { // TODO don't reuse variables (cleaner code)
-    	branch_boxes->Add(Checkbox(branch, &branch_visibility_map[branch]));
-    }
+	// branch visibility
+	branch_visibility_map = {};
+	branches = ostree_repo->getBranchesAsString();
+	std::stringstream branches_ss(branches);
+	std::string branch;
+	while (branches_ss >> branch) {
+		branch_visibility_map[branch] = true;
+		branch_boxes->Add(Checkbox(branch, &branch_visibility_map[branch]));
+	}
 }
 
-Manager::Manager(Component bb, std::string b, std::unordered_map<std::string, bool> bm, std::vector<Commit> c, size_t sc):
-            branch_boxes(bb), branches(b), branch_visibility_map(bm), commits(c), selected_commit(sc) {
+Manager::Manager(cl_ostree::OSTreeRepo* repo, Component bb, size_t sc):
+            ostree_repo(repo),
+			branch_boxes(bb),
+			commits(*repo->getCommitListSorted()),
+			selected_commit(sc) {
     init();
 }
 
@@ -57,8 +43,7 @@ Component Manager::render() {
 	    std::vector<Element> bfb_elements = {
 				text(L"filter branches") | bold,
 				filler(),
-				branch_boxes->Render() | vscroll_indicator | frame |
-								size(HEIGHT, LESS_THAN, 10) | border,
+				branch_boxes->Render() | vscroll_indicator,
 			};
 	    auto branch_filter_box = vbox(bfb_elements);
 	    // TODO selected commit info
