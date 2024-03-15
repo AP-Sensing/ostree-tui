@@ -24,7 +24,7 @@
 using namespace ftxui;
 
 
-std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch){
+auto parseCommits(std::string ostreeLogOutput, std::string branch) -> std::vector<Commit> {
   	std::vector<Commit> commitList;
   
   	std::stringstream log(ostreeLogOutput);
@@ -77,7 +77,7 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
     |      "a commit message that is c..."
     |
 */
-std::shared_ptr<Node> commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) {
+auto commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) -> std::shared_ptr<Node> {
 
 	// filter commits for excluded branches
 	std::vector<Commit> filteredCommits = {};
@@ -110,7 +110,7 @@ std::shared_ptr<Node> commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commi
 	}
 
 	std::vector<bool> used_branches(branch_map_size);
-	for (int i=0; i<branch_map.size(); i++) {
+	for (size_t i=0; i<branch_map.size(); i++) {
 		used_branches[i] = false;
 	}
 
@@ -175,7 +175,7 @@ std::shared_ptr<Node> commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commi
 	return commitrender;
 }
 
-std::vector<Commit> parseCommitsAllBranches(cl_ostree::OSTreeRepo repo) {
+auto parseCommitsAllBranches(cl_ostree::OSTreeRepo repo) -> std::vector<Commit> {
 	// get all branches
 	std::string branches = repo.getBranchesAsString();
 	std::stringstream branches_ss(branches);

@@ -40,14 +40,14 @@ namespace cl_ostree {
             std::string* getRepo();
 
             std::vector<Commit>* getCommitList();
-            void setCommitList(std::vector<Commit> commit_list);
+            void setCommitList(std::vector<Commit> commit_list); // TODO replace -> update (don't modify from outside)
             std::vector<Commit> getCommitListSorted();
-            bool isCommitSigned(Commit commit);
+            bool isCommitSigned(const Commit& commit);
 
             std::vector<std::string>* getBranches();
-            void setBranches(std::vector<std::string> branches); // TODO replace with update, do not modify from outside
+            void setBranches(std::vector<std::string> branches); // TODO replace -> update (don't modify from outside)
             std::string getBranchesAsString();
-            std::string getLogStringOfBranch(std::string branch);
+            std::string getLogStringOfBranch(const std::string& branch);
     };
 
 } // namespace cl_ostree

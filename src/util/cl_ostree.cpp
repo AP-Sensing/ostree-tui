@@ -2,10 +2,11 @@
 
 #include <string>
 #include <algorithm>
+#include <utility>
 
-// class OSTreeRepo
+
 cl_ostree::OSTreeRepo::OSTreeRepo(std::string repo):
-        repo_path(repo),
+        repo_path(std::move(repo)),
         commit_list({}),
         branches({})
     {}
@@ -19,7 +20,7 @@ auto cl_ostree::OSTreeRepo::getCommitList() -> std::vector<Commit>* {
 }
 
 auto cl_ostree::OSTreeRepo::setCommitList(std::vector<Commit> commit_list) -> void {
-    this->commit_list = commit_list; 
+    this->commit_list = std::move(commit_list); 
 }
 
 auto cl_ostree::OSTreeRepo::getCommitListSorted() -> std::vector<Commit> {
@@ -37,12 +38,12 @@ auto cl_ostree::OSTreeRepo::getBranches() -> std::vector<std::string>* {
 }
 
 auto cl_ostree::OSTreeRepo::setBranches(std::vector<std::string> branches) -> void {
-    this->branches = branches; 
+    this->branches = std::move(branches); 
 }
 
 // _Command_Line_Methods_______________________________________
 
-auto cl_ostree::OSTreeRepo::isCommitSigned(Commit commit) -> bool {
+auto cl_ostree::OSTreeRepo::isCommitSigned(const Commit& commit) -> bool {
     std::string cmd = CMD_HEAD + repo_path + " show " + commit.hash + " | grep Signature";
 	std::string out = commandline::exec(cmd.c_str());
 	return !out.empty();
@@ -53,7 +54,7 @@ auto cl_ostree::OSTreeRepo::getBranchesAsString() -> std::string {
 	return commandline::exec(command.c_str());
 }
 
-auto cl_ostree::OSTreeRepo::getLogStringOfBranch(std::string branch) -> std::string {
+auto cl_ostree::OSTreeRepo::getLogStringOfBranch(const std::string& branch) -> std::string {
     auto command = CMD_HEAD + repo_path + " log " + branch;
   	return commandline::exec(command.c_str());
 }
