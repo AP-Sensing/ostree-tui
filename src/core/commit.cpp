@@ -77,7 +77,7 @@ std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch
     |      "a commit message that is c..."
     |
 */
-std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) {
+std::shared_ptr<Node> commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) {
 
 	// filter commits for excluded branches
 	std::vector<Commit> filteredCommits = {};
@@ -161,7 +161,7 @@ std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std:
 		comm->Add(Renderer([commit_top_text_element] { return commit_top_text_element; }));
         comm->Add(Renderer([commit] { return text("   " + commit.date); }));
 		// signed
-		if (cl_ostree::isCommitSigned("testrepo", commit)) {
+		if (repo.isCommitSigned(commit)) {
 			tree->Add(Renderer([tree_root] { return text(tree_root); }));
 			comm->Add(Renderer([commit] { return text("   signed") | color(Color::Green); }));
 		}
@@ -175,20 +175,16 @@ std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std:
 	return commitrender;
 }
 
-std::vector<Commit> parseCommitsAllBranches(std::string repo) {
+std::vector<Commit> parseCommitsAllBranches(cl_ostree::OSTreeRepo repo) {
 	// get all branches
-	std::string branches = cl_ostree::getAllBranches(repo);
+	std::string branches = repo.getBranchesAsString();
 	std::stringstream branches_ss(branches);
 	std::string branch;
 
 	std::vector<Commit> commitList;
 
 	while (branches_ss >> branch) {
-		// get log TODO make generic repo path
-		auto command = "ostree log --repo=" + repo + " " + branch;
-  		std::string ostreeLogOutput = commandline::exec(command.c_str());
-		// parse commits
-		auto commits = parseCommits(ostreeLogOutput, branch);
+		auto commits = parseCommits(repo.getLogStringOfBranch(branch), branch);
 		commitList.insert(commitList.end(), commits.begin(), commits.end());
 	}
   	

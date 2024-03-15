@@ -19,6 +19,6 @@ using namespace ftxui;
 
 std::vector<Commit> parseCommits(std::string ostreeLogOutput, std::string branch);
 
-std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0);
+std::shared_ptr<Node> commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0);
 
-std::vector<Commit> parseCommitsAllBranches(std::string repo = "testrepo");
+std::vector<Commit> parseCommitsAllBranches(cl_ostree::OSTreeRepo repo);

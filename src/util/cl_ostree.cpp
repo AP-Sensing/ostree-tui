@@ -32,12 +32,6 @@ auto cl_ostree::OSTreeRepo::getCommitListSorted() -> std::vector<Commit> {
     return commit_list;
 }
 
-auto cl_ostree::OSTreeRepo::isCommitSigned(Commit commit) -> bool {
-    std::string cmd = "ostree --repo=" + repo_path + " show " + commit.hash + " | grep Signature";
-	std::string out = commandline::exec(cmd.c_str());
-	return !out.empty();
-}
-
 auto cl_ostree::OSTreeRepo::getBranches() -> std::vector<std::string>* {
     return &branches;
 }
@@ -46,20 +40,20 @@ auto cl_ostree::OSTreeRepo::setBranches(std::vector<std::string> branches) -> vo
     this->branches = branches; 
 }
 
-auto cl_ostree::OSTreeRepo::getBranchesAsString() -> std::string {
-    std::string command = "ostree refs --repo=" + repo_path;
-	return commandline::exec(command.c_str());
-}
+// _Command_Line_Methods_______________________________________
 
-// deprecated
-bool cl_ostree::isCommitSigned(std::string repo_path, Commit commit) {
-	std::string cmd = "ostree --repo=" + repo_path + " show " + commit.hash + " | grep Signature";
+auto cl_ostree::OSTreeRepo::isCommitSigned(Commit commit) -> bool {
+    std::string cmd = CMD_HEAD + repo_path + " show " + commit.hash + " | grep Signature";
 	std::string out = commandline::exec(cmd.c_str());
 	return !out.empty();
 }
 
-// deprecated
-std::string cl_ostree::getAllBranches(std::string repo_path) {
-    std::string command = "ostree refs --repo=" + repo_path;
+auto cl_ostree::OSTreeRepo::getBranchesAsString() -> std::string {
+    std::string command = CMD_HEAD + repo_path + " refs";
 	return commandline::exec(command.c_str());
+}
+
+auto cl_ostree::OSTreeRepo::getLogStringOfBranch(std::string branch) -> std::string {
+    auto command = CMD_HEAD + repo_path + " log " + branch;
+  	return commandline::exec(command.c_str());
 }

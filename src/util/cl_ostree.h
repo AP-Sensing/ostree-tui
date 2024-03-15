@@ -22,6 +22,8 @@ struct Commit {
 	std::string branch;
 };
 
+constexpr auto CMD_HEAD = "ostree --repo=";
+
 namespace cl_ostree {
 
     class OSTreeRepo {
@@ -45,9 +47,7 @@ namespace cl_ostree {
             std::vector<std::string>* getBranches();
             void setBranches(std::vector<std::string> branches); // TODO replace with update, do not modify from outside
             std::string getBranchesAsString();
+            std::string getLogStringOfBranch(std::string branch);
     };
-
-    bool isCommitSigned(std::string repo_path, Commit commit);
-    std::string getAllBranches(std::string repo_path);
 
 } // namespace cl_ostree

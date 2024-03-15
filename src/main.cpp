@@ -41,10 +41,7 @@ int main(int argc, const char** argv) {
 		return 0;
 	}
 	std::string repo = argv[0];
-	//  TODO parse optional branch
-
-	// open OSTree Repo
-	//cpplibostree::OSTreeRepo osr(repo);
+	//  TODO parse additional arguments
 
 	return tui_application(repo);
 }
@@ -55,29 +52,30 @@ int main(int argc, const char** argv) {
 int tui_application(std::string repo) {
 	std::cout << "OSTree TUI on '" << repo << "'";
 
-	cl_ostree::OSTreeRepo ostree_repo(repo);
-
-  	auto screen = ScreenInteractive::Fullscreen();
-
 // - STATES -
+	// OSTree Repo 
+	cl_ostree::OSTreeRepo ostree_repo(repo);
+	ostree_repo.setCommitList(parseCommitsAllBranches(ostree_repo));
+	size_t selected_commit{0};
 	std::unordered_map<std::string, bool> branch_visibility_map = {};
-	// get all branches
-	std::string br = cl_ostree::getAllBranches(repo);
+
+	// branch visibility
+	std::string br = ostree_repo.getBranchesAsString();
 	std::stringstream branches_ss(br);
 	std::string branch;
 	while (branches_ss >> branch) {
 		branch_visibility_map[branch] = true;
 	}
-	// commits
-	ostree_repo.setCommitList(parseCommitsAllBranches(*ostree_repo.getRepo()));
-	size_t selected_commit{0};
+	
+	// Screen
+	auto screen = ScreenInteractive::Fullscreen();
 
 // - MANAGER ---------- ----------
 	Manager manager = Manager(Container::Vertical({}), br, branch_visibility_map, *ostree_repo.getCommitList(), selected_commit);
 	auto manager_renderer = manager.render();
 
 // - LOG ---------- ----------
-  	commitRender(*ostree_repo.getCommitList(), *ostree_repo.getBranches());
+  	commitRender(ostree_repo,*ostree_repo.getCommitList(), *ostree_repo.getBranches());
 
 	auto log_renderer = Renderer([&] {
 			// update shown branches
@@ -90,7 +88,7 @@ int tui_application(std::string repo) {
 						}
 			});
 			// render commit log
-		return commitRender(*ostree_repo.getCommitList(), *ostree_repo.getBranches(), selected_commit);
+		return commitRender(ostree_repo, *ostree_repo.getCommitList(), *ostree_repo.getBranches(), selected_commit);
 	});
 
 // - FOOTER ---------- ----------
