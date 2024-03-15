@@ -177,8 +177,7 @@ std::shared_ptr<Node> commitRender(std::vector<Commit> commits, std::vector<std:
 
 std::vector<Commit> parseCommitsAllBranches(std::string repo) {
 	// get all branches
-	auto command = "ostree refs --repo=" + repo;
-	std::string branches = commandline::exec(command.c_str());
+	std::string branches = cl_ostree::getAllBranches(repo);
 	std::stringstream branches_ss(branches);
 	std::string branch;
 

@@ -55,7 +55,8 @@ int main(int argc, const char** argv) {
 int tui_application(std::string repo) {
 	std::cout << "OSTree TUI on '" << repo << "'";
 
-	std::vector<std::string> branches = {};
+	cl_ostree::OSTreeRepo ostree_repo(repo);
+
   	auto screen = ScreenInteractive::Fullscreen();
 
 // - STATES -
@@ -68,28 +69,28 @@ int tui_application(std::string repo) {
 		branch_visibility_map[branch] = true;
 	}
 	// commits
-	auto commits = parseCommitsAllBranches(repo);
+	ostree_repo.setCommitList(parseCommitsAllBranches(*ostree_repo.getRepo()));
 	size_t selected_commit{0};
 
 // - MANAGER ---------- ----------
-	Manager manager = Manager(Container::Vertical({}), br, branch_visibility_map, commits, selected_commit);
+	Manager manager = Manager(Container::Vertical({}), br, branch_visibility_map, *ostree_repo.getCommitList(), selected_commit);
 	auto manager_renderer = manager.render();
 
 // - LOG ---------- ----------
-  	commitRender(commits, branches);
+  	commitRender(*ostree_repo.getCommitList(), *ostree_repo.getBranches());
 
 	auto log_renderer = Renderer([&] {
 			// update shown branches
 			branch_visibility_map = manager.branch_visibility_map;
-			branches = {};
+			ostree_repo.setBranches({});
 			std::for_each(branch_visibility_map.begin(), branch_visibility_map.end(),
 					[&](std::pair<std::string, bool> key_value) {
 						if (key_value.second) {
-							branches.push_back(key_value.first);
+							ostree_repo.getBranches()->push_back(key_value.first);
 						}
 			});
 			// render commit log
-		return commitRender(commits, branches, selected_commit);
+		return commitRender(*ostree_repo.getCommitList(), *ostree_repo.getBranches(), selected_commit);
 	});
 
 // - FOOTER ---------- ----------
@@ -122,7 +123,7 @@ int tui_application(std::string repo) {
     	  return true;
     	}
     	if (event == Event::Character('-')) {
-    	  if (selected_commit + 1 < commits.size())
+    	  if (selected_commit + 1 < ostree_repo.getCommitList()->size())
 		  	++selected_commit;
 		  manager.selected_commit = selected_commit;
     	  return true;

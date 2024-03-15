@@ -35,11 +35,16 @@ namespace cl_ostree {
 
             bool updateData();
 
-            std::vector<Commit> getCommitList();
+            std::string* getRepo();
+
+            std::vector<Commit>* getCommitList();
+            void setCommitList(std::vector<Commit> commit_list);
             std::vector<Commit> getCommitListSorted();
             bool isCommitSigned(Commit commit);
-            
-            std::string getAllBranchesAsString();
+
+            std::vector<std::string>* getBranches();
+            void setBranches(std::vector<std::string> branches); // TODO replace with update, do not modify from outside
+            std::string getBranchesAsString();
     };
 
     bool isCommitSigned(std::string repo_path, Commit commit);
