@@ -3,7 +3,7 @@
  |   Offers an interface to execute common functions on ostree
  |   repositories. Depending on the scope of this project, this
  |   file will be changed to an interface to libostree, instead
- |   of the commandline access (see cpplibostree.h).
+ |   of the commandline access.
  |___________________________________________________________*/
 
 #include <string>
