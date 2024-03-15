@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "commandline.h"
+
 
 cl_ostree::OSTreeRepo::OSTreeRepo(std::string repo):
         repo_path(std::move(repo)),

@@ -6,13 +6,12 @@
  |   of the commandline access (see cpplibostree.h).
  |___________________________________________________________*/
 
-#include "commandline.h"
-
 #include <string>
 #include <vector>
 
 #pragma once
 
+/// represents a OSTree commit
 struct Commit {
     std::string hash;
     std::string parent;
@@ -26,6 +25,7 @@ constexpr auto CMD_HEAD = "ostree --repo=";
 
 namespace cl_ostree {
 
+    /// OSTree repository representation, must be kept up-to-date by calling update()
     class OSTreeRepo {
         private:
             std::string repo_path;

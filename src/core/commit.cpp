@@ -59,24 +59,6 @@ auto parseCommits(std::string ostreeLogOutput, std::string branch) -> std::vecto
 	return commitList;
 }
 
-/*|brnchs||-----------commits-----------|       not shown, comment
-
-     top  commit: 0934afg1                      // TODO top commit of branch
-      |     "some commit message cut o..."
-      |
-      O   commit: 3b34afg1                      // one branch only
-      |    "some different commit mess..."
-      |
-    O |   commit: 2734aaa5                      // multiple branches shown
-    | |    "some commit message cut o..."
-    | |
-    | O   commit: 09fee6g2	                    // TODO (?)
-    | |    "a commit message that is c..."        
-    |/                                            
-    O     commit: 09fee6g2
-    |      "a commit message that is c..."
-    |
-*/
 auto commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) -> std::shared_ptr<Node> {
 
 	// filter commits for excluded branches

@@ -1,12 +1,19 @@
+/*_____________________________________________________________
+ | Manager Render
+ |   Right portion of main window, includes branch filter &
+ |   detailed commit info of the selected commit.
+ |___________________________________________________________*/
+
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
+#include "ftxui/component/component.hpp"  // for Component
 
 #include "commit.h"
 #include "../util/cl_ostree.h"
 
+/// Right postion of main window
 class Manager {
 public:
     // TODO keeping this data copy is very dirty -> refactor

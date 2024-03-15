@@ -1,15 +1,18 @@
-#include "ftxui/component/captured_mouse.hpp"  // for ftxui
-#include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
-#include "ftxui/component/component_base.hpp"      // for ComponentBase
-#include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
-#include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
-#include "ftxui/screen/screen.hpp"
-#include "ftxui/screen/string.hpp"
+/*_____________________________________________________________
+ | Footer Render
+ |   Bottom portion of main window, includes a section for
+ |   keyboard shortcuts info.
+ |___________________________________________________________*/
+
+#include "ftxui/component/component.hpp"        // for ftxui
+#include "ftxui/component/component_base.hpp"   // for Component
 
 using namespace ftxui;
 
+
 namespace footer{
 
+    /// create a Renderer for the footer section
     Component footerRender();
 
 } // namespace footer
