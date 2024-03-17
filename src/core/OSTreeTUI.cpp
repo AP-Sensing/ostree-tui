@@ -32,7 +32,6 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 // - STATES -
 	// OSTree Repo
 	cl_ostree::OSTreeRepo ostree_repo(repo);
-	ostree_repo.setCommitList(parseCommitsAllBranches(ostree_repo));
 	size_t selected_commit{0};
 	
 	// Screen

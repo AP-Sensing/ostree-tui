@@ -24,41 +24,6 @@
 using namespace ftxui;
 
 
-auto parseCommits(std::string ostreeLogOutput, std::string branch) -> std::vector<Commit> {
-  	std::vector<Commit> commitList;
-  
-  	std::stringstream log(ostreeLogOutput);
-  	std::string word;
-
-	Commit cur = {"error", "couldn't read commit", "", "", "", branch};
-
-	bool ready = false;
-  	while (log >> word) {
-    	if (word == "commit") {
-			if (ready) {
-				commitList.push_back(std::move(cur));
-			}
-			ready = true;
-			// create new commit
-			cur = {"", "", "", "", "", branch};
-			log >> word;
-			cur.hash = word;
-		} else if (word == "Parent:") {
-			log >> word;
-			cur.parent = word;
-		} else if (word == "ContentChecksum:") {
-			log >> word;
-			cur.contentChecksum = word;
-		} else if (word == "Date:") {
-			log >> word;
-			cur.date = word;
-		}
-  	}
-	commitList.push_back(std::move(cur));
-
-	return commitList;
-}
-
 auto commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) -> std::shared_ptr<Node> {
 
 	// filter commits for excluded branches
@@ -155,20 +120,4 @@ auto commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::
 	});
 	// TODO this doesn't allow for button usage, fix this
 	return commitrender;
-}
-
-auto parseCommitsAllBranches(cl_ostree::OSTreeRepo repo) -> std::vector<Commit> {
-	// get all branches
-	std::string branches = repo.getBranchesAsString();
-	std::stringstream branches_ss(branches);
-	std::string branch;
-
-	std::vector<Commit> commitList;
-
-	while (branches_ss >> branch) {
-		auto commits = parseCommits(repo.getLogStringOfBranch(branch), branch);
-		commitList.insert(commitList.end(), commits.begin(), commits.end());
-	}
-  	
-	return commitList;
 }
