@@ -35,19 +35,27 @@ namespace cl_ostree {
         public:
             explicit OSTreeRepo(std::string repo_path);
 
-            bool updateData();
+        // Getters
 
             std::string* getRepo();
-
             std::vector<Commit>* getCommitList();
-            void setCommitList(std::vector<Commit> commit_list); // TODO replace -> update (don't modify from outside)
             std::vector<Commit>* getCommitListSorted();
-            bool isCommitSigned(const Commit& commit);
-
             std::vector<std::string>* getBranches();
-            void setBranches(std::vector<std::string> branches); // TODO replace -> update (don't modify from outside)
+
+        // Methods
+
+            /// update all data
+            bool updateData();
+            /// check if a certain commit is signed
+            bool isCommitSigned(const Commit& commit);
+            /// parse commits from a ostree log output
+            std::vector<Commit> parseCommits(std::string branch);
+            /// same as parseCommits(), but on all available branches
+            std::vector<Commit> parseCommitsAllBranches();
+            /// get ostree refs
             std::string getBranchesAsString();
             std::string getLogStringOfBranch(const std::string& branch);
+            void setBranches(std::vector<std::string> branches); // TODO replace -> update (don't modify from outside)
     };
 
 } // namespace cl_ostree
