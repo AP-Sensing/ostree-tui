@@ -42,7 +42,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	auto manager_renderer = manager.render();
 
 // - LOG ---------- ----------
-  	commitRender(ostree_repo,*ostree_repo.getCommitList(), *ostree_repo.getBranches());
+  	commitRender(ostree_repo,*ostree_repo.getCommitListSorted(), *ostree_repo.getBranches());
 
 	auto log_renderer = Renderer([&] {
 			// update shown branches
@@ -54,7 +54,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 						}
 			});
 			// render commit log
-		return commitRender(ostree_repo, *ostree_repo.getCommitList(), *ostree_repo.getBranches(), selected_commit);
+		return commitRender(ostree_repo, *ostree_repo.getCommitListSorted(), *ostree_repo.getBranches(), selected_commit);
 	});
 
 // - FOOTER ---------- ----------
@@ -87,7 +87,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
     	  return true;
     	}
     	if (event == Event::Character('-')) {
-    	  if (selected_commit + 1 < ostree_repo.getCommitList()->size())
+    	  if (selected_commit + 1 < ostree_repo.getCommitListSorted()->size())
 		  	++selected_commit;
 		  manager.selected_commit = selected_commit;
     	  return true;

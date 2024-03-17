@@ -7,7 +7,9 @@
  |___________________________________________________________*/
 
 #include <string>
+#include <unordered_set>
 #include <vector>
+#include <set>
 
 #pragma once
 
@@ -19,6 +21,7 @@ struct Commit {
     std::string date;
     std::string subject;
 	std::string branch;
+    std::set<std::string> signatures;// replace with signature
 };
 
 constexpr auto CMD_HEAD = "ostree --repo=";
