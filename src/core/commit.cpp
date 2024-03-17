@@ -65,14 +65,6 @@ auto commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::
 	auto tree = Container::Vertical({});
 	auto comm = Container::Vertical({});
 
-    // sort commits by parents (TODO validate)
-    std::sort(commits.begin(), commits.end(), [](const Commit& lhs, const Commit& rhs) {
-      return lhs.hash.compare(rhs.hash) > 0;
-    });
-    std::stable_sort(commits.begin(), commits.end(), [](const Commit& lhs, const Commit& rhs) {
-      return lhs.parent == rhs.hash;
-    });
-
 	std::string marked_string = commits.at(selected_commit).hash;
 
 	for (auto commit : commits) {

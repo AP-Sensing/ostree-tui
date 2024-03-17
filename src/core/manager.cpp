@@ -13,6 +13,7 @@
 #include "ftxui/screen/string.hpp"
 
 #include "../util/cl_ostree.h"
+#include "../util/commandline.h"
 
 using namespace ftxui;
 
@@ -46,26 +47,32 @@ Component Manager::render() {
 				branch_boxes->Render() | vscroll_indicator,
 			};
 	    auto branch_filter_box = vbox(bfb_elements);
-	    // TODO selected commit info
+	    // selected commit info
 	    auto commit_info_box = vbox({
 				text("commit info") | bold,
 				filler(),
-				text("hash:     " + commits[selected_commit].hash),
+				text("hash:       " + commits[selected_commit].hash),
 				filler(),
-				text("subject:  " + commits[selected_commit].subject),
+				text("subject:    " + commits[selected_commit].subject),
 				filler(),
-				text("date:     " + commits[selected_commit].date),
+				text("date:       " + commits[selected_commit].date),
 				filler(),
-				text("parent:   " + commits[selected_commit].parent),
+				text("parent:     " + commits[selected_commit].parent),
 				filler(),
-				text("checksum: " + commits[selected_commit].parent),
+				text("checksum:   " + commits[selected_commit].parent),
+				filler(),
+				commits[selected_commit].signatures.size() > 0 ? text("signatures: ") : text(""),
+				// TODO make dynamic
+				text((commits[selected_commit].signatures.size() > 0 ? "    RSA " + *(commits[selected_commit].signatures.begin()) : "")),
+				text((commits[selected_commit].signatures.size() > 1 ? "    RSA " + *(++commits[selected_commit].signatures.begin()) : "")),
+				text((commits[selected_commit].signatures.size() > 2 ? "    RSA " + *(++(++commits[selected_commit].signatures.begin())) : "")),
 				filler(),
 			});
 	    // unify boxes
 	    return vbox({
 				branch_filter_box,
 				separator(),
-				commit_info_box,
+				commit_info_box
 			});
     });
 }

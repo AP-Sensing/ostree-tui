@@ -1,9 +1,12 @@
 #include "cl_ostree.h"
 
+#include <cstddef>
+#include <iostream>
 #include <string>
 #include <sstream>
 #include <algorithm>
 #include <utility>
+#include <set>
 
 #include "commandline.h"
 
@@ -29,8 +32,8 @@ auto cl_ostree::OSTreeRepo::getCommitList() -> std::vector<Commit>* {
 }
 
 auto cl_ostree::OSTreeRepo::getCommitListSorted() -> std::vector<Commit>* {
-    std::sort(commit_list.begin(), commit_list.end(), [](const Commit& lhs, const Commit& rhs) {
-      return lhs.hash.compare(rhs.hash) > 0;
+	std::stable_sort(commit_list.begin(), commit_list.end(), [](const Commit& lhs, const Commit& rhs) {
+      return lhs.date.compare(rhs.date) > 0;
     });
     std::stable_sort(commit_list.begin(), commit_list.end(), [](const Commit& lhs, const Commit& rhs) {
       return lhs.parent == rhs.hash;
@@ -66,17 +69,27 @@ auto cl_ostree::OSTreeRepo::parseCommits(std::string branch) -> std::vector<Comm
   	std::stringstream log(getLogStringOfBranch(branch));
   	std::string word;
 
-	Commit cur = {"error", "couldn't read commit", "", "", "", branch};
+	Commit cur = {"error", "couldn't read commit", "", "", "", branch, {}};
 
 	bool ready = false;
   	while (log >> word) {
     	if (word == "commit") {
 			if (ready) {
+				// parse signatures
+				int count{1};
+				std::string cmd = CMD_HEAD + repo_path + " show " + cur.hash + " | grep -m " + std::to_string(count) + " Signature | tail -n 1 | rev | cut -c 1-16 | rev";
+				std::string out = commandline::exec(cmd.c_str());
+				while (!out.empty() && count < 8) {
+					cur.signatures.insert(out);
+					++count;
+					cmd = CMD_HEAD + repo_path + " show " + cur.hash + " | grep -m " + std::to_string(count) + " Signature | tail -n 1 | rev | cut -c 1-16 | rev";
+					out = commandline::exec(cmd.c_str());
+				}
 				commitList.push_back(std::move(cur));
 			}
 			ready = true;
 			// create new commit
-			cur = {"", "", "", "", "", branch};
+			cur = {"", "", "", "", "", branch, {}};
 			log >> word;
 			cur.hash = word;
 		} else if (word == "Parent:") {
@@ -88,8 +101,25 @@ auto cl_ostree::OSTreeRepo::parseCommits(std::string branch) -> std::vector<Comm
 		} else if (word == "Date:") {
 			log >> word;
 			cur.date = word;
+		} else if (word == "+0000") {
+			log >> word;
+			if (word != "(no") {
+				cur.subject = word;
+			}
 		}
   	}
+
+	// parse signatures
+	int count{1};
+	std::string cmd = CMD_HEAD + repo_path + " show " + cur.hash + " | grep -m " + std::to_string(count) + " Signature | tail -n 1 | rev | cut -c 1-16 | rev";
+	std::string out = commandline::exec(cmd.c_str());
+	while (!out.empty() && count < 8) {
+		cur.signatures.insert(out);
+		++count;
+		cmd = CMD_HEAD + repo_path + " show " + cur.hash + " | grep -m " + std::to_string(count) + " Signature | tail -n 1 | rev | cut -c 1-16 | rev";
+		out = commandline::exec(cmd.c_str());
+	}
+
 	commitList.push_back(std::move(cur));
 
 	return commitList;
