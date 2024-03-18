@@ -15,7 +15,7 @@ Component footer::footerRender() {
 		return hbox({
 			text(" OSTree TUI ") | bold,
 			separator(),
-			text("  || exit: q || rebase_mode: r || apply changes: s ||  "),
+			text("  || exit: q || navigate commits: +/- ||  "), // || rebase_mode: r || apply changes: s
 		});
 	});
 }
