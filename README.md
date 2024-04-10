@@ -19,7 +19,7 @@ mkdir build
 cd build
 cmake ..
 cmake --build .
-./bin/ostree-log
+./bin/ostree-tui
 ```
 
 **Webassembly build:**
