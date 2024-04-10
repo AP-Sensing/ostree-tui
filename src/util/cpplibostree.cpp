@@ -1,4 +1,3 @@
-/*
 #include "cpplibostree.h"
 
 // C++
@@ -16,14 +15,16 @@
 using namespace cpplibostree;
 
 OSTreeRepo::OSTreeRepo(std::string repo_path) {
-    int dfd;
-    if ((dfd = open(repo_path.c_str(), O_DIRECTORY | O_RDONLY)) == -1) {
-    	std::cout << "couldn't find repository '" + repo_path + "'\n";
-    }
-    osr = ostree_repo_open_at (dfd,
-             repo_path.c_str(),
-             nullptr,
-             nullptr);
+
+    g_autoptr (GError) error = NULL;
+    OstreeRepo *repo = NULL;
+
+    g_autoptr (GFile) repo_path_ptr = g_file_new_for_path (repo_path.c_str());
+    g_autoptr (OstreeRepo) ret_repo = ostree_repo_new (repo_path_ptr);
+    if (!ostree_repo_open (ret_repo, NULL, &error))
+        std::cout << "ostree error\n";
+
+    osr = OSTREE_REPO (g_steal_pointer (&ret_repo));
 }
 
 OSTreeRepo::~OSTreeRepo() {
@@ -33,4 +34,3 @@ OSTreeRepo::~OSTreeRepo() {
 OstreeRepo* OSTreeRepo::_c() {
     return osr;
 }
-*/

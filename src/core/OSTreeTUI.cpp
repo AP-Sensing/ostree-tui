@@ -22,8 +22,11 @@
 #include "manager.h"
 #include "footer.h"
 
+//#include "clip.h"
+
 #include "../util/cl_ostree.h"
 #include "../util/commandline.h"
+//#include "../util/cpplibostree.h"
 
 
 auto OSTreeTUI::main(const std::string& repo) -> int {
@@ -33,6 +36,9 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	// OSTree Repo
 	cl_ostree::OSTreeRepo ostree_repo(repo);
 	size_t selected_commit{0};
+
+	// new OSTree Repo - TODO replace
+	//cpplibostree::OSTreeRepo cpp_ostree_repo("tmp_repo");
 	
 	// Screen
 	auto screen = ScreenInteractive::Fullscreen();
@@ -63,8 +69,8 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 // - FINALIZE ---------- ----------
   	int log_size = 80;
   	int footer_size = 1;
-  	auto container = log_renderer;
-  	container = ResizableSplitRight(manager_renderer, container, &log_size);
+  	auto container = manager_renderer;
+  	container = ResizableSplitLeft(log_renderer, container, &log_size);
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
 	// add shortcuts
@@ -78,6 +84,13 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
     	if (event == Event::Character('r')) {
     	  std::cout << "rebase not implemented yet" << std::endl;
     	  return true;
+    	}
+		// copy commit id
+    	if (event == Event::Character('c')) {
+			// TODO replace with (working) clipboard library
+			std::string cmd = "gnome-terminal -- bash -c \"echo " + ostree_repo.getCommitListSorted()->at(selected_commit).hash + " | xclip -selection clipboard; sleep .01\"";
+			commandline::exec(cmd.c_str());
+    	  	return true;
     	}
 		// switch through commits (may be temporary)
     	if (event == Event::Character('+')) {

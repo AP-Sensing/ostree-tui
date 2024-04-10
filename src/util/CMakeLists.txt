@@ -17,5 +17,12 @@ target_link_libraries(util
   PRIVATE clip
 )
 
-target_include_directories(util PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+#target_include_directories(util
+#  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#  /usr/include/ostree-1
+#  /usr/include/glib-2.0/
+#  /usr/lib/x86_64-linux-gnu/glib-2.0/include
+#  /usr/lib64/glib-2.0/include/
+#)
+
 add_library(ostui::util ALIAS util)

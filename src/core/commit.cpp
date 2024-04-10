@@ -91,7 +91,9 @@ auto commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::
 
 		// render commit
 
-		std::string commit_top_text = "   " + commit.hash.substr(commit.hash.size() - 8);
+		std::string commit_top_text = commit.hash;
+		if (commit_top_text.size() > 8)
+			commit_top_text = "   " + commit.hash.substr(commit.hash.size() - 8);
 		Element commit_top_text_element = text(commit_top_text);
 		// selected
 		if (marked_string.compare(commit.hash) == 0) {
