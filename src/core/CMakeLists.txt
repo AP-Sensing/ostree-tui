@@ -14,6 +14,7 @@ target_link_libraries(ostree-tui_core
 )
 target_include_directories(ostree-tui_core
   PUBLIC ${ostree-tui_include_dirs}
+  # TODO dirty
   PUBLIC ../../build/_deps/clip-src
 )
 
