@@ -26,7 +26,7 @@
 
 #include "../util/cl_ostree.h"
 #include "../util/commandline.h"
-//#include "../util/cpplibostree.h"
+#include "../util/cpplibostree.h"
 
 
 auto OSTreeTUI::main(const std::string& repo) -> int {
@@ -38,7 +38,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	size_t selected_commit{0};
 
 	// new OSTree Repo - TODO replace
-	//cpplibostree::OSTreeRepo cpp_ostree_repo("tmp_repo");
+	cpplibostree::OSTreeRepo cpp_ostree_repo("tmp_repo");
 	
 	// Screen
 	auto screen = ScreenInteractive::Fullscreen();
