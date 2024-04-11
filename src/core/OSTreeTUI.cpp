@@ -38,7 +38,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	size_t selected_commit{0};
 
 	// new OSTree Repo - TODO replace
-	cpplibostree::OSTreeRepo cpp_ostree_repo("tmp_repo");
+	cpplibostree::OSTreeRepo cpp_ostree_repo(repo);
 	
 	// Screen
 	auto screen = ScreenInteractive::Fullscreen();

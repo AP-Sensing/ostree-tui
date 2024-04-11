@@ -50,9 +50,6 @@ namespace cpplibostree {
         // custom methods
         OstreeRepo* _c();
 
-        // libostree methods
-        GHashTable ostree_repo_list_refs(std::string refspec_prefix);
-
         // Getters
 
             std::string* getRepo();
