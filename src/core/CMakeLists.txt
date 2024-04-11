@@ -12,9 +12,9 @@ target_link_libraries(ostree-tui_core
   PRIVATE ftxui::dom
   PRIVATE ftxui::component
 )
-#target_include_directories(ostree-tui_core
-#  PUBLIC ${ostree-tui_include_dirs}
-#  PUBLIC ../../build/_deps/clip-src
-#)
+target_include_directories(ostree-tui_core
+  PUBLIC ${ostree-tui_include_dirs}
+  PUBLIC ../../build/_deps/clip-src
+)
 
 add_library(ostui::core ALIAS ostree-tui_core)
