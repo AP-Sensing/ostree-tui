@@ -36,16 +36,13 @@ struct Commit {
     std::string hash;
     std::string date;
 	std::string branch;
-    std::vector<std::string> signatures;// replace with signature
+    std::vector<std::string> signatures; // replace with signature
 };
 
 namespace cpplibostree {
 
     class OSTreeRepo {
     private:
-        //OstreeRepo* repo;
-        //GError* error;
-
         std::string repo_path;
         std::vector<Commit> commit_list = {};
         std::vector<std::string> branches = {};
@@ -71,8 +68,8 @@ namespace cpplibostree {
             /// check if a certain commit is signed
             bool isCommitSigned(const Commit& commit);
             /// parse commits from a ostree log output
-            std::vector<Commit> parseCommits(std::string branch);
-            /// same as parseCommits(), but on all available branches
+            std::vector<Commit> parseCommitsOfBranch(std::string branch);
+            /// same as parseCommitsOfBranch(), but on all available branches
             std::vector<Commit> parseCommitsAllBranches();
             /// get ostree refs
             std::string getBranchesAsString();
