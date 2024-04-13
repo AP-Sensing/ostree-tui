@@ -39,8 +39,12 @@ namespace cpplibostree {
 
     class OSTreeRepo {
     public:
-        //g_autoptr(OstreeRepo) osr;
-        OstreeRepo* osr;
+        OstreeRepo* repo;
+        GError* error;
+        std::string repo_path;
+        // TODO remove & use proper libostree objects
+        std::vector<Commit> commit_list = {};
+        std::vector<std::string> branches = {};
 
     public:
         // Class
