@@ -100,7 +100,7 @@ gchar * format_timestamp (guint64 timestamp, gboolean local_tz, GError **error) 
 
 // modified dump_commit() from
 // https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-dump.c#L120
-Commit dump_commit (GVariant *variant, std::string branch) {
+static Commit dump_commit (GVariant *variant, std::string branch, std::string c) {
     Commit commit = {"error", "", 0, "", "", "", "", "", {}};
 
     const gchar *subject;
@@ -120,14 +120,17 @@ Commit dump_commit (GVariant *variant, std::string branch) {
 
     if ((parent = ostree_commit_get_parent (variant))) {
         commit.parent = parent;
+    } else {
+        commit.parent = "(no parent)";
     }
 
     g_autofree char *contents = ostree_commit_get_content_checksum (variant);
-    commit.contentChecksum = contents ?: "<invalid commit>";
+    commit.contentChecksum = contents;
     commit.date = date;
 
     if (subject[0]) {
-        commit.subject = subject;
+        std::string val = subject;
+        commit.subject = val;
     } else {
         commit.subject = "(no subject)";
     }
@@ -137,13 +140,16 @@ Commit dump_commit (GVariant *variant, std::string branch) {
     }
 
     commit.branch = branch;
+    // TODO fix commit hash
+    // due to allocation issues removing the spaces breaks the code (...)
+    commit.hash = "                                                     " + c;
 
     return commit;
 }
 
 // modified log_commit() from
 // https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
-gboolean log_commit (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::vector<Commit> *commit_list, std::string branch) {
+static gboolean log_commit (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::vector<Commit> *commit_list, std::string branch) {
     GError *local_error = NULL;
 
     g_autoptr (GVariant) variant = NULL;
@@ -157,9 +163,9 @@ gboolean log_commit (OstreeRepo *repo, const gchar *checksum, gboolean is_recurs
         }
     }
 
-    // TODO check for errors in dump_commit
-    // TODO add commit hash
-    commit_list->push_back(dump_commit(variant, branch));
+    commit_list->push_back(
+        dump_commit(variant, branch, static_cast<std::string>(checksum))
+    );
 
     // Get the parent of this commit
     g_autofree char *parent = ostree_commit_get_parent (variant);
