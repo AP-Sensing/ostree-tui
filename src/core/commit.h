@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include "../util/cl_ostree.h"
+#include "../util/cpplibostree.h"
 
 using namespace ftxui;
 
@@ -27,4 +27,4 @@ using namespace ftxui;
  * @param selected_commit selected commit
  * @return std::shared_ptr<Node> 
  */
-std::shared_ptr<Node> commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0);
+std::shared_ptr<Node> commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0);

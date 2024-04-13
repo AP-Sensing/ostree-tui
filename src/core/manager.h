@@ -13,13 +13,13 @@
 #include "ftxui/component/component.hpp"  // for Component
 
 #include "commit.h"
-#include "../util/cl_ostree.h"
+#include "../util/cpplibostree.h"
 
 /// Right postion of main window
 class Manager {
 public:
     // TODO keeping this data copy is very dirty -> refactor
-    cl_ostree::OSTreeRepo* ostree_repo;
+    cpplibostree::OSTreeRepo* ostree_repo;
     Component branch_boxes = Container::Vertical({});
     std::string branches;
     std::unordered_map<std::string, bool> branch_visibility_map;
@@ -28,6 +28,6 @@ public:
 
 public:
     void init();
-    Manager(cl_ostree::OSTreeRepo* repo, Component bb, size_t sc);
+    Manager(cpplibostree::OSTreeRepo* repo, Component bb, size_t sc);
     Component render();
 };

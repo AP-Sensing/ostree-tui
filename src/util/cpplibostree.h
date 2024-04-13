@@ -11,8 +11,10 @@
  | - errors are thrown, not passed as pointer
  |___________________________________________________________*/
 
+#pragma once
 // C++
 #include <string>
+#include <sys/types.h>
 #include <vector>
 #include <set>
 // C
@@ -23,36 +25,38 @@
 #include <glib-2.0/glib.h>
 #include <ostree-1/ostree.h>
 
+struct Commit {
+    // GVariant
+    std::string subject;
+    std::string body;
+    u_int64_t timestamp;
+    std::string parent;
+    // 
+    std::string contentChecksum;
+    std::string hash;
+    std::string date;
+	std::string branch;
+    std::set<std::string> signatures;// replace with signature
+};
 
 namespace cpplibostree {
 
-    /// TODO remove & replace by GVariant Commit of ostreelib
-    struct Commit {
-        std::string hash;
-        std::string parent;
-        std::string contentChecksum;
-        std::string date;
-        std::string subject;
-    	std::string branch;
-        std::set<std::string> signatures;// replace with signature
-    };
-
     class OSTreeRepo {
-    public:
-        OstreeRepo* repo;
-        GError* error;
+    private:
+        //OstreeRepo* repo;
+        //GError* error;
+
         std::string repo_path;
-        // TODO remove & use proper libostree objects
         std::vector<Commit> commit_list = {};
         std::vector<std::string> branches = {};
 
     public:
         // Class
         explicit OSTreeRepo(std::string repo_path);
-        ~OSTreeRepo();
+        ~OSTreeRepo(); // ?
 
         // custom methods
-        OstreeRepo* _c();
+        OstreeRepo* _c(); // ?
 
         // Getters
 
