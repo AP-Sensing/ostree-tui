@@ -53,7 +53,6 @@ namespace cpplibostree {
     public:
         // Class
         explicit OSTreeRepo(std::string repo_path);
-        ~OSTreeRepo(); // ?
 
         // custom methods
         OstreeRepo* _c(); // ?
@@ -77,7 +76,6 @@ namespace cpplibostree {
             std::vector<Commit> parseCommitsAllBranches();
             /// get ostree refs
             std::string getBranchesAsString();
-            std::string getLogStringOfBranch(const std::string& branch);
             void setBranches(std::vector<std::string> branches); // TODO replace -> update (don't modify from outside)
 
     };
