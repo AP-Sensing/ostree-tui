@@ -24,37 +24,16 @@ OSTreeRepo::OSTreeRepo(std::string path):
     updateData();
 }
 
-OSTreeRepo::~OSTreeRepo() {
-    //g_object_unref(repo);
-}
-
 auto OSTreeRepo::updateData() -> bool {
-    // open ostree repository
-    //GError *error = NULL;
-    //OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), NULL, &error);
-    //
-    //if (repo == NULL) {
-    //    g_printerr("Error opening repository: %s\n", error->message);
-    //    g_error_free(error);
-    //    // TODO exit with error
-    //}
-
-    // (TEST) get a list of refs
-    //        g_print("\nrefs: %s\n", getBranchesAsString().c_str());
-    //        parseCommits("foo");
-    // (TEST)
 
     std::string branchString = getBranchesAsString();
     std::stringstream bss(branchString);
     std::string word;
     while (bss >> word) {
-        //std::cout << "found branch " << word << "\n";
         branches.push_back(word);
     }
 
     commit_list = parseCommitsAllBranches();
-
-    //this->repo = repo;
 
     return true;
 }
@@ -63,7 +42,7 @@ auto OSTreeRepo::updateData() -> bool {
 
 auto OSTreeRepo::_c() -> OstreeRepo* {
     // TODO
-    return nullptr; //repo;
+    return nullptr;
 }
 
 auto OSTreeRepo::getRepo() -> std::string* {
@@ -104,15 +83,11 @@ gchar * format_timestamp (guint64 timestamp, gboolean local_tz, GError **error) 
 
     dt = g_date_time_new_from_unix_utc (timestamp);
     if (dt == NULL) {
-        //g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-        //             "Invalid timestamp: %" G_GUINT64_FORMAT, timestamp);
         return NULL;
     }
 
     if (local_tz) {
-        /* Convert to local time and display in the locale's preferred
-         * representation.
-         */
+        // Convert to local time and display in the locale's preferred representation.
         g_autoptr (GDateTime) dt_local = g_date_time_to_local (dt);
         str = g_date_time_format (dt_local, "%c");
     } else {
@@ -136,52 +111,33 @@ Commit dump_commit (GVariant *variant, std::string branch) {
     g_autofree char *version = NULL;
     g_autoptr (GError) local_error = NULL;
 
-    /* See OSTREE_COMMIT_GVARIANT_FORMAT */
+    // see OSTREE_COMMIT_GVARIANT_FORMAT
     g_variant_get (variant, "(a{sv}aya(say)&s&stayay)", NULL, NULL, NULL, &subject, &body, &timestamp,
                  NULL, NULL);
 
     timestamp = GUINT64_FROM_BE (timestamp);
     date = format_timestamp (timestamp, FALSE, &local_error);
-    //if (!date) {
-    //    g_assert (local_error); /* Pacify static analysis */
-    //}
 
     if ((parent = ostree_commit_get_parent (variant))) {
-        //g_print ("Parent:  %s\n", parent);
         commit.parent = parent;
     }
 
     g_autofree char *contents = ostree_commit_get_content_checksum (variant);
-    //g_print ("ContentChecksum:  %s\n", contents ?: "<invalid commit>");
     commit.contentChecksum = contents ?: "<invalid commit>";
-    //g_print ("Date:  %s\n", date);
     commit.date = date;
 
-    //if ((version = ot_admin_checksum_version (variant))) {
-    //    g_print ("Version: %s\n", version);
-    //}
-
     if (subject[0]) {
-        //g_print ("\n");
-        //dump_indented_lines (subject);
-        //g_print ("%s\n", subject);
         commit.subject = subject;
     } else {
-        //g_print ("(no subject)\n");
         commit.subject = "(no subject)";
     }
 
     if (body[0]) {
-        //g_print ("\n");
-        //dump_indented_lines (body);
-        //g_print ("%s\n", body);
         commit.body = body;
     }
-    //g_print ("\n");
 
     commit.branch = branch;
 
-    //Commit commit = {subject, body, 0, parent, contents, "" /*hash*/, "" /*date*/, "" /*branch*/, {}};
     return commit;
 }
 
@@ -190,12 +146,9 @@ Commit dump_commit (GVariant *variant, std::string branch) {
 gboolean log_commit (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::vector<Commit> *commit_list, std::string branch) {
     GError *local_error = NULL;
 
-    //g_print("parsing commit, cs: %s\n", std::string(checksum));
-
     g_autoptr (GVariant) variant = NULL;
     if (!ostree_repo_load_variant (repo, OSTREE_OBJECT_TYPE_COMMIT, checksum, &variant, &local_error)) {
         if (is_recurse && g_error_matches (local_error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
-            //g_print ("<< History beyond this commit not fetched >>\n");
             g_clear_error (&local_error);
             return true;
         } else {
@@ -205,9 +158,10 @@ gboolean log_commit (OstreeRepo *repo, const gchar *checksum, gboolean is_recurs
     }
 
     // TODO check for errors in dump_commit
+    // TODO add commit hash
     commit_list->push_back(dump_commit(variant, branch));
 
-    /* Get the parent of this commit */
+    // Get the parent of this commit
     g_autofree char *parent = ostree_commit_get_parent (variant);
     if (parent && !log_commit (repo, parent, true, error, commit_list, branch)) {
         return false;
@@ -278,6 +232,7 @@ auto OSTreeRepo::getBranchesAsString() -> std::string {
         // TODO exit with error
         return "";
     }
+
     // iterate through the refs
     GHashTableIter iter;
     gpointer key, value;
@@ -286,13 +241,9 @@ auto OSTreeRepo::getBranchesAsString() -> std::string {
         const gchar *ref_name = (const gchar *)key;
         branches_str += " " + std::string(ref_name);
     }
+
     // free
     g_hash_table_unref(refs_hash);
 
     return branches_str;
-}
-
-auto OSTreeRepo::getLogStringOfBranch(const std::string& branch) -> std::string {
-    // TODO
-    return "";
 }

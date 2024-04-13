@@ -7,10 +7,7 @@ This project is in its **earliest stages** and is **not ready** to be used, or r
 
 Here are the main ToDos, that would need to be fulfilled to consider it 'ready':
 - integrate conan2 into the project (replace some of the FetchContent)
-- cleanup CMakeLists
 - replace command-line access with libostree
-- *heavily* refactor code
-- squash some of the early commits
 -------------
 
 # Build instructions:
