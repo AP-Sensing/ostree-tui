@@ -72,8 +72,29 @@ auto OSTreeRepo::setBranches(std::vector<std::string> branches) -> void {
 }
 
 auto OSTreeRepo::isCommitSigned(const Commit& commit) -> bool {
+    // TODO don't reopen new repo
+    GError *error = NULL;
+    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, "testrepo", NULL, &error);
+    if (repo == NULL) {
+        g_printerr("Error opening repository: %s\n", error->message);
+        g_error_free(error);
+        return false;
+    }
+
     // TODO
-    return false;
+    std::string cs = commit.hash;
+    cs.erase(std::remove_if(cs.begin(), cs.end(), [](char c) { return std::isspace(c); }), cs.end());
+    std::cout << "check signature of cs " << cs << "\n";
+
+    g_autoptr (OstreeGpgVerifyResult) result = NULL;
+    g_autoptr (GError) local_error = NULL;
+    g_autoptr (GFile) gpg_homedir = NULL;
+
+    result = ostree_repo_verify_commit_ext (repo, cs.c_str(), gpg_homedir, NULL, NULL,
+                                                &local_error);
+    
+    guint n_sigs = ostree_gpg_verify_result_count_all (result);
+    return n_sigs > 0;
 }
 
 // https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-dump.c#L52
@@ -142,7 +163,9 @@ static Commit dump_commit (GVariant *variant, std::string branch, std::string c)
     commit.branch = branch;
     // TODO fix commit hash
     // due to allocation issues removing the spaces breaks the code (...)
-    commit.hash = "                                                     " + c;
+    commit.hash = "                        " + c;
+
+    // TODO signatures
 
     return commit;
 }
