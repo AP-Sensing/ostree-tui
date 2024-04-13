@@ -1,7 +1,7 @@
 #include <string>
 
 /* TODO
- * replace the command line interface & commit structure with the proper libostree
+ * remove the command line interface completely
  */
  
 namespace commandline {
