@@ -12,8 +12,8 @@
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
 
-#include "../util/cl_ostree.h"
 #include "../util/commandline.h"
+#include "../util/cpplibostree.h"
 
 using namespace ftxui;
 
@@ -30,7 +30,7 @@ void Manager::init() {
 	}
 }
 
-Manager::Manager(cl_ostree::OSTreeRepo* repo, Component bb, size_t sc):
+Manager::Manager(cpplibostree::OSTreeRepo* repo, Component bb, size_t sc):
             ostree_repo(repo),
 			branch_boxes(bb),
 			commits(*repo->getCommitListSorted()),

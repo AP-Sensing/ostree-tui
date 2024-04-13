@@ -18,22 +18,26 @@
 #include "ftxui/screen/string.hpp"
 
 #include "commit.h"
-#include "../util/cl_ostree.h"
 #include "../util/commandline.h"
+#include "../util/cpplibostree.h"
 
 using namespace ftxui;
 
 
-auto commitRender(cl_ostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) -> std::shared_ptr<Node> {
+auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) -> std::shared_ptr<Node> {
 
 	// filter commits for excluded branches
 	std::vector<Commit> filteredCommits = {};
 	for(const auto & commit : commits) {
     	bool valid_branch = false;
+		//std::cout << "commit " << commit.contentChecksum << "\n";
 		for(const auto & branch : branches) {
+			//std::cout << "compare (" << commit.branch << ") with (" << branch << ") -> ";
 			if(commit.branch == branch) {
         		valid_branch = true;
+				//std::cout << "true\n";
     		}
+			//std::cout << "false\n";
 		}
 		if (valid_branch) {
 			filteredCommits.push_back(commit);

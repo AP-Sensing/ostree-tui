@@ -24,7 +24,6 @@
 
 //#include "clip.h"
 
-#include "../util/cl_ostree.h"
 #include "../util/commandline.h"
 #include "../util/cpplibostree.h"
 
@@ -34,11 +33,11 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 
 // - STATES -
 	// OSTree Repo
-	cl_ostree::OSTreeRepo ostree_repo(repo);
+	//cl_ostree::OSTreeRepo ostree_repo(repo);
 	size_t selected_commit{0};
 
 	// new OSTree Repo - TODO replace
-	cpplibostree::OSTreeRepo cpp_ostree_repo(repo);
+	cpplibostree::OSTreeRepo ostree_repo(repo);
 	
 	// Screen
 	auto screen = ScreenInteractive::Fullscreen();
@@ -48,7 +47,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	auto manager_renderer = manager.render();
 
 // - LOG ---------- ----------
-  	commitRender(ostree_repo,*ostree_repo.getCommitListSorted(), *ostree_repo.getBranches());
+  	commitRender(ostree_repo,*ostree_repo.getCommitList(), *ostree_repo.getBranches());
 
 	auto log_renderer = Renderer([&] {
 			// update shown branches
@@ -60,7 +59,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 						}
 			});
 			// render commit log
-		return commitRender(ostree_repo, *ostree_repo.getCommitListSorted(), *ostree_repo.getBranches(), selected_commit);
+		return commitRender(ostree_repo, *ostree_repo.getCommitList(), *ostree_repo.getBranches(), selected_commit);
 	});
 
 // - FOOTER ---------- ----------

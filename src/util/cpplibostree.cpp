@@ -3,6 +3,7 @@
 // C++
 #include <cstdlib>
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -17,34 +18,52 @@
 
 using namespace cpplibostree;
 
-OSTreeRepo::OSTreeRepo(std::string path): repo_path(path) {
-
-    // open ostree repository
-    GError *error = NULL;
-    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, path.c_str(), NULL, &error);
-
-    if (repo == NULL) {
-        g_printerr("Error opening repository: %s\n", error->message);
-        g_error_free(error);
-        // TODO exit with error
-    }
-
-    // (TEST) get a list of refs
-            g_print("\nrefs: %s\n", getBranchesAsString().c_str());
-            parseCommits("foo");
-    // (TEST)
-
-    this->repo = repo;
+OSTreeRepo::OSTreeRepo(std::string path):
+        repo_path(std::move(path)), 
+        branches({}) {
+    updateData();
 }
 
 OSTreeRepo::~OSTreeRepo() {
-    g_object_unref(repo);
+    //g_object_unref(repo);
+}
+
+auto OSTreeRepo::updateData() -> bool {
+    // open ostree repository
+    //GError *error = NULL;
+    //OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), NULL, &error);
+    //
+    //if (repo == NULL) {
+    //    g_printerr("Error opening repository: %s\n", error->message);
+    //    g_error_free(error);
+    //    // TODO exit with error
+    //}
+
+    // (TEST) get a list of refs
+    //        g_print("\nrefs: %s\n", getBranchesAsString().c_str());
+    //        parseCommits("foo");
+    // (TEST)
+
+    std::string branchString = getBranchesAsString();
+    std::stringstream bss(branchString);
+    std::string word;
+    while (bss >> word) {
+        //std::cout << "found branch " << word << "\n";
+        branches.push_back(word);
+    }
+
+    commit_list = parseCommitsAllBranches();
+
+    //this->repo = repo;
+
+    return true;
 }
 
 // METHODS
 
 auto OSTreeRepo::_c() -> OstreeRepo* {
-    return repo;
+    // TODO
+    return nullptr; //repo;
 }
 
 auto OSTreeRepo::getRepo() -> std::string* {
@@ -69,9 +88,8 @@ auto OSTreeRepo::getBranches() -> std::vector<std::string>* {
     return &branches;
 }
 
-auto OSTreeRepo::updateData() -> bool {
-    // TODO
-    return false;
+auto OSTreeRepo::setBranches(std::vector<std::string> branches) -> void {
+    this->branches = std::move(branches); 
 }
 
 auto OSTreeRepo::isCommitSigned(const Commit& commit) -> bool {
@@ -107,12 +125,14 @@ gchar * format_timestamp (guint64 timestamp, gboolean local_tz, GError **error) 
 
 // modified dump_commit() from
 // https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-dump.c#L120
-void dump_commit (GVariant *variant) {
+Commit dump_commit (GVariant *variant, std::string branch) {
+    Commit commit = {"error", "", 0, "", "", "", "", "", {}};
+
     const gchar *subject;
     const gchar *body;
     guint64 timestamp;
     g_autofree char *parent = NULL;
-    g_autofree char *str = NULL;
+    g_autofree char *date = NULL;
     g_autofree char *version = NULL;
     g_autoptr (GError) local_error = NULL;
 
@@ -121,51 +141,61 @@ void dump_commit (GVariant *variant) {
                  NULL, NULL);
 
     timestamp = GUINT64_FROM_BE (timestamp);
-    str = format_timestamp (timestamp, FALSE, &local_error);
-    if (!str) {
-        g_assert (local_error); /* Pacify static analysis */
-        //errx (1, "Failed to read commit: %s", local_error->message);
-    }
+    date = format_timestamp (timestamp, FALSE, &local_error);
+    //if (!date) {
+    //    g_assert (local_error); /* Pacify static analysis */
+    //}
 
     if ((parent = ostree_commit_get_parent (variant))) {
-        g_print ("Parent:  %s\n", parent);
+        //g_print ("Parent:  %s\n", parent);
+        commit.parent = parent;
     }
 
     g_autofree char *contents = ostree_commit_get_content_checksum (variant);
-    g_print ("ContentChecksum:  %s\n", contents ?: "<invalid commit>");
-    g_print ("Date:  %s\n", str);
+    //g_print ("ContentChecksum:  %s\n", contents ?: "<invalid commit>");
+    commit.contentChecksum = contents ?: "<invalid commit>";
+    //g_print ("Date:  %s\n", date);
+    commit.date = date;
 
     //if ((version = ot_admin_checksum_version (variant))) {
     //    g_print ("Version: %s\n", version);
     //}
 
     if (subject[0]) {
-        g_print ("\n");
+        //g_print ("\n");
         //dump_indented_lines (subject);
-        g_print ("%s\n", subject);
+        //g_print ("%s\n", subject);
+        commit.subject = subject;
     } else {
-        g_print ("(no subject)\n");
+        //g_print ("(no subject)\n");
+        commit.subject = "(no subject)";
     }
 
     if (body[0]) {
-        g_print ("\n");
+        //g_print ("\n");
         //dump_indented_lines (body);
-        g_print ("%s\n", body);
+        //g_print ("%s\n", body);
+        commit.body = body;
     }
-    g_print ("\n");
+    //g_print ("\n");
+
+    commit.branch = branch;
+
+    //Commit commit = {subject, body, 0, parent, contents, "" /*hash*/, "" /*date*/, "" /*branch*/, {}};
+    return commit;
 }
 
 // modified log_commit() from
 // https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
-gboolean log_commit (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error) {
+gboolean log_commit (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::vector<Commit> *commit_list, std::string branch) {
     GError *local_error = NULL;
 
-    g_print("parsing commit, cs: %s\n", std::string(checksum));
+    //g_print("parsing commit, cs: %s\n", std::string(checksum));
 
     g_autoptr (GVariant) variant = NULL;
     if (!ostree_repo_load_variant (repo, OSTREE_OBJECT_TYPE_COMMIT, checksum, &variant, &local_error)) {
         if (is_recurse && g_error_matches (local_error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
-            g_print ("<< History beyond this commit not fetched >>\n");
+            //g_print ("<< History beyond this commit not fetched >>\n");
             g_clear_error (&local_error);
             return true;
         } else {
@@ -174,20 +204,19 @@ gboolean log_commit (OstreeRepo *repo, const gchar *checksum, gboolean is_recurs
         }
     }
 
-    // TODO replace with commit parsing
-    //ot_dump_object (OSTREE_OBJECT_TYPE_COMMIT, checksum, variant, flags);
-    dump_commit(variant);
+    // TODO check for errors in dump_commit
+    commit_list->push_back(dump_commit(variant, branch));
 
     /* Get the parent of this commit */
     g_autofree char *parent = ostree_commit_get_parent (variant);
-    if (parent && !log_commit (repo, parent, true, error))
+    if (parent && !log_commit (repo, parent, true, error, commit_list, branch)) {
         return false;
+    }
     
     return true;
 }
 
 auto OSTreeRepo::parseCommits(std::string branch) -> std::vector<Commit> {
-    // TODO
     auto ret = std::vector<Commit>();
 
     // TODO don't reopen new repo
@@ -201,18 +230,28 @@ auto OSTreeRepo::parseCommits(std::string branch) -> std::vector<Commit> {
 
     // recursive commit log
     g_autofree char *checksum = NULL;
-    if (!ostree_repo_resolve_rev (repo, branch.c_str(), FALSE, &checksum, &error)) {
+    if (!ostree_repo_resolve_rev (repo, branch.c_str(), false, &checksum, &error)) {
         return ret;
     }
 
-    log_commit (repo, checksum, FALSE, &error);
+    log_commit(repo, checksum, false, &error, &ret, branch);
 
     return ret;
 }
 
 auto OSTreeRepo::parseCommitsAllBranches() -> std::vector<Commit> {
-    // TODO
-    return std::vector<Commit>();
+    
+    std::istringstream branches_string(getBranchesAsString());
+    std::string branch;
+
+    std::vector<Commit> commits_all_branches;
+
+    while (branches_string >> branch) {
+        auto commits = parseCommits(branch);
+        commits_all_branches.insert(commits_all_branches.end(), commits.begin(), commits.end());
+    }
+
+    return commits_all_branches;
 }
 
 auto OSTreeRepo::getBranchesAsString() -> std::string {
@@ -256,8 +295,4 @@ auto OSTreeRepo::getBranchesAsString() -> std::string {
 auto OSTreeRepo::getLogStringOfBranch(const std::string& branch) -> std::string {
     // TODO
     return "";
-}
-
-auto OSTreeRepo::setBranches(std::vector<std::string> branches) -> void {
-    this->branches = std::move(branches); 
 }
