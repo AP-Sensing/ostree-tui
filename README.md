@@ -3,11 +3,7 @@ A terminal user interface for OSTree.
 
 -------------
 **Warning**
-This project is in its **earliest stages** and is **not ready** to be used, or reviewed in any form. Please refrain from posting issues while this setup is in process and rather contact one of the maintainers instead!
-
-Here are the main ToDos, that would need to be fulfilled to consider it 'ready':
-- integrate conan2 into the project (replace some of the FetchContent)
-- replace command-line access with libostree
+This project is in its **earliest stages** and therefor missing many features, as well as some critical bug cleansing. Please refrain from posting issues while this setup is in process and rather contact one of the maintainers instead!
 -------------
 
 # Build instructions:
