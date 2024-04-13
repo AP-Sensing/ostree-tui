@@ -72,8 +72,6 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 	std::string marked_string = commits.at(selected_commit).hash;
 
 	for (auto commit : commits) {
-		std::string command = "echo \"rendering commit with hash " + commit.hash + "\" >> log";
-		commandline::exec(command.c_str());
 		// mark branch as now used
 		used_branches.at(branch_map[commit.branch]) = true;
 		// render branchesg
