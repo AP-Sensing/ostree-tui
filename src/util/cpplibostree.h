@@ -36,7 +36,7 @@ struct Commit {
     std::string hash;
     std::string date;
 	std::string branch;
-    std::set<std::string> signatures;// replace with signature
+    std::vector<std::string> signatures;// replace with signature
 };
 
 namespace cpplibostree {
