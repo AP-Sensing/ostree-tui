@@ -13,6 +13,8 @@
 #include <ostree.h>
 #include <glib-2.0/glib.h>
 
+#include "commandline.h"
+
 using namespace cpplibostree;
 
 OSTreeRepo::OSTreeRepo(std::string path):
@@ -81,14 +83,23 @@ auto OSTreeRepo::isCommitSigned(const Commit& commit) -> bool {
 
     // check commit signature
     std::string cs = commit.hash;
-    cs.erase(std::remove_if(cs.begin(), cs.end(), [](char c) { return std::isspace(c); }), cs.end());
 
+    /* !!! TODO !!!
+     * If this method returns true, the TUI breaks.
+     * temporary complete invalidation
+     */
+    cs += "invalid-";
+    
     g_autoptr (OstreeGpgVerifyResult) result = NULL;
     g_autoptr (GError) local_error = NULL;
     g_autoptr (GFile) gpg_homedir = NULL;
 
     result = ostree_repo_verify_commit_ext (repo, cs.c_str(), gpg_homedir, NULL, NULL,
                                                 &local_error);
+
+    if (!OSTREE_IS_GPG_VERIFY_RESULT (result)) {
+        return false;
+    }
     
     guint n_sigs = ostree_gpg_verify_result_count_all (result);
     return n_sigs > 0;
@@ -155,9 +166,7 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
     }
 
     commit.branch = branch;
-    // TODO fix commit hash
-    // due to allocation issues removing the spaces breaks the code...
-    commit.hash = "                        " + hash;
+    commit.hash = hash;
 
     // TODO signatures
 
