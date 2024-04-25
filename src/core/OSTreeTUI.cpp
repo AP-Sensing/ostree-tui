@@ -66,13 +66,14 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
   	auto footer_renderer = footer::footerRender();
 
 // - FINALIZE ---------- ----------
-  	int log_size = 80;
+  	int log_size = 50;
   	int footer_size = 1;
   	auto container = manager_renderer;
   	container = ResizableSplitLeft(log_renderer, container, &log_size);
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
 	// add shortcuts
+	// TODO distribute element-specific shortcuts
 	auto main_container = CatchEvent(container | border, [&](Event event) {
 		// apply changes
     	if (event == Event::Character('s')) {
@@ -92,13 +93,13 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
     	  	return true;
     	}
 		// switch through commits
-    	if (event == Event::Character('+')) {
+    	if (event == Event::Character('+') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
     	  if (selected_commit > 0)
 		  	--selected_commit;
 		  manager.selected_commit = selected_commit;
     	  return true;
     	}
-    	if (event == Event::Character('-')) {
+    	if (event == Event::Character('-') || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
     	  if (selected_commit + 1 < ostree_repo.getCommitListSorted()->size())
 		  	++selected_commit;
 		  manager.selected_commit = selected_commit;
