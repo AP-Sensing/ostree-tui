@@ -77,13 +77,13 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	auto main_container = CatchEvent(container | border, [&](Event event) {
 		// apply changes
     	if (event == Event::Character('s')) {
-    	  std::cout << "apply not implemented yet" << std::endl;
-    	  return true;
+    	  	std::cout << "apply not implemented yet" << std::endl;
+    	  	return true;
     	}
 		// enter rebase mode
     	if (event == Event::Character('r')) {
-    	  std::cout << "rebase not implemented yet" << std::endl;
-    	  return true;
+    	  	std::cout << "rebase not implemented yet" << std::endl;
+    	  	return true;
     	}
 		// copy commit id
     	if (event == Event::Character('c')) {
@@ -94,21 +94,21 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
     	}
 		// switch through commits
     	if (event == Event::Character('+') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
-    	  if (selected_commit > 0)
-		  	--selected_commit;
-		  manager.selected_commit = selected_commit;
-    	  return true;
+    	  	if (selected_commit > 0)
+		  		--selected_commit;
+		  	manager.selected_commit = selected_commit;
+    	  	return true;
     	}
     	if (event == Event::Character('-') || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
-    	  if (selected_commit + 1 < ostree_repo.getCommitListSorted()->size())
-		  	++selected_commit;
-		  manager.selected_commit = selected_commit;
-    	  return true;
+    	  	if (selected_commit + 1 < ostree_repo.getCommitListSorted()->size())
+		  		++selected_commit;
+		  	manager.selected_commit = selected_commit;
+    	  	return true;
     	}
 		// exit
     	if (event == Event::Character('q') || event == Event::Escape) {
-    	  screen.ExitLoopClosure()();
-    	  return true;
+    	  	screen.ExitLoopClosure()();
+    	  	return true;
     	}
     	return false;
   	});

@@ -31,14 +31,10 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 	std::vector<Commit> filteredCommits = {};
 	for(const auto & commit : commits) {
     	bool valid_branch = false;
-		//std::cout << "commit " << commit.contentChecksum << "\n";
 		for(const auto & branch : branches) {
-			//std::cout << "compare (" << commit.branch << ") with (" << branch << ") -> ";
 			if(commit.branch == branch) {
         		valid_branch = true;
-				//std::cout << "true\n";
     		}
-			//std::cout << "false\n";
 		}
 		if (valid_branch) {
 			filteredCommits.push_back(commit);
@@ -86,7 +82,6 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		// check if it is first branch usage
 		if (! used_branches.at(branch_map[commit.branch])) {
 			int color_chose_index{2};
-			int branch_index{0};
 			for (auto branch : used_branches) {
 				auto branch_color = Color::Palette256(color_chose_index++);
 				if (branch) {
@@ -146,6 +141,5 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		vbox(std::move(tree_elements)),
 		vbox(std::move(comm_elements))
 	});
-	// TODO this doesn't allow for button usage, fix this
 	return commitrender;
 }
