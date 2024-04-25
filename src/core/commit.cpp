@@ -74,34 +74,54 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 	std::string marked_string = commits.at(selected_commit).hash;
 
 	for (auto commit : commits) {
-		// mark branch as now used
-		used_branches.at(branch_map[commit.branch]) = true;
-		// render branchesg
-		std::string tree_root;
-		std::string tree_top;
+		// render branches
+		Elements tree_branch_elements;
+		Elements tree_top_elements;
+		Elements tree_root_elements;
+		Elements tree_bottom_elements;
 		
-		int color_chose_index{1};
+		int color_chose_index{2};
 		int branch_index{0};
+
+		// check if it is first branch usage
+		if (! used_branches.at(branch_map[commit.branch])) {
+			int color_chose_index{2};
+			int branch_index{0};
+			for (auto branch : used_branches) {
+				auto branch_color = Color::Palette256(color_chose_index++);
+				if (branch) {
+					tree_branch_elements.push_back(text("  │") | color(branch_color));
+				} else {
+					tree_branch_elements.push_back(text("   ") | color(branch_color));
+				}
+			}
+			tree_elements.push_back(hbox(std::move(tree_branch_elements)));
+			comm_elements.push_back(text(branches.at(branch_map[commit.branch])) | color(Color::Palette256(branch_map[commit.branch] + 2)));
+		}
+		// set branch as used
+		used_branches.at(branch_map[commit.branch]) = true;
 
 		for (auto branch : used_branches) {
 			auto branch_color = Color::Palette256(color_chose_index);
 			color_chose_index = (color_chose_index + 1) % 256;
 			if (branch) {
 				if (branch_index++ == branch_map[commit.branch]) {
-					tree_top += "  ☐";
+					tree_top_elements.push_back(text("  ☐") | color(branch_color));
 				} else {
-					tree_top += "  │";
+					tree_top_elements.push_back(text("  │") | color(branch_color));
 				}
-				tree_root += "  │";
+				tree_root_elements.push_back(text("  │") | color(branch_color));
+				tree_bottom_elements.push_back(text("  │") | color(branch_color));
 			} else {
-				tree_top  += "   ";
-				tree_root += "   ";
+				tree_top_elements.push_back(text("   ") | color(branch_color));
+				tree_root_elements.push_back(text("   ") | color(branch_color));
+				tree_bottom_elements.push_back(text("   ") | color(branch_color));
 			}
 		}
 
-		tree_elements.push_back(text(tree_top));  // | color(branch_color));
-		tree_elements.push_back(text(tree_root)); // | color(branch_color));
-		tree_elements.push_back(text(tree_root)); // | color(branch_color));
+		tree_elements.push_back(hbox(std::move(tree_top_elements)));
+		tree_elements.push_back(hbox(std::move(tree_root_elements)));
+		tree_elements.push_back(hbox(std::move(tree_bottom_elements)));
 
 		// render commit
 
@@ -117,7 +137,7 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		comm_elements.push_back(text("   " + commit.date));
 		// signed
 		if (repo.isCommitSigned(commit)) {
-			tree_elements.push_back(text(tree_root));
+			tree_elements.push_back(hbox(std::move(tree_bottom_elements)));
 			comm_elements.push_back(text("   signed") | color(Color::Green));
 		}
 		comm_elements.push_back(text(""));

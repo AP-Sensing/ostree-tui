@@ -3,7 +3,6 @@
 #include <algorithm>                           // for max, min
 #include <ftxui/component/component_base.hpp>  // for Component, ComponentBase
 #include <ftxui/component/event.hpp>  // for Event, Event::ArrowDown, Event::ArrowUp, Event::End, Event::Home, Event::PageDown, Event::PageUp
-#include <memory>   // for shared_ptr, allocator, __shared_ptr_access
 #include <utility>  // for move
 
 #include "ftxui/component/component.hpp"  // for Make
@@ -14,6 +13,14 @@
 #include "ftxui/dom/requirement.hpp"  // for Requirement
 #include "ftxui/screen/box.hpp"       // for Box
 
+
+/*
+ * This Scroller Element is a modified version of the Scroller in the following repository
+ *    Title: git-tui
+ *    Author: Arthur Sonzogni
+ *    Date: 2021
+ *    Availability: https://github.com/ArthurSonzogni/git-tui/blob/master/src/scroller.cpp
+ */
 namespace ftxui {
 
 class ScrollerBase : public ComponentBase {
@@ -33,41 +40,11 @@ class ScrollerBase : public ComponentBase {
     return dbox({
                std::move(background),
                vbox({
-                   text(L"") | size(HEIGHT, EQUAL, selected_ * 3),
-                   text(L"") | style | focused,
+                   text(L"") | size(HEIGHT, EQUAL, *sc * 3),
+                   text(L"") | focused,
                }),
            }) |
            vscroll_indicator | yframe | yflex | reflect(box_);
-  }
-
-  bool OnEvent(Event event) final {
-    if (event.is_mouse() && box_.Contain(event.mouse().x, event.mouse().y))
-      TakeFocus();
-
-    int selected_old = selected_;
-    if (event == Event::ArrowUp || event == Event::Character('k') ||
-        (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
-      selected_--;
-    }
-    if ((event == Event::ArrowDown || event == Event::Character('j') ||
-         (event.is_mouse() && event.mouse().button == Mouse::WheelDown))) {
-      selected_++;
-    }
-    if (event == Event::PageDown)
-      selected_ += box_.y_max - box_.y_min;
-    if (event == Event::PageUp)
-      selected_ -= box_.y_max - box_.y_min;
-    if (event == Event::Home)
-      selected_ = 0;
-    if (event == Event::End)
-      selected_ = size_;
-    if (event == Event::Return) {
-      *sc = selected_;
-      return true;
-    }
-
-    selected_ = std::max(0, std::min(size_ - 1, selected_));
-    return selected_old != selected_;
   }
 
   bool Focusable() const final { return true; }
@@ -81,7 +58,3 @@ Component Scroller(size_t *selected_commit, Component child) {
   return Make<ScrollerBase>(selected_commit, std::move(child));
 }
 }  // namespace ftxui
-
-// Copyright 2021 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.
