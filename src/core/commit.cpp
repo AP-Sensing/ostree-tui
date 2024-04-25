@@ -78,22 +78,30 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		used_branches.at(branch_map[commit.branch]) = true;
 		// render branchesg
 		std::string tree_root;
+		std::string tree_top;
+		
+		int color_chose_index{1};
+		int branch_index{0};
+
 		for (auto branch : used_branches) {
+			auto branch_color = Color::Palette256(color_chose_index);
+			color_chose_index = (color_chose_index + 1) % 256;
 			if (branch) {
-				tree_root += "  |";//"  │";
+				if (branch_index++ == branch_map[commit.branch]) {
+					tree_top += "  ☐";
+				} else {
+					tree_top += "  │";
+				}
+				tree_root += "  │";
 			} else {
+				tree_top  += "   ";
 				tree_root += "   ";
 			}
 		}
 
-		std::string tree_top = tree_root;
-		if (tree_top.size() > 0) {
-			tree_top.at(3 * branch_map[commit.branch] + 2) = 'O';
-		}
-
-		tree_elements.push_back(text(tree_top));
-		tree_elements.push_back(text(tree_root));
-		tree_elements.push_back(text(tree_root));
+		tree_elements.push_back(text(tree_top));  // | color(branch_color));
+		tree_elements.push_back(text(tree_root)); // | color(branch_color));
+		tree_elements.push_back(text(tree_root)); // | color(branch_color));
 
 		// render commit
 

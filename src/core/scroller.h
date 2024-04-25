@@ -6,7 +6,7 @@
 #include "ftxui/component/component_base.hpp"  // for Component
 
 namespace ftxui {
-Component Scroller(Component child);
+Component Scroller(size_t *selected_commit, Component child);
 } // namespace ftxui
 #endif /* end of include guard: SCROLLER_H */
 

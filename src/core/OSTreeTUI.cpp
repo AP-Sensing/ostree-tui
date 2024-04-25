@@ -35,12 +35,11 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 
 // - STATES -
 	// OSTree Repo data
-	size_t selected_commit{0}; // TODO store as checksum
+	size_t selected_commit{0};
 	cpplibostree::OSTreeRepo ostree_repo(repo);
 
-	auto update_data = [&] {
-		ostree_repo = cpplibostree::OSTreeRepo(repo);
-	};
+	// Color support
+	
 	
 	// Screen
 	auto screen = ScreenInteractive::Fullscreen();
@@ -51,7 +50,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 
   	commitRender(ostree_repo,*ostree_repo.getCommitList(), *ostree_repo.getBranches());
 
-	auto log_renderer = Scroller(Renderer([&] {
+	auto log_renderer = Scroller(&selected_commit, Renderer([&] {
 			// update shown branches
 			ostree_repo.setBranches({});
 			std::for_each(manager.branch_visibility_map.begin(), manager.branch_visibility_map.end(),
@@ -92,7 +91,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 			commandline::exec(cmd.c_str());
     	  	return true;
     	}
-		// switch through commits (may be temporary)
+		// switch through commits
     	if (event == Event::Character('+')) {
     	  if (selected_commit > 0)
 		  	--selected_commit;
