@@ -51,7 +51,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 
   	commitRender(ostree_repo,*ostree_repo.getCommitList(), *ostree_repo.getBranches());
 
-	auto log_renderer = /*Scroller(*/Renderer([&] {
+	auto log_renderer = Scroller(Renderer([&] {
 			// update shown branches
 			ostree_repo.setBranches({});
 			std::for_each(manager.branch_visibility_map.begin(), manager.branch_visibility_map.end(),
@@ -62,7 +62,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 			});
 			// render commit log
 		return commitRender(ostree_repo, *ostree_repo.getCommitList(), *ostree_repo.getBranches(), selected_commit);
-	});
+	}));
 
   	auto footer_renderer = footer::footerRender();
 
