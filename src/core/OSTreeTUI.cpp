@@ -18,6 +18,8 @@
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
 
+#include "scroller.h"
+
 #include "commit.h"
 #include "manager.h"
 #include "footer.h"
@@ -32,24 +34,24 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	std::cout << "OSTree TUI on '" << repo << "'";
 
 // - STATES -
-	// OSTree Repo
-	//cl_ostree::OSTreeRepo ostree_repo(repo);
-	size_t selected_commit{0};
-
-	// new OSTree Repo - TODO replace
+	// OSTree Repo data
+	size_t selected_commit{0}; // TODO store as checksum
 	cpplibostree::OSTreeRepo ostree_repo(repo);
+
+	auto update_data = [&] {
+		ostree_repo = cpplibostree::OSTreeRepo(repo);
+	};
 	
 	// Screen
 	auto screen = ScreenInteractive::Fullscreen();
 
-// - MANAGER ---------- ----------
+// - ELEMENTS ---------- ----------
 	Manager manager = Manager(&ostree_repo, Container::Vertical({}), selected_commit);
 	auto manager_renderer = manager.render();
 
-// - LOG ---------- ----------
   	commitRender(ostree_repo,*ostree_repo.getCommitList(), *ostree_repo.getBranches());
 
-	auto log_renderer = Renderer([&] {
+	auto log_renderer = /*Scroller(*/Renderer([&] {
 			// update shown branches
 			ostree_repo.setBranches({});
 			std::for_each(manager.branch_visibility_map.begin(), manager.branch_visibility_map.end(),
@@ -62,7 +64,6 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 		return commitRender(ostree_repo, *ostree_repo.getCommitList(), *ostree_repo.getBranches(), selected_commit);
 	});
 
-// - FOOTER ---------- ----------
   	auto footer_renderer = footer::footerRender();
 
 // - FINALIZE ---------- ----------

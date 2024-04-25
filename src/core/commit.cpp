@@ -26,6 +26,7 @@ using namespace ftxui;
 
 auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) -> std::shared_ptr<Node> {
 
+// prepare data
 	// filter commits for excluded branches
 	std::vector<Commit> filteredCommits = {};
 	for(const auto & commit : commits) {
@@ -65,9 +66,10 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		used_branches[i] = false;
 	}
 
+// render
 	// left tree, right commits
-	auto tree = Container::Vertical({});
-	auto comm = Container::Vertical({});
+	Elements tree_elements;
+	Elements comm_elements;
 
 	std::string marked_string = commits.at(selected_commit).hash;
 
@@ -89,9 +91,9 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 			tree_top.at(3 * branch_map[commit.branch] + 2) = 'O';
 		}
 
-        tree->Add(Renderer([tree_top] { return text(tree_top); }));
-        tree->Add(Renderer([tree_root] { return text(tree_root); }));
-		tree->Add(Renderer([tree_root] { return text(tree_root); })); // TODO check parent commit
+		tree_elements.push_back(text(tree_top));
+		tree_elements.push_back(text(tree_root));
+		tree_elements.push_back(text(tree_root));
 
 		// render commit
 
@@ -103,18 +105,18 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		if (marked_string.compare(commit.hash) == 0) {
 			commit_top_text_element = commit_top_text_element | bold;
 		}
-		comm->Add(Renderer([commit_top_text_element] { return commit_top_text_element; }));
-        comm->Add(Renderer([commit] { return text("   " + commit.date); }));
+		comm_elements.push_back(commit_top_text_element);
+		comm_elements.push_back(text("   " + commit.date));
 		// signed
 		if (repo.isCommitSigned(commit)) {
-			tree->Add(Renderer([tree_root] { return text(tree_root); }));
-			comm->Add(Renderer([commit] { return text("   signed") | color(Color::Green); }));
+			tree_elements.push_back(text(tree_root));
+			comm_elements.push_back(text("   signed") | color(Color::Green));
 		}
-        comm->Add(Renderer([] { return text(""); }));
+		comm_elements.push_back(text(""));
   	}
 	auto commitrender = hbox({
-		tree->Render(),
-		comm->Render()
+		vbox(std::move(tree_elements)),
+		vbox(std::move(comm_elements))
 	});
 	// TODO this doesn't allow for button usage, fix this
 	return commitrender;
