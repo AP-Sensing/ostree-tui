@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/c++-%2300599C.svg?style=flat&logo=c%2B%2B&logoColor=white"></img></a>
-  <a href="http://opensource.org/licenses/MIT"><img src="https://img.shields.io/github/license/AP-Sensing/ostree-tui?color=black"></img></a>
+  <a href="https://opensource.org/license/gpl-3-0"><img src="https://img.shields.io/github/license/AP-Sensing/ostree-tui?color=black"></img></a>
   <a href="#"><img src="https://img.shields.io/github/stars/AP-Sensing/ostree-tui"></img></a>
   <a href="#"><img src="https://img.shields.io/github/forks/AP-Sensing/ostree-tui"></img></a>
   <a href="#"><img src="https://img.shields.io/github/repo-size/AP-Sensing/ostree-tui"></img></a>
