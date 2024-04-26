@@ -132,7 +132,8 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		comm_elements.push_back(text("   " + commit.date));
 		// signed
 		if (repo.isCommitSigned(commit)) {
-			tree_elements.push_back(hbox(std::move(tree_bottom_elements)));
+			// todo proper bottom elements
+			tree_elements.push_back(text("todo"));
 			comm_elements.push_back(text("   signed") | color(Color::Green));
 		}
 		comm_elements.push_back(text(""));

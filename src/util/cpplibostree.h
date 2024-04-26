@@ -25,6 +25,15 @@
 #include <glib-2.0/glib.h>
 #include <ostree-1/ostree.h>
 
+struct Signature {
+    std::string pubkey_algorithm;
+    std::string fingerprint;
+    std::string timestamp;
+    std::string expire_timestamp;
+    std::string username;
+    std::string usermail;
+};
+
 struct Commit {
     // GVariant
     std::string subject;
@@ -36,7 +45,7 @@ struct Commit {
     std::string hash;
     std::string date;
 	std::string branch;
-    std::vector<std::string> signatures; // replace with signature
+    std::vector<Signature> signatures; // replace with signature
 };
 
 namespace cpplibostree {

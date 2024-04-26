@@ -73,36 +73,7 @@ auto OSTreeRepo::setBranches(std::vector<std::string> branches) -> void {
 }
 
 auto OSTreeRepo::isCommitSigned(const Commit& commit) -> bool {
-    // open repo
-    GError *error = NULL;
-    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), NULL, &error);
-    if (repo == NULL) {
-        g_error_free(error);
-        return false;
-    }
-
-    // check commit signature
-    std::string cs = commit.hash;
-
-    /* !!! TODO !!!
-     * If this method returns true, the TUI breaks.
-     * temporary complete invalidation
-     */
-    cs += "invalid-";
-    
-    g_autoptr (OstreeGpgVerifyResult) result = NULL;
-    g_autoptr (GError) local_error = NULL;
-    g_autoptr (GFile) gpg_homedir = NULL;
-
-    result = ostree_repo_verify_commit_ext (repo, cs.c_str(), gpg_homedir, NULL, NULL,
-                                                &local_error);
-
-    if (!OSTREE_IS_GPG_VERIFY_RESULT (result)) {
-        return false;
-    }
-    
-    guint n_sigs = ostree_gpg_verify_result_count_all (result);
-    return n_sigs > 0;
+    return commit.signatures.size() > 0;
 }
 
 // source: https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-dump.c#L52
@@ -136,7 +107,7 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
     g_autofree char *parent = NULL;
     g_autofree char *date = NULL;
     g_autofree char *version = NULL;
-    g_autoptr (GError) local_error = NULL;
+    //g_autoptr (GError) local_error = NULL;
 
     // see OSTREE_COMMIT_GVARIANT_FORMAT
     g_variant_get(variant, "(a{sv}aya(say)&s&stayay)", NULL, NULL, NULL, &subject, &body, &timestamp, NULL, NULL);
@@ -168,7 +139,69 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
     commit.branch = branch;
     commit.hash = hash;
 
-    // TODO signatures
+// TODO signatures
+    // open repo
+    GError *error = NULL;
+    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, "testrepo", NULL, &error);
+    if (repo == NULL) {
+        g_printerr("Error opening repository: %s\n", error->message);
+        g_error_free(error);
+    }
+    // see ostree print_object for reference
+    g_autoptr (OstreeGpgVerifyResult) result = NULL;
+    g_autoptr (GError) local_error = NULL;
+    result = ostree_repo_verify_commit_ext (repo, commit.parent.c_str(), NULL, NULL, NULL,
+                                                  &local_error);
+    if (g_error_matches (local_error, OSTREE_GPG_ERROR, OSTREE_GPG_ERROR_NO_SIGNATURE)) {
+        /* Ignore */
+    } else if (local_error != NULL) {
+        /* Ignore */
+    } else {
+        guint n_sigs = ostree_gpg_verify_result_count_all (result);
+        g_print ("Found %u signature%s for commit %s:\n", n_sigs, n_sigs == 1 ? "" : "s", commit.parent.c_str());
+    
+        for (guint ii = 0; ii < n_sigs; ii++) {
+            // see ostree_gpg_verify_result_describe for reference
+            g_autoptr (GVariant) variant = NULL;
+            variant = ostree_gpg_verify_result_get_all (result, ii);
+            // see ostree_gpg_verify_result_describe_variant for reference
+            gint64 timestamp;
+            gint64 exp_timestamp;
+            const char *type_string;
+            const char *fingerprint;
+            const char *fingerprint_primary;
+            const char *pubkey_algo;
+            const char *user_name;
+            const char *user_email;
+            const char *key_id;
+
+            g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_PUBKEY_ALGO_NAME, "&s", &pubkey_algo);
+            g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT, "&s", &fingerprint);
+            g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_TIMESTAMP, "x", &timestamp);
+            g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_EXP_TIMESTAMP, "x", &exp_timestamp);
+            g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_USER_NAME, "&s", &user_name);
+            g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_USER_EMAIL, "&s", &user_email);
+            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_VALID, "b", &valid);
+            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_SIG_EXPIRED, "b", &sig_expired);
+            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXPIRED, "b", &key_expired);
+            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_REVOKED, "b", &key_revoked);
+            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_MISSING, "b", &key_missing);
+            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT_PRIMARY, "&s", &fingerprint_primary);
+            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXP_TIMESTAMP, "x", &key_exp_timestamp);
+            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXP_TIMESTAMP_PRIMARY, "x", &key_exp_timestamp_primary);
+        
+            Signature sig = {"error","","","","",""};
+            sig.pubkey_algorithm = pubkey_algo;
+            sig.fingerprint = fingerprint;
+            sig.timestamp = std::to_string(timestamp);
+            sig.expire_timestamp = std::to_string(exp_timestamp);
+            sig.username = user_name;
+            sig.usermail = user_email;
+
+            commit.signatures.push_back(std::move(sig));
+        }
+    }
+    
 
     return commit;
 }
