@@ -98,7 +98,7 @@ static auto formatTimestamp(guint64 timestamp, gboolean local_tz) -> gchar* {
     return str;
 }
 
-static auto parseCommit(GVariant *variant, std::string branch, std::string hash) -> Commit {
+auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string hash) -> Commit {
     Commit commit = {"error", "", 0, "", "", "", "", "", {}};
 
     const gchar *subject;
@@ -139,10 +139,10 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
     commit.branch = branch;
     commit.hash = hash;
 
-// TODO signatures
+    // Signatures ___ refactor into own method
     // open repo
     GError *error = NULL;
-    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, "testrepo", NULL, &error);
+    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), NULL, &error);
     if (repo == NULL) {
         g_printerr("Error opening repository: %s\n", error->message);
         g_error_free(error);
@@ -158,9 +158,8 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
         /* Ignore */
     } else {
         guint n_sigs = ostree_gpg_verify_result_count_all (result);
-        
+        // parse all found signatures
         for (guint ii = 0; ii < n_sigs; ii++) {
-            // see ostree_gpg_verify_result_describe for reference
             g_autoptr (GVariant) variant = NULL;
             variant = ostree_gpg_verify_result_get_all (result, ii);
             // see ostree_gpg_verify_result_describe_variant for reference
@@ -196,7 +195,7 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
 }
 
 // modified log_commit() from https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
-static auto parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse,
+auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse,
                         GError **error, std::vector<Commit> *commit_list, std::string branch) -> gboolean {
     GError *local_error = NULL;
 

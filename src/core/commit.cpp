@@ -77,6 +77,7 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		Elements tree_bottom_elements;
 		Elements sign_elements;
 		
+		// TODO make color dependant on branch name (name -> hash -> color index)
 		int color_chose_index{2};
 		int branch_index{0};
 
@@ -136,7 +137,8 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		// signed
 		if (repo.isCommitSigned(commit)) {
 			tree_elements.push_back(hbox(std::move(sign_elements)));
-			comm_elements.push_back(text("   signed") | color(Color::Green));
+			std::string signed_text = "   signed " + (commit.signatures.size() > 1 ? std::to_string(commit.signatures.size()) + "x" : "");
+			comm_elements.push_back(text(signed_text.c_str()) | color(Color::Green));
 		}
 		comm_elements.push_back(text(""));
   	}

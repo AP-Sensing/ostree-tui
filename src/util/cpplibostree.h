@@ -83,7 +83,11 @@ namespace cpplibostree {
             /// get ostree refs
             std::string getBranchesAsString();
             void setBranches(std::vector<std::string> branches); // TODO replace -> update (don't modify from outside)
-
+    private:
+            /// parse a GVarian commit to Commit struct
+            Commit parseCommit(GVariant *variant, std::string branch, std::string hash);
+            /// parse all commits in a OstreeRepo into a commit vector
+            gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::vector<Commit> *commit_list, std::string branch);
     };
 
 } // namespace cpplibostree

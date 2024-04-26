@@ -84,7 +84,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 		return false;
 	});
 
-  	int log_size = 50;
+  	int log_size = 45;
   	int footer_size = 1;
   	auto container = manager_renderer;
   	container = ResizableSplitLeft(log_renderer, container, &log_size);
