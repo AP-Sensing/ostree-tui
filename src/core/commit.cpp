@@ -126,7 +126,7 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		Element commit_top_text_element = text(commit_top_text);
 		// selected
 		if (marked_string.compare(commit.hash) == 0) {
-			commit_top_text_element = commit_top_text_element | bold;
+			commit_top_text_element = commit_top_text_element | bold | inverted;
 		}
 		comm_elements.push_back(commit_top_text_element);
 		comm_elements.push_back(text("   " + commit.date));

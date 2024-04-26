@@ -66,6 +66,24 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
   	auto footer_renderer = footer::footerRender();
 
 // - FINALIZE ---------- ----------
+	// window specific shortcuts
+	log_renderer = CatchEvent(log_renderer | border, [&](Event event) {
+		// switch through commits
+    	if (event == Event::ArrowUp || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
+    	  	if (selected_commit > 0)
+		  		--selected_commit;
+		  	manager.selected_commit = selected_commit;
+    	  	return true;
+    	}
+    	if (event == Event::ArrowDown || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
+    	  	if (selected_commit + 1 < ostree_repo.getCommitListSorted()->size())
+		  		++selected_commit;
+		  	manager.selected_commit = selected_commit;
+    	  	return true;
+    	}
+		return false;
+	});
+
   	int log_size = 50;
   	int footer_size = 1;
   	auto container = manager_renderer;
@@ -73,7 +91,6 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
 	// add shortcuts
-	// TODO distribute element-specific shortcuts
 	auto main_container = CatchEvent(container | border, [&](Event event) {
 		// apply changes
     	if (event == Event::Character('s')) {
@@ -93,13 +110,14 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
     	  	return true;
     	}
 		// switch through commits
-    	if (event == Event::Character('+') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
+		// TODO rethink if this is nercessary (additionally to the log_renderer shortcuts)
+    	if (event == Event::Character('+')) {
     	  	if (selected_commit > 0)
 		  		--selected_commit;
 		  	manager.selected_commit = selected_commit;
     	  	return true;
     	}
-    	if (event == Event::Character('-') || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
+    	if (event == Event::Character('-')) {
     	  	if (selected_commit + 1 < ostree_repo.getCommitListSorted()->size())
 		  		++selected_commit;
 		  	manager.selected_commit = selected_commit;
