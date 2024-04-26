@@ -158,8 +158,7 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
         /* Ignore */
     } else {
         guint n_sigs = ostree_gpg_verify_result_count_all (result);
-        g_print ("Found %u signature%s for commit %s:\n", n_sigs, n_sigs == 1 ? "" : "s", commit.parent.c_str());
-    
+        
         for (guint ii = 0; ii < n_sigs; ii++) {
             // see ostree_gpg_verify_result_describe for reference
             g_autoptr (GVariant) variant = NULL;
@@ -167,13 +166,10 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
             // see ostree_gpg_verify_result_describe_variant for reference
             gint64 timestamp;
             gint64 exp_timestamp;
-            const char *type_string;
             const char *fingerprint;
-            const char *fingerprint_primary;
             const char *pubkey_algo;
             const char *user_name;
             const char *user_email;
-            const char *key_id;
 
             g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_PUBKEY_ALGO_NAME, "&s", &pubkey_algo);
             g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT, "&s", &fingerprint);
@@ -181,15 +177,8 @@ static auto parseCommit(GVariant *variant, std::string branch, std::string hash)
             g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_EXP_TIMESTAMP, "x", &exp_timestamp);
             g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_USER_NAME, "&s", &user_name);
             g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_USER_EMAIL, "&s", &user_email);
-            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_VALID, "b", &valid);
-            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_SIG_EXPIRED, "b", &sig_expired);
-            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXPIRED, "b", &key_expired);
-            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_REVOKED, "b", &key_revoked);
-            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_MISSING, "b", &key_missing);
-            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT_PRIMARY, "&s", &fingerprint_primary);
-            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXP_TIMESTAMP, "x", &key_exp_timestamp);
-            //g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXP_TIMESTAMP_PRIMARY, "x", &key_exp_timestamp_primary);
-        
+            
+            // create signature struct
             Signature sig = {"error","","","","",""};
             sig.pubkey_algorithm = pubkey_algo;
             sig.fingerprint = fingerprint;

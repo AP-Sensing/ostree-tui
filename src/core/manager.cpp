@@ -63,9 +63,9 @@ Component Manager::render() {
 				filler(),
 				commits[selected_commit].signatures.size() > 0 ? text("signatures: ") : text(""),
 				// TODO make dynamic
-				text((commits[selected_commit].signatures.size() > 0 ? "    " + commits[selected_commit].signatures.at(0).fingerprint : "")),
-				text((commits[selected_commit].signatures.size() > 1 ? "    " + commits[selected_commit].signatures.at(1).fingerprint : "")),
-				text((commits[selected_commit].signatures.size() > 2 ? "    " + commits[selected_commit].signatures.at(2).fingerprint : "")),
+				text((commits[selected_commit].signatures.size() > 0 ? "    " + commits[selected_commit].signatures.at(0).pubkey_algorithm + " " + commits[selected_commit].signatures.at(0).fingerprint : "")),
+				text((commits[selected_commit].signatures.size() > 1 ? "    " + commits[selected_commit].signatures.at(1).pubkey_algorithm + " " + commits[selected_commit].signatures.at(1).fingerprint : "")),
+				text((commits[selected_commit].signatures.size() > 2 ? "    " + commits[selected_commit].signatures.at(2).pubkey_algorithm + " " + commits[selected_commit].signatures.at(2).fingerprint : "")),
 				filler(),
 			});
 	    // unify boxes

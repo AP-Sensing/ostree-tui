@@ -75,6 +75,7 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		Elements tree_top_elements;
 		Elements tree_root_elements;
 		Elements tree_bottom_elements;
+		Elements sign_elements;
 		
 		int color_chose_index{2};
 		int branch_index{0};
@@ -107,10 +108,12 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 				}
 				tree_root_elements.push_back(text("  │") | color(branch_color));
 				tree_bottom_elements.push_back(text("  │") | color(branch_color));
+				sign_elements.push_back(text("  │") | color(branch_color));
 			} else {
 				tree_top_elements.push_back(text("   ") | color(branch_color));
 				tree_root_elements.push_back(text("   ") | color(branch_color));
 				tree_bottom_elements.push_back(text("   ") | color(branch_color));
+				sign_elements.push_back(text("   ") | color(branch_color));
 			}
 		}
 
@@ -132,8 +135,7 @@ auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, st
 		comm_elements.push_back(text("   " + commit.date));
 		// signed
 		if (repo.isCommitSigned(commit)) {
-			// todo proper bottom elements
-			tree_elements.push_back(text("todo"));
+			tree_elements.push_back(hbox(std::move(sign_elements)));
 			comm_elements.push_back(text("   signed") | color(Color::Green));
 		}
 		comm_elements.push_back(text(""));
