@@ -110,7 +110,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
     	  	return true;
     	}
 		// switch through commits
-		// TODO rethink if this is nercessary (additionally to the log_renderer shortcuts)
+		// TODO rethink if this is necessary (additionally to the log_renderer shortcuts)
     	if (event == Event::Character('+')) {
     	  	if (selected_commit > 0)
 		  		--selected_commit;

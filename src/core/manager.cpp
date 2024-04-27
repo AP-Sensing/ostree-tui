@@ -41,13 +41,19 @@ Manager::Manager(cpplibostree::OSTreeRepo* repo, Component bb, size_t sc):
 Component Manager::render() {
     return Renderer(branch_boxes, [&] {
 	    // branch filter
-	    std::vector<Element> bfb_elements = {
+	    Elements bfb_elements = {
 				text(L"filter branches") | bold,
 				filler(),
 				branch_boxes->Render() | vscroll_indicator,
 			};
 	    auto branch_filter_box = vbox(bfb_elements);
 	    // selected commit info
+		Elements signatures;
+		for (auto signature : commits[selected_commit].signatures) {
+			signatures.push_back(
+				text("    " + signature.pubkey_algorithm + " " + signature.fingerprint)
+			);
+		}
 	    auto commit_info_box = vbox({
 				text("commit info") | bold,
 				filler(),
@@ -62,10 +68,7 @@ Component Manager::render() {
 				text("checksum:   " + commits[selected_commit].parent),
 				filler(),
 				commits[selected_commit].signatures.size() > 0 ? text("signatures: ") : text(""),
-				// TODO make dynamic
-				text((commits[selected_commit].signatures.size() > 0 ? "    " + commits[selected_commit].signatures.at(0).pubkey_algorithm + " " + commits[selected_commit].signatures.at(0).fingerprint : "")),
-				text((commits[selected_commit].signatures.size() > 1 ? "    " + commits[selected_commit].signatures.at(1).pubkey_algorithm + " " + commits[selected_commit].signatures.at(1).fingerprint : "")),
-				text((commits[selected_commit].signatures.size() > 2 ? "    " + commits[selected_commit].signatures.at(2).pubkey_algorithm + " " + commits[selected_commit].signatures.at(2).fingerprint : "")),
+				vbox(signatures),
 				filler(),
 			});
 	    // unify boxes
