@@ -27,4 +27,8 @@ using namespace ftxui;
  * @param selected_commit selected commit
  * @return std::shared_ptr<Node> 
  */
-std::shared_ptr<Node> commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches = {}, size_t selected_commit = 0);
+std::shared_ptr<Node> commitRender(cpplibostree::OSTreeRepo repo,
+                                std::vector<std::string> visible_commit_map,
+                                std::unordered_map<std::string, bool> visible_branches,
+                                std::unordered_map<std::string, Color> branch_color_map,
+                                size_t selected_commit = 0);

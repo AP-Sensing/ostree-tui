@@ -16,6 +16,7 @@
 #include <string>
 #include <sys/types.h>
 #include <vector>
+#include <unordered_map>
 #include <set>
 // C
 #include <cstdio>
@@ -44,8 +45,9 @@ struct Commit {
     std::string contentChecksum;
     std::string hash;
     std::string date;
-	std::string branch;
-    std::vector<Signature> signatures; // replace with signature
+    // a commit already stores, to which branches it belongs to
+	std::vector<std::string> branches;
+    std::vector<Signature> signatures;
 };
 
 namespace cpplibostree {
@@ -53,7 +55,7 @@ namespace cpplibostree {
     class OSTreeRepo {
     private:
         std::string repo_path;
-        std::vector<Commit> commit_list = {};
+        std::unordered_map<std::string,Commit> commit_list = {}; // map commit hash to commit
         std::vector<std::string> branches = {};
 
     public:
@@ -66,9 +68,8 @@ namespace cpplibostree {
         // Getters
 
             std::string* getRepo();
-            std::vector<Commit>* getCommitList();
-            std::vector<Commit>* getCommitListSorted();
-            std::vector<std::string>* getBranches();
+            std::unordered_map<std::string,Commit> getCommitList();
+            std::vector<std::string> getBranches();
 
         // Methods
 
@@ -77,17 +78,17 @@ namespace cpplibostree {
             /// check if a certain commit is signed
             bool isCommitSigned(const Commit& commit);
             /// parse commits from a ostree log output
-            std::vector<Commit> parseCommitsOfBranch(std::string branch);
+            std::unordered_map<std::string,Commit> parseCommitsOfBranch(std::string branch);
             /// same as parseCommitsOfBranch(), but on all available branches
-            std::vector<Commit> parseCommitsAllBranches();
+            std::unordered_map<std::string,Commit> parseCommitsAllBranches();
             /// get ostree refs
             std::string getBranchesAsString();
-            void setBranches(std::vector<std::string> branches); // TODO replace -> update (don't modify from outside)
+            void setBranches(std::vector<std::string> branches); // TODO separate model and view -> update (don't modify from outside)
     private:
             /// parse a GVarian commit to Commit struct
             Commit parseCommit(GVariant *variant, std::string branch, std::string hash);
             /// parse all commits in a OstreeRepo into a commit vector
-            gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::vector<Commit> *commit_list, std::string branch);
+            gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch);
     };
 
 } // namespace cpplibostree

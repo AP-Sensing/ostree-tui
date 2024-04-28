@@ -19,15 +19,15 @@
 class Manager {
 public:
     // TODO keeping this data copy is very dirty -> refactor
-    cpplibostree::OSTreeRepo* ostree_repo;
+    cpplibostree::OSTreeRepo ostree_repo;
     Component branch_boxes = Container::Vertical({});
     std::string branches;
     std::unordered_map<std::string, bool> branch_visibility_map;
-    std::vector<Commit> commits;
+    std::unordered_map<std::string, Commit> commits;
     size_t selected_commit;
 
 public:
     void init();
-    Manager(cpplibostree::OSTreeRepo* repo, Component bb, size_t sc);
+    Manager(cpplibostree::OSTreeRepo repo, Component bb, size_t sc);
     Component render();
 };

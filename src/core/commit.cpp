@@ -24,97 +24,83 @@
 using namespace ftxui;
 
 
-auto commitRender(cpplibostree::OSTreeRepo repo, std::vector<Commit> commits, std::vector<std::string> branches, size_t selected_commit) -> std::shared_ptr<Node> {
-
-// prepare data
-	// filter commits for excluded branches
-	std::vector<Commit> filteredCommits = {};
-	for(const auto & commit : commits) {
-    	bool valid_branch = false;
-		for(const auto & branch : branches) {
-			if(commit.branch == branch) {
-        		valid_branch = true;
-    		}
-		}
-		if (valid_branch) {
-			filteredCommits.push_back(commit);
-		}
-	}
-	commits = filteredCommits;
+auto commitRender(cpplibostree::OSTreeRepo repo,
+				std::vector<std::string> visible_commit_map,
+				std::unordered_map<std::string, bool>  visible_branches,
+				std::unordered_map<std::string, Color> branch_color_map,
+				size_t selected_commit)
+			-> std::shared_ptr<Node> {
 
 	// check empty commit list
-	if (commits.size() == 0) {
+	if (visible_commit_map.size() == 0) {
 		return color(Color::RedLight, text(" no commits to be shown ") | bold | center);
 	}
 
-	// determine all branches, divide them into 'branch slots' & determine max size
-	std::unordered_map<std::string,size_t> branch_map;
+	// divide all visible branches into 'branch slots' & determine max size
+	// set all branches to not displayed yet
+	std::unordered_map<std::string, size_t> branch_map;
+	std::unordered_map<std::string, bool> used_branches;
 	size_t branch_map_size{0};
-	for (auto commit : commits) {
-		if (! branch_map.count(commit.branch)) {
-			branch_map[commit.branch] = branch_map_size;
+	for (auto branch_pair : visible_branches) {
+		if (branch_pair.second) {
+			branch_map[branch_pair.first] = branch_map_size;
+			used_branches[branch_pair.first] = false;
 			branch_map_size++;
 		}
 	}
 
-	std::vector<bool> used_branches(branch_map_size);
-	for (size_t i=0; i<branch_map.size(); i++) {
-		used_branches[i] = false;
-	}
-
-// render
+	// - RENDER -
 	// left tree, right commits
 	Elements tree_elements;
 	Elements comm_elements;
 
-	std::string marked_string = commits.at(selected_commit).hash;
+	std::string marked_string = repo.getCommitList().at(visible_commit_map.at(selected_commit)).hash;
 
-	for (auto commit : commits) {
+	for (auto visible_commit_index : visible_commit_map) {
+		
+		Commit commit = repo.getCommitList().at(visible_commit_index);
+
+		// TODO properly use all branches
+		std::string relevant_branch = commit.branches.at(0);
+		
 		// render branches
 		Elements tree_branch_elements;
 		Elements tree_top_elements;
 		Elements tree_root_elements;
 		Elements tree_bottom_elements;
 		Elements sign_elements;
-		
-		// TODO make color dependant on branch name (name -> hash -> color index)
-		int color_chose_index{2};
-		int branch_index{0};
 
 		// check if it is first branch usage
-		if (! used_branches.at(branch_map[commit.branch])) {
-			int color_chose_index{2};
+		if (! used_branches.at(relevant_branch)) {
 			for (auto branch : used_branches) {
-				auto branch_color = Color::Palette256(color_chose_index++);
-				if (branch) {
-					tree_branch_elements.push_back(text("  │") | color(branch_color));
+				if (branch.second) {
+					tree_branch_elements.push_back(text("  │") | color(branch_color_map[branch.first]));
 				} else {
-					tree_branch_elements.push_back(text("   ") | color(branch_color));
+					tree_branch_elements.push_back(text("   ") | color(branch_color_map[branch.first]));
 				}
 			}
 			tree_elements.push_back(hbox(std::move(tree_branch_elements)));
-			comm_elements.push_back(text(branches.at(branch_map[commit.branch])) | color(Color::Palette256(branch_map[commit.branch] + 2)));
+			comm_elements.push_back(text(relevant_branch) | color(branch_color_map[relevant_branch]));
 		}
 		// set branch as used
-		used_branches.at(branch_map[commit.branch]) = true;
+		used_branches.at(relevant_branch) = true;
 
+		int branch_index{0};
 		for (auto branch : used_branches) {
-			auto branch_color = Color::Palette256(color_chose_index);
-			color_chose_index = (color_chose_index + 1) % 256;
-			if (branch) {
-				if (branch_index++ == branch_map[commit.branch]) {
-					tree_top_elements.push_back(text("  ☐") | color(branch_color));
+			if (branch.second) {
+				if (branch_index++ == branch_map[relevant_branch]) {
+					tree_top_elements.push_back(text("  ☐") | color(branch_color_map[branch.first]));
 				} else {
-					tree_top_elements.push_back(text("  │") | color(branch_color));
+					tree_top_elements.push_back(text("  │") | color(branch_color_map[branch.first]));
 				}
-				tree_root_elements.push_back(text("  │") | color(branch_color));
-				tree_bottom_elements.push_back(text("  │") | color(branch_color));
-				sign_elements.push_back(text("  │") | color(branch_color));
+				tree_root_elements.push_back(text("  │") | color(branch_color_map[branch.first]));
+				tree_bottom_elements.push_back(text("  │") | color(branch_color_map[branch.first]));
+				sign_elements.push_back(text("  │") | color(branch_color_map[branch.first]));
 			} else {
-				tree_top_elements.push_back(text("   ") | color(branch_color));
-				tree_root_elements.push_back(text("   ") | color(branch_color));
-				tree_bottom_elements.push_back(text("   ") | color(branch_color));
-				sign_elements.push_back(text("   ") | color(branch_color));
+				tree_top_elements.push_back(text("   ") | color(branch_color_map[branch.first]));
+				tree_root_elements.push_back(text("   ") | color(branch_color_map[branch.first]));
+				tree_bottom_elements.push_back(text("   ") | color(branch_color_map[branch.first]));
+				sign_elements.push_back(text("   ") | color(branch_color_map[branch.first]));
 			}
 		}
 

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include <algorithm>
 // C
 #include <cstdio>
@@ -50,26 +51,12 @@ auto OSTreeRepo::getRepo() -> std::string* {
     return &repo_path;
 }
 
-auto OSTreeRepo::getCommitList() -> std::vector<Commit>* {
-    return &commit_list;
+auto OSTreeRepo::getCommitList() -> std::unordered_map<std::string,Commit> {
+    return commit_list;
 }
 
-auto OSTreeRepo::getCommitListSorted() -> std::vector<Commit>* {
-    std::stable_sort(commit_list.begin(), commit_list.end(), [](const Commit& lhs, const Commit& rhs) {
-      return lhs.date.compare(rhs.date) > 0;
-    });
-    std::stable_sort(commit_list.begin(), commit_list.end(), [](const Commit& lhs, const Commit& rhs) {
-      return lhs.parent == rhs.hash;
-    });
-    return &commit_list;
-}
-
-auto OSTreeRepo::getBranches() -> std::vector<std::string>* {
-    return &branches;
-}
-
-auto OSTreeRepo::setBranches(std::vector<std::string> branches) -> void {
-    this->branches = std::move(branches); 
+auto OSTreeRepo::getBranches() -> std::vector<std::string> {
+    return branches;
 }
 
 auto OSTreeRepo::isCommitSigned(const Commit& commit) -> bool {
@@ -99,7 +86,7 @@ static auto formatTimestamp(guint64 timestamp, gboolean local_tz) -> gchar* {
 }
 
 auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string hash) -> Commit {
-    Commit commit = {"error", "", 0, "", "", "", "", "", {}};
+    Commit commit = {"error", "", 0, "", "", "", "", {}, {}};
 
     const gchar *subject;
     const gchar *body;
@@ -136,7 +123,7 @@ auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string 
         commit.body = body;
     }
 
-    commit.branch = branch;
+    commit.branches.push_back(branch);
     commit.hash = hash;
 
     // Signatures ___ refactor into own method
@@ -196,7 +183,7 @@ auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string 
 
 // modified log_commit() from https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
 auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse,
-                        GError **error, std::vector<Commit> *commit_list, std::string branch) -> gboolean {
+                        GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch) -> gboolean {
     GError *local_error = NULL;
 
     g_autoptr (GVariant) variant = NULL;
@@ -204,9 +191,10 @@ auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum,
         return is_recurse && g_error_matches(local_error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
     }
 
-    commit_list->push_back(
+    commit_list->insert({
+        static_cast<std::string>(checksum),
         parseCommit(variant, branch, static_cast<std::string>(checksum))
-    );
+    });
 
     // parent recursion
     g_autofree char *parent = ostree_commit_get_parent(variant);
@@ -217,8 +205,8 @@ auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum,
     return true;
 }
 
-auto OSTreeRepo::parseCommitsOfBranch(std::string branch) -> std::vector<Commit> {
-    auto ret = std::vector<Commit>();
+auto OSTreeRepo::parseCommitsOfBranch(std::string branch) -> std::unordered_map<std::string,Commit> {
+    auto ret = std::unordered_map<std::string,Commit>();
 
     // open repo
     GError *error = NULL;
@@ -240,16 +228,16 @@ auto OSTreeRepo::parseCommitsOfBranch(std::string branch) -> std::vector<Commit>
     return ret;
 }
 
-auto OSTreeRepo::parseCommitsAllBranches() -> std::vector<Commit> {
+auto OSTreeRepo::parseCommitsAllBranches() -> std::unordered_map<std::string,Commit> {
     
     std::istringstream branches_string(getBranchesAsString());
     std::string branch;
 
-    std::vector<Commit> commits_all_branches;
+    std::unordered_map<std::string,Commit> commits_all_branches;
 
     while (branches_string >> branch) {
         auto commits = parseCommitsOfBranch(branch);
-        commits_all_branches.insert(commits_all_branches.end(), commits.begin(), commits.end());
+        commits_all_branches.insert(commits.begin(), commits.end());
     }
 
     return commits_all_branches;
