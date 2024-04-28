@@ -72,7 +72,8 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	};
 	parse_visible_commit_map();
 
-	auto update_data = [&] {
+	auto refresh_repository = [&] {
+		ostree_repo.updateData();
 		parse_visible_commit_map();
 		return true;
 	};
@@ -100,8 +101,6 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	    return manager.render(display_commit);
     });
 
-  	commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map);
-
 	auto log_renderer = Scroller(&selected_commit, Renderer([&] {
 		parse_visible_commit_map();
 		return commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit);
@@ -113,10 +112,10 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	// window specific shortcuts
 	log_renderer = CatchEvent(log_renderer | border, [&](Event event) {
 		// switch through commits
-    	if (event == Event::ArrowUp || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
+    	if (event == Event::ArrowUp || event == Event::Character('k') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
     	  	return prev_commit();
     	}
-    	if (event == Event::ArrowDown || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
+    	if (event == Event::ArrowDown || event == Event::Character('j') || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
     	  	return next_commit();
     	}
 		return false;
@@ -136,7 +135,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
     	  	return true;
     	}
 		// enter rebase mode
-    	if (event == Event::Character('r')) {
+    	if (event == Event::Character('b')) {
     	  	std::cout << "rebase not implemented yet" << std::endl;
     	  	return true;
     	}
@@ -146,14 +145,11 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 			std::cout << "copy not implemented yet" << std::endl;
     	  	return true;
     	}
-		// switch through commits
-		// TODO rethink if this is necessary (additionally to the log_renderer shortcuts)
-    	if (event == Event::Character('+')) {
-    	  	return prev_commit();
-    	}
-    	if (event == Event::Character('-')) {
-    	  	return next_commit();
-    	}
+		// refresh repository
+		if (event == Event::Character('r')) {
+			refresh_repository();
+			return true;
+		}
 		// exit
     	if (event == Event::Character('q') || event == Event::Escape) {
     	  	screen.ExitLoopClosure()();
