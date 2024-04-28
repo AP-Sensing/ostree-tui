@@ -94,8 +94,13 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	};
 
 // - ELEMENTS ---------- ----------
-	//Manager manager = Manager(&ostree_repo, Container::Vertical({}), selected_commit);
-	//auto manager_renderer = manager.render();
+	Manager manager = Manager(ostree_repo, &visible_branches);
+	auto branch_boxes = manager.branch_boxes;
+	auto manager_renderer = Renderer(branch_boxes, [&] {
+		Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
+	    // branch filter
+	    return manager.render(display_commit);
+    });
 
   	commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map);
 
@@ -121,9 +126,8 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 
   	int log_size = 45;
   	int footer_size = 1;
-  	//auto container = manager_renderer;
-  	//container = ResizableSplitLeft(log_renderer, container, &log_size);
-	auto container = log_renderer;
+  	auto container = manager_renderer;
+  	container = ResizableSplitLeft(log_renderer, container, &log_size);
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
 	// add shortcuts
@@ -143,6 +147,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 			// TODO replace with (working) clipboard library
 			//std::string cmd = "gnome-terminal -- bash -c \"echo " + ostree_repo.getCommitList().at(selected_commit).hash + " | xclip -selection clipboard; sleep .01\"";
 			//commandline::exec(cmd.c_str());
+			std::cout << "copy not implemented yet" << std::endl;
     	  	return true;
     	}
 		// switch through commits

@@ -18,16 +18,9 @@
 /// Right postion of main window
 class Manager {
 public:
-    // TODO keeping this data copy is very dirty -> refactor
-    cpplibostree::OSTreeRepo ostree_repo;
     Component branch_boxes = Container::Vertical({});
-    std::string branches;
-    std::unordered_map<std::string, bool> branch_visibility_map;
-    std::unordered_map<std::string, Commit> commits;
-    size_t selected_commit;
 
 public:
-    void init();
-    Manager(cpplibostree::OSTreeRepo repo, Component bb, size_t sc);
-    Component render();
+    Manager(cpplibostree::OSTreeRepo repo, std::unordered_map<std::string, bool> *visible_branches);
+    std::shared_ptr<Node> render(Commit display_commit);
 };
