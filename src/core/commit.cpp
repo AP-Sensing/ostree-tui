@@ -81,14 +81,15 @@ auto commitRender(cpplibostree::OSTreeRepo repo,
 			}
 			tree_elements.push_back(hbox(std::move(tree_branch_elements)));
 			comm_elements.push_back(text(relevant_branch) | color(branch_color_map[relevant_branch]));
+			// set branch as used
+			used_branches.at(relevant_branch) = true;
 		}
-		// set branch as used
-		used_branches.at(relevant_branch) = true;
 
+		// build branches from left to right for this commit
 		int branch_index{0};
 		for (auto branch : used_branches) {
 			if (branch.second) {
-				if (branch_index++ == branch_map[relevant_branch]) {
+				if (branch.first == relevant_branch) {
 					tree_top_elements.push_back(text("  ☐") | color(branch_color_map[branch.first]));
 				} else {
 					tree_top_elements.push_back(text("  │") | color(branch_color_map[branch.first]));
@@ -102,6 +103,7 @@ auto commitRender(cpplibostree::OSTreeRepo repo,
 				tree_bottom_elements.push_back(text("   ") | color(branch_color_map[branch.first]));
 				sign_elements.push_back(text("   ") | color(branch_color_map[branch.first]));
 			}
+			++branch_index;
 		}
 
 		tree_elements.push_back(hbox(std::move(tree_top_elements)));
