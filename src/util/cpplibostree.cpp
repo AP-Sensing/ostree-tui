@@ -14,8 +14,6 @@
 #include <ostree.h>
 #include <glib-2.0/glib.h>
 
-#include "commandline.h"
-
 using namespace cpplibostree;
 
 OSTreeRepo::OSTreeRepo(std::string path):

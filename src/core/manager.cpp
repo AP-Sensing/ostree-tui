@@ -12,7 +12,6 @@
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
 
-#include "../util/commandline.h"
 #include "../util/cpplibostree.h"
 
 using namespace ftxui;

@@ -18,7 +18,6 @@
 #include "ftxui/screen/string.hpp"
 
 #include "commit.h"
-#include "../util/commandline.h"
 #include "../util/cpplibostree.h"
 
 using namespace ftxui;

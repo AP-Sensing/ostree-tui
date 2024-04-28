@@ -9,7 +9,9 @@
 
 #include <cstdio>
 #include <fcntl.h>
- 
+
+//#include "clip.h"
+
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
@@ -24,9 +26,6 @@
 #include "manager.h"
 #include "footer.h"
 
-//#include "clip.h"
-
-#include "../util/commandline.h"
 #include "../util/cpplibostree.h"
 
 
@@ -98,7 +97,6 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 	auto branch_boxes = manager.branch_boxes;
 	auto manager_renderer = Renderer(branch_boxes, [&] {
 		Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
-	    // branch filter
 	    return manager.render(display_commit);
     });
 
@@ -144,9 +142,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
     	}
 		// copy commit id
     	if (event == Event::Character('c')) {
-			// TODO replace with (working) clipboard library
-			//std::string cmd = "gnome-terminal -- bash -c \"echo " + ostree_repo.getCommitList().at(selected_commit).hash + " | xclip -selection clipboard; sleep .01\"";
-			//commandline::exec(cmd.c_str());
+			// TODO add (working) clipboard library
 			std::cout << "copy not implemented yet" << std::endl;
     	  	return true;
     	}
