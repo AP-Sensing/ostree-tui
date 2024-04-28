@@ -110,6 +110,7 @@ auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string 
 
     g_autofree char *contents = ostree_commit_get_content_checksum(variant);
     commit.contentChecksum = contents;
+    commit.timestamp = timestamp;
     commit.date = date;
 
     if (subject[0]) {

@@ -68,7 +68,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 		// sort by date
 		std::sort(visible_commit_view_map.begin(), visible_commit_view_map.end(), [&](std::string a, std::string b) {
 			return ostree_repo.getCommitList().at(a).timestamp
-				 < ostree_repo.getCommitList().at(b).timestamp;
+				 > ostree_repo.getCommitList().at(b).timestamp;
 		});
 	};
 	parse_visible_commit_map();
