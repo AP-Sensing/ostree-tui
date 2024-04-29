@@ -52,6 +52,12 @@ struct Commit {
 
 namespace cpplibostree {
 
+    /**
+     * @brief OSTreeRepo functions as a C++ wrapper around libostree's OstreeRepo. 
+     * The complete OSTree repository gets parsed into a complete commit list in
+     * commit_list and a list of refs in branches.
+     * 
+     */
     class OSTreeRepo {
     private:
         std::string repo_path;
@@ -59,36 +65,98 @@ namespace cpplibostree {
         std::vector<std::string> branches = {};
 
     public:
-        // Class
+        /**
+         * @brief Construct a new OSTreeRepo.
+         * 
+         * @param repo_path Path to the OSTree Repository
+         */
         explicit OSTreeRepo(std::string repo_path);
 
-        // custom methods
-        OstreeRepo* _c(); // ?
+        /**
+         * @brief Return a C-style pointer to a libostree OstreeRepo. This exists, to be
+         * able to access functions, that have not yet been adapted in this C++ wrapper.
+         * 
+         * @return OstreeRepo* 
+         */
+        OstreeRepo* _c();
 
         // Getters
 
-            std::string* getRepo();
-            std::unordered_map<std::string,Commit> getCommitList();
-            std::vector<std::string> getBranches();
+        /// Getter
+        std::string* getRepo();
+        /// Getter
+        std::unordered_map<std::string,Commit> getCommitList();
+        /// Getter
+        std::vector<std::string> getBranches();
 
         // Methods
 
-            /// update all data
-            bool updateData();
-            /// check if a certain commit is signed
-            bool isCommitSigned(const Commit& commit);
-            /// parse commits from a ostree log output
-            std::unordered_map<std::string,Commit> parseCommitsOfBranch(std::string branch);
-            /// same as parseCommitsOfBranch(), but on all available branches
-            std::unordered_map<std::string,Commit> parseCommitsAllBranches();
-            /// get ostree refs
-            std::string getBranchesAsString();
-            void setBranches(std::vector<std::string> branches); // TODO separate model and view -> update (don't modify from outside)
+        /**
+         * @brief Reload the OSTree repository data.
+         * 
+         * @return true if data was changed during the reload
+         * @return false if nothing changed
+         */
+        bool updateData();
+
+        /**
+         * @brief Check if a certain commit is signed. This simply accesses the
+         * size() of commit.signatures.
+         * 
+         * @param commit 
+         * @return true if the commit is signed
+         * @return false if the commit is not signed
+         */
+        bool isCommitSigned(const Commit& commit);
+
+        /**
+         * @brief Parse commits from a ostree log output to a commit_list, mapping
+         * the hashes to commits.
+         * 
+         * @param branch 
+         * @return std::unordered_map<std::string,Commit> 
+         */
+        std::unordered_map<std::string,Commit> parseCommitsOfBranch(std::string branch);
+        
+        /**
+         * @brief Performs parseCommitsOfBranch() on all available branches and
+         * merges all commit lists into one.
+         * 
+         * @return std::unordered_map<std::string,Commit> 
+         */
+        std::unordered_map<std::string,Commit> parseCommitsAllBranches();
+
     private:
-            /// parse a GVarian commit to Commit struct
-            Commit parseCommit(GVariant *variant, std::string branch, std::string hash);
-            /// parse all commits in a OstreeRepo into a commit vector
-            gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch);
+        /**
+         * @brief Get all branches as a single string, separated by spaces.
+         * 
+         * @return std::string All branch names, separated by spaces
+         */
+        std::string getBranchesAsString();
+
+        /**
+         * @brief Parse a libostree GVariant commit to a C++ commit struct.
+         * 
+         * @param variant pointer to GVariant commit
+         * @param branch branch of the commit
+         * @param hash commit hash
+         * @return Commit struct
+         */
+        Commit parseCommit(GVariant *variant, std::string branch, std::string hash);
+        
+        /**
+         * @brief Parse all commits in a OstreeRepo into a commit vector.
+         * 
+         * @param repo pointer to libostree Ostree repository
+         * @param checksum checksum of first commit
+         * @param is_recurse !Do not use!, or set to false. Used only for recursion.
+         * @param error gets set, if an error occurred during parsing
+         * @param commit_list commit list to parse the commits into
+         * @param branch branch to read the commit from
+         * @return true if parsing was successful
+         * @return false if an error occurred during parsing
+         */
+        gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse = false, GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch);
     };
 
 } // namespace cpplibostree

@@ -222,7 +222,7 @@ auto OSTreeRepo::parseCommitsOfBranch(std::string branch) -> std::unordered_map<
         return ret;
     }
 
-    parseCommitsRecursive(repo, checksum, false, &error, &ret, branch);
+    parseCommitsRecursive(repo, checksum, &error, &ret, branch);
 
     return ret;
 }
