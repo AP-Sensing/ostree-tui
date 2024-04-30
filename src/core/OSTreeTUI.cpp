@@ -103,7 +103,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 
 	auto log_renderer = Scroller(&selected_commit, Renderer([&] {
 		parse_visible_commit_map();
-		return commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit);
+		return commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit, GRAPHSTYLE::DEFAULT);
 	}));
 
   	auto footer_renderer = footer::footerRender();

@@ -156,7 +156,7 @@ namespace cpplibostree {
          * @return true if parsing was successful
          * @return false if an error occurred during parsing
          */
-        gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse = false, GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch);
+        gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse, GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch);
     };
 
 } // namespace cpplibostree
