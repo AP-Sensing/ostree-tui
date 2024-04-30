@@ -181,8 +181,8 @@ auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string 
 }
 
 // modified log_commit() from https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
-auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse,
-                        GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch) -> gboolean {
+auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
+                std::unordered_map<std::string,Commit> *commit_list, std::string branch, gboolean is_recurse) -> gboolean {
     GError *local_error = NULL;
 
     g_autoptr (GVariant) variant = NULL;
@@ -197,7 +197,7 @@ auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum,
 
     // parent recursion
     g_autofree char *parent = ostree_commit_get_parent(variant);
-    if (parent && !parseCommitsRecursive(repo, parent, true, error, commit_list, branch)) {
+    if (parent && !parseCommitsRecursive(repo, parent, error, commit_list, branch, true)) {
         return false;
     }
     

@@ -149,14 +149,14 @@ namespace cpplibostree {
          * 
          * @param repo pointer to libostree Ostree repository
          * @param checksum checksum of first commit
-         * @param is_recurse !Do not use!, or set to false. Used only for recursion.
          * @param error gets set, if an error occurred during parsing
          * @param commit_list commit list to parse the commits into
          * @param branch branch to read the commit from
+         * @param is_recurse !Do not use!, or set to false. Used only for recursion.
          * @return true if parsing was successful
          * @return false if an error occurred during parsing
          */
-        gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, gboolean is_recurse = false, GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch);
+        gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch, gboolean is_recurse = false);
     };
 
 } // namespace cpplibostree
