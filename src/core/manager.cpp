@@ -24,14 +24,17 @@ Manager::Manager(cpplibostree::OSTreeRepo repo, std::unordered_map<std::string, 
 	}
 }
 
-std::shared_ptr<Node> Manager::render(Commit display_commit) {
+std::shared_ptr<Node> Manager::branchBoxRender(){
 	// branch filter
 	Elements bfb_elements = {
 			text(L"filter branches") | bold,
 			filler(),
 			branch_boxes->Render() | vscroll_indicator,
 		};
-	auto branch_filter_box = vbox(bfb_elements);
+	return vbox(bfb_elements);
+}
+
+std::shared_ptr<Node> Manager::render(Commit display_commit) {
 	// selected commit info
 	Elements signatures;
 	for (auto signature : display_commit.signatures) {
@@ -39,7 +42,7 @@ std::shared_ptr<Node> Manager::render(Commit display_commit) {
 			text("    " + signature.pubkey_algorithm + " " + signature.fingerprint)
 		);
 	}
-	auto commit_info_box = vbox({
+	return vbox({
 			text("commit info") | bold,
 			filler(),
 			text("hash:       " + display_commit.hash),
@@ -55,11 +58,5 @@ std::shared_ptr<Node> Manager::render(Commit display_commit) {
 			display_commit.signatures.size() > 0 ? text("signatures: ") : text(""),
 			vbox(signatures),
 			filler(),
-		});
-	// unify boxes
-	return vbox({
-			branch_filter_box,
-			separator(),
-			commit_info_box
 		});
 }

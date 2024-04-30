@@ -22,5 +22,7 @@ public:
 
 public:
     Manager(cpplibostree::OSTreeRepo repo, std::unordered_map<std::string, bool> *visible_branches);
+    
+    std::shared_ptr<Node> branchBoxRender();
     std::shared_ptr<Node> render(Commit display_commit);
 };
