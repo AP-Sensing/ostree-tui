@@ -1,9 +1,17 @@
 cmake_minimum_required(VERSION 3.27)
-
-file(GLOB_RECURSE ostree_sources *.cpp *.h)
+                
 set(ostree-tui_include_dirs "${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_library(ostree-tui_core STATIC ${ostree_sources})
+add_library(ostree-tui_core commit.cpp  
+                            commit.hpp
+                            footer.cpp
+                            footer.hpp
+                            manager.cpp
+                            manager.hpp
+                            OSTreeTUI.cpp
+                            OSTreeTUI.hpp
+                            scroller.cpp
+                            scroller.hpp)
 
 target_link_libraries(ostree-tui_core
   PRIVATE clip

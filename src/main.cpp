@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "core/OSTreeTUI.h"
+#include "core/OSTreeTUI.hpp"
 
 
 int main(int argc, const char** argv) {

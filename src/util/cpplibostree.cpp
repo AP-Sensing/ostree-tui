@@ -1,4 +1,4 @@
-#include "cpplibostree.h"
+#include "cpplibostree.hpp"
 
 // C++
 #include <cstdlib>

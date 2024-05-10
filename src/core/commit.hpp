@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "../util/cpplibostree.h"
+#include "../util/cpplibostree.hpp"
 
 namespace CommitRender {
     /**

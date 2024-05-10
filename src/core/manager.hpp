@@ -11,8 +11,8 @@
 
 #include "ftxui/component/component.hpp"  // for Component
 
-#include "../util/cpplibostree.h"
-#include "commit.h"
+#include "../util/cpplibostree.hpp"
+#include "commit.hpp"
 
 /// Right postion of main window
 class Manager {

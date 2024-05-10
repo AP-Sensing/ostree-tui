@@ -1,4 +1,4 @@
-#include "OSTreeTUI.h"
+#include "OSTreeTUI.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -9,19 +9,19 @@
 
 #include <fcntl.h>
 
-//#include "clip.h"
+//#include "clip.hpp"
 
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 
-#include "scroller.h"
+#include "scroller.hpp"
 
-#include "footer.h"
-#include "manager.h"
+#include "footer.hpp"
+#include "manager.hpp"
 
-#include "../util/cpplibostree.h"
+#include "../util/cpplibostree.hpp"
 
 
 int OSTreeTUI::main(const std::string& repo) {

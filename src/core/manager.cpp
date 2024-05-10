@@ -1,11 +1,11 @@
-#include "manager.h"
+#include "manager.hpp"
 
 #include <cstdio>
 #include <string>
 
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 
-#include "../util/cpplibostree.h"
+#include "../util/cpplibostree.hpp"
 
 
 Manager::Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches) {

@@ -1,4 +1,5 @@
-#include <algorithm>
+#include "commit.hpp"
+
 #include <cstdio>
 #include <string>
 #include <unordered_map>
@@ -6,8 +7,7 @@
 
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 
-#include "commit.h"
-#include "../util/cpplibostree.h"
+#include "../util/cpplibostree.hpp"
 
 namespace CommitRender {
 

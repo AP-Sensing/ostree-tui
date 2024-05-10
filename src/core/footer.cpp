@@ -6,7 +6,7 @@
 #include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/string.hpp"
 
-#include "footer.h"
+#include "footer.hpp"
 
 ftxui::Component footer::footerRender() {
 	using namespace ftxui;

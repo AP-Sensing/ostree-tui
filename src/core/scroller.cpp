@@ -1,4 +1,4 @@
-#include "scroller.h"
+#include "scroller.hpp"
 
 #include <algorithm>                           // for max, min
 #include <ftxui/component/component_base.hpp>  // for Component, ComponentBase

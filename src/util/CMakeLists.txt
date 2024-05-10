@@ -7,9 +7,8 @@ pkg_check_modules(glib-2.0 REQUIRED IMPORTED_TARGET glib-2.0)
 pkg_check_modules(gio-2.0 REQUIRED IMPORTED_TARGET gio-2.0)
 pkg_check_modules(gobject-2.0 REQUIRED IMPORTED_TARGET gobject-2.0)
 
-file(GLOB_RECURSE util_sources *.cpp *.h)
-
-add_library(util STATIC ${util_sources})
+add_library(util cpplibostree.cpp 
+                 cpplibostree.hpp)
 
 target_include_directories(util
     PUBLIC
