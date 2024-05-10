@@ -32,6 +32,34 @@ if(NOT clip_POPULATED)
   add_subdirectory(${clip_SOURCE_DIR} ${clip_BINARY_DIR})
 endif()
 
+# OSTree ______________________________________________________
+include(ExternalProject)
+
+ExternalProject_Add(ostree_build GIT_REPOSITORY https://github.com/ostreedev/ostree.git
+                                  GIT_TAG v2024.5
+                                  PATCH_COMMAND cd "<SOURCE_DIR>" && env NOCONFIGURE=1 ./autogen.sh
+                                  CONFIGURE_COMMAND cd "<SOURCE_DIR>" && ./configure --enable-man=off
+                                  BUILD_COMMAND cd "<SOURCE_DIR>" && make -j 10
+                                  CONFIGURE_HANDLED_BY_BUILD ON
+                                  INSTALL_COMMAND ""
+                                  BUILD_IN_SOURCE OFF
+                                  UPDATE_DISCONNECTED ON
+                                  COMMENT "Building OSTree"
+                                  BUILD_BYPRODUCTS "<SOURCE_DIR>/.libs/libostree-1.so")
+
+add_library(libostree SHARED IMPORTED)
+set(SHUMATE_LIBRARIES "libostree")
+add_dependencies(libostree ostree_build)
+
+ExternalProject_Get_Property(ostree_build SOURCE_DIR)
+set(OSTREE_LIB "${SOURCE_DIR}/.libs/libostree-1.so")
+set_target_properties(libostree PROPERTIES IMPORTED_LOCATION ${OSTREE_LIB})
+
+set(OSTREE_INCLUDE_DIRS "${SOURCE_DIR}/src/libostree")
+# Fix for ExternalProject_Add only cloning during build not configure
+file(MAKE_DIRECTORY ${OSTREE_INCLUDE_DIRS})
+target_include_directories(libostree INTERFACE ${OSTREE_INCLUDE_DIRS})
+
 # Project _____________________________________________________
 set(PROJECT_NAME "ostree-tui")
 set(PROJECT_DESCRIPTION "Terminal User Interface for ostree.")

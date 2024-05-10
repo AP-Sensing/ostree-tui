@@ -48,7 +48,7 @@ cd ostree-tui
 mkdir build
 cd build
 cmake ..
-cmake --build .
+cmake --build . --parallel
 # The binary will be located in `./bin/ostree-tui`.
 # To install, use `make install DESTDIR=<target_destination>`
 ```

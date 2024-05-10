@@ -24,7 +24,7 @@
 #include <fcntl.h>
 // external
 #include <glib-2.0/glib.h>
-#include <ostree-1/ostree.h>
+#include <ostree.h>
 
 struct Signature {
     std::string pubkey_algorithm;
