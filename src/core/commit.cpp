@@ -20,15 +20,15 @@
 #include "commit.h"
 #include "../util/cpplibostree.h"
 
-using namespace ftxui;
-
-
 auto commitRender(cpplibostree::OSTreeRepo repo,
 				std::vector<std::string> visible_commit_map,
 				std::unordered_map<std::string, bool>  visible_branches,
-				std::unordered_map<std::string, Color> branch_color_map,
+				std::unordered_map<std::string, ftxui::Color> branch_color_map,
 				size_t selected_commit)
-			-> std::shared_ptr<Node> {
+			-> ftxui::Element {
+
+	using namespace ftxui;
+
 
 	// check empty commit list
 	if (visible_commit_map.size() == 0) {

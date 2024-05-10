@@ -14,7 +14,7 @@
 #include <ostree.h>
 #include <glib-2.0/glib.h>
 
-using namespace cpplibostree;
+namespace cpplibostree {
 
 OSTreeRepo::OSTreeRepo(std::string path):
         repo_path(std::move(path)), 
@@ -40,8 +40,8 @@ auto OSTreeRepo::updateData() -> bool {
 
 auto OSTreeRepo::_c() -> OstreeRepo* {
     // open repo
-    GError *error = NULL;
-    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), NULL, &error);
+    GError *error = nullptr;
+    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
     return repo;
 }
 
@@ -67,8 +67,8 @@ static auto formatTimestamp(guint64 timestamp, gboolean local_tz) -> gchar* {
     gchar *str;
 
     dt = g_date_time_new_from_unix_utc (timestamp);
-    if (dt == NULL) {
-        return NULL;
+    if (dt == nullptr) {
+        return nullptr;
     }
 
     if (local_tz) {
@@ -89,13 +89,13 @@ auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string 
     const gchar *subject;
     const gchar *body;
     guint64 timestamp;
-    g_autofree char *parent = NULL;
-    g_autofree char *date = NULL;
-    g_autofree char *version = NULL;
-    //g_autoptr (GError) local_error = NULL;
+    g_autofree char *parent = nullptr;
+    g_autofree char *date = nullptr;
+    g_autofree char *version = nullptr;
+    //g_autoptr (GError) local_error = nullptr;
 
     // see OSTREE_COMMIT_GVARIANT_FORMAT
-    g_variant_get(variant, "(a{sv}aya(say)&s&stayay)", NULL, NULL, NULL, &subject, &body, &timestamp, NULL, NULL);
+    g_variant_get(variant, "(a{sv}aya(say)&s&stayay)", nullptr, nullptr, nullptr, &subject, &body, &timestamp, nullptr, nullptr);
 
     timestamp = GUINT64_FROM_BE(timestamp);
     date = formatTimestamp(timestamp, FALSE);
@@ -127,26 +127,26 @@ auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string 
 
     // Signatures ___ refactor into own method
     // open repo
-    GError *error = NULL;
-    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), NULL, &error);
-    if (repo == NULL) {
+    GError *error = nullptr;
+    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
+    if (repo == nullptr) {
         g_printerr("Error opening repository: %s\n", error->message);
         g_error_free(error);
     }
     // see ostree print_object for reference
-    g_autoptr (OstreeGpgVerifyResult) result = NULL;
-    g_autoptr (GError) local_error = NULL;
-    result = ostree_repo_verify_commit_ext (repo, commit.parent.c_str(), NULL, NULL, NULL,
+    g_autoptr (OstreeGpgVerifyResult) result = nullptr;
+    g_autoptr (GError) local_error = nullptr;
+    result = ostree_repo_verify_commit_ext (repo, commit.parent.c_str(), nullptr, nullptr, nullptr,
                                                   &local_error);
     if (g_error_matches (local_error, OSTREE_GPG_ERROR, OSTREE_GPG_ERROR_NO_SIGNATURE)) {
         /* Ignore */
-    } else if (local_error != NULL) {
+    } else if (local_error != nullptr) {
         /* Ignore */
     } else {
         guint n_sigs = ostree_gpg_verify_result_count_all (result);
         // parse all found signatures
         for (guint ii = 0; ii < n_sigs; ii++) {
-            g_autoptr (GVariant) variant = NULL;
+            g_autoptr (GVariant) variant = nullptr;
             variant = ostree_gpg_verify_result_get_all (result, ii);
             // see ostree_gpg_verify_result_describe_variant for reference
             gint64 timestamp;
@@ -183,9 +183,9 @@ auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string 
 // modified log_commit() from https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
 auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
                 std::unordered_map<std::string,Commit> *commit_list, std::string branch, gboolean is_recurse) -> gboolean {
-    GError *local_error = NULL;
+    GError *local_error = nullptr;
 
-    g_autoptr (GVariant) variant = NULL;
+    g_autoptr (GVariant) variant = nullptr;
     if (!ostree_repo_load_variant(repo, OSTREE_OBJECT_TYPE_COMMIT, checksum, &variant, &local_error)) {
         return is_recurse && g_error_matches(local_error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
     }
@@ -208,16 +208,16 @@ auto OSTreeRepo::parseCommitsOfBranch(std::string branch) -> std::unordered_map<
     auto ret = std::unordered_map<std::string,Commit>();
 
     // open repo
-    GError *error = NULL;
-    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), NULL, &error);
-    if (repo == NULL) {
+    GError *error = nullptr;
+    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
+    if (repo == nullptr) {
         g_printerr("Error opening repository: %s\n", error->message);
         g_error_free(error);
         return ret;
     }
 
     // recursive commit log
-    g_autofree char *checksum = NULL;
+    g_autofree char *checksum = nullptr;
     if (!ostree_repo_resolve_rev(repo, branch.c_str(), false, &checksum, &error)) {
         return ret;
     }
@@ -246,18 +246,18 @@ auto OSTreeRepo::getBranchesAsString() -> std::string {
     std::string branches_str = "";
 
     // open repo
-    GError *error = NULL;
-    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), NULL, &error);
+    GError *error = nullptr;
+    OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
 
-    if (repo == NULL) {
+    if (repo == nullptr) {
         g_printerr("Error opening repository: %s\n", error->message);
         g_error_free(error);
         return "";
     }
 
     // get a list of refs
-    GHashTable *refs_hash = NULL;
-    gboolean result = ostree_repo_list_refs_ext(repo, NULL, &refs_hash, OSTREE_REPO_LIST_REFS_EXT_NONE, NULL, &error);
+    GHashTable *refs_hash = nullptr;
+    gboolean result = ostree_repo_list_refs_ext(repo, nullptr, &refs_hash, OSTREE_REPO_LIST_REFS_EXT_NONE, nullptr, &error);
     if (!result) {
         g_printerr("Error listing refs: %s\n", error->message);
         g_error_free(error);
@@ -280,3 +280,5 @@ auto OSTreeRepo::getBranchesAsString() -> std::string {
 
     return branches_str;
 }
+
+} // namespace cpplibostree

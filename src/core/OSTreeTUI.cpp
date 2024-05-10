@@ -1,36 +1,32 @@
 #include "OSTreeTUI.h"
 
+#include <algorithm>
 #include <cstddef>
-#include <iostream>
 #include <cstdio>
-#include <sstream>
+#include <iostream>
 #include <string>
 #include <unordered_map>
-#include <algorithm>
 
-#include <cstdio>
 #include <fcntl.h>
 
 //#include "clip.h"
 
-#include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
-#include "ftxui/screen/screen.hpp"
-#include "ftxui/screen/string.hpp"
 
 #include "scroller.h"
 
-#include "commit.h"
-#include "manager.h"
 #include "footer.h"
+#include "manager.h"
 
 #include "../util/cpplibostree.h"
 
 
-auto OSTreeTUI::main(const std::string& repo) -> int {
+int OSTreeTUI::main(const std::string& repo) {
+	using namespace ftxui;
+
 	std::cout << "OSTree TUI on '" << repo << "'";
 
 // - STATES -
@@ -66,7 +62,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
 			}
 		}
 		// sort by date
-		std::sort(visible_commit_view_map.begin(), visible_commit_view_map.end(), [&](std::string a, std::string b) {
+		std::sort(visible_commit_view_map.begin(), visible_commit_view_map.end(), [&](const std::string& a, const std::string& b) {
 			return ostree_repo.getCommitList().at(a).timestamp
 				 > ostree_repo.getCommitList().at(b).timestamp;
 		});
@@ -142,7 +138,7 @@ auto OSTreeTUI::main(const std::string& repo) -> int {
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
 	// add shortcuts
-	auto main_container = CatchEvent(container | border, [&](Event event) {
+	auto main_container = CatchEvent(container | border, [&](const Event& event) {
 		// apply changes
     	if (event == Event::Character('s')) {
     	  	std::cout << "apply not implemented yet" << std::endl;

@@ -16,19 +16,16 @@
 
 #include "../util/cpplibostree.h"
 
-using namespace ftxui;
-
-
 /**
  * @brief create a Renderer for the commit section
  * 
  * @param repo ostree repository
  * @param branches branches to include
  * @param selected_commit selected commit
- * @return std::shared_ptr<Node> 
+ * @return Element 
  */
-std::shared_ptr<Node> commitRender(cpplibostree::OSTreeRepo repo,
+ftxui::Element commitRender(cpplibostree::OSTreeRepo repo,
                                 std::vector<std::string> visible_commit_map,
                                 std::unordered_map<std::string, bool> visible_branches,
-                                std::unordered_map<std::string, Color> branch_color_map,
+                                std::unordered_map<std::string, ftxui::Color> branch_color_map,
                                 size_t selected_commit = 0);

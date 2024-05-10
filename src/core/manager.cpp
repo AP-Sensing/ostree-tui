@@ -14,17 +14,19 @@
 
 #include "../util/cpplibostree.h"
 
-using namespace ftxui;
-
 
 Manager::Manager(cpplibostree::OSTreeRepo repo, std::unordered_map<std::string, bool> *visible_branches) {
-    // branch visibility
+    using namespace ftxui;
+
+	// branch visibility
 	for (auto branch : repo.getBranches()) {
 		branch_boxes->Add(Checkbox(branch, &(visible_branches->at(branch))));
 	}
 }
 
-std::shared_ptr<Node> Manager::branchBoxRender(){
+ftxui::Element Manager::branchBoxRender(){
+	using namespace ftxui;
+	
 	// branch filter
 	Elements bfb_elements = {
 			text(L"filter branches") | bold,
@@ -34,7 +36,9 @@ std::shared_ptr<Node> Manager::branchBoxRender(){
 	return vbox(bfb_elements);
 }
 
-std::shared_ptr<Node> Manager::render(Commit display_commit) {
+ftxui::Element Manager::render(Commit display_commit) {
+	using namespace ftxui;
+	
 	// selected commit info
 	Elements signatures;
 	for (auto signature : display_commit.signatures) {

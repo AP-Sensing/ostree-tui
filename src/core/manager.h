@@ -18,11 +18,11 @@
 /// Right postion of main window
 class Manager {
 public:
-    Component branch_boxes = Container::Vertical({});
+    ftxui::Component branch_boxes = ftxui::Container::Vertical({});
 
 public:
     Manager(cpplibostree::OSTreeRepo repo, std::unordered_map<std::string, bool> *visible_branches);
     
-    std::shared_ptr<Node> branchBoxRender();
-    std::shared_ptr<Node> render(Commit display_commit);
+    ftxui::Element branchBoxRender();
+    ftxui::Element render(Commit display_commit);
 };
