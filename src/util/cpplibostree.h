@@ -15,15 +15,14 @@
 // C++
 #include <string>
 #include <sys/types.h>
-#include <vector>
 #include <unordered_map>
-#include <set>
+#include <vector>
 // C
-#include <cstdio>
 #include <cerrno>
+#include <cstdio>
 #include <fcntl.h>
 // external
-#include <glib-2.0/glib.h>
+#include <glib.h>
 #include <ostree.h>
 
 
@@ -36,7 +35,7 @@ namespace cpplibostree {
         std::string expire_timestamp;
         std::string username;
         std::string usermail;
-    };
+    } __attribute__((aligned(128)));
 
     struct Commit {
         // GVariant
@@ -62,8 +61,8 @@ namespace cpplibostree {
     class OSTreeRepo {
     private:
         std::string repo_path;
-        std::unordered_map<std::string,Commit> commit_list = {}; // map commit hash to commit
-        std::vector<std::string> branches = {};
+        std::unordered_map<std::string,Commit> commit_list; // map commit hash to commit
+        std::vector<std::string> branches;
 
     public:
         /**
@@ -84,7 +83,7 @@ namespace cpplibostree {
         // Getters
 
         /// Getter
-        std::string* getRepo();
+        std::string* getRepoPath();
         /// Getter
         std::unordered_map<std::string,Commit> getCommitList();
         /// Getter
@@ -108,7 +107,7 @@ namespace cpplibostree {
          * @return true if the commit is signed
          * @return false if the commit is not signed
          */
-        bool isCommitSigned(const Commit& commit);
+        static bool isCommitSigned(const Commit& commit);
 
         /**
          * @brief Parse commits from a ostree log output to a commit_list, mapping
@@ -117,7 +116,7 @@ namespace cpplibostree {
          * @param branch 
          * @return std::unordered_map<std::string,Commit> 
          */
-        std::unordered_map<std::string,Commit> parseCommitsOfBranch(std::string branch);
+        std::unordered_map<std::string,Commit> parseCommitsOfBranch(const std::string& branch);
         
         /**
          * @brief Performs parseCommitsOfBranch() on all available branches and
@@ -143,7 +142,7 @@ namespace cpplibostree {
          * @param hash commit hash
          * @return Commit struct
          */
-        Commit parseCommit(GVariant *variant, std::string branch, std::string hash);
+        Commit parseCommit(GVariant *variant, const std::string& branch, const std::string& hash);
         
         /**
          * @brief Parse all commits in a OstreeRepo into a commit vector.
@@ -157,7 +156,9 @@ namespace cpplibostree {
          * @return true if parsing was successful
          * @return false if an error occurred during parsing
          */
-        gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error, std::unordered_map<std::string,Commit> *commit_list, std::string branch, gboolean is_recurse = false);
+        gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
+                                        std::unordered_map<std::string,Commit> *commit_list,
+                                        const std::string& branch, gboolean is_recurse = false);
     };
 
 } // namespace cpplibostree

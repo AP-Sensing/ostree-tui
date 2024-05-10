@@ -2,26 +2,27 @@
 
 // C++
 #include <cstdlib>
-#include <string>
 #include <sstream>
-#include <vector>
+#include <string>
 #include <unordered_map>
-#include <algorithm>
+#include <utility>
+#include <vector>
 // C
 #include <cstdio>
 #include <fcntl.h>
-#include <ostree.h>
 #include <glib-2.0/glib.h>
+#include <ostree.h>
 
 namespace cpplibostree {
 
     OSTreeRepo::OSTreeRepo(std::string path):
             repo_path(std::move(path)), 
+            commit_list({}),
             branches({}) {
         updateData();
     }
 
-    auto OSTreeRepo::updateData() -> bool {
+    bool OSTreeRepo::updateData() {
 
         std::string branchString = getBranchesAsString();
         std::stringstream bss(branchString);
@@ -37,33 +38,38 @@ namespace cpplibostree {
 
     // METHODS
 
-    auto OSTreeRepo::_c() -> OstreeRepo* {
+    OstreeRepo* OSTreeRepo::_c() {
         // open repo
-        GError *error = nullptr;
+        GError *error{nullptr};
         OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
+        if (repo == nullptr) {
+            g_printerr("Error opening repository: %s\n", error->message);
+            g_error_free(error);
+            return nullptr;
+        }
         return repo;
     }
 
-    auto OSTreeRepo::getRepo() -> std::string* {
+    std::string* OSTreeRepo::getRepoPath() {
         return &repo_path;
     }
 
-    auto OSTreeRepo::getCommitList() -> std::unordered_map<std::string,Commit> {
+    std::unordered_map<std::string,Commit> OSTreeRepo::getCommitList() {
         return commit_list;
     }
 
-    auto OSTreeRepo::getBranches() -> std::vector<std::string> {
+    std::vector<std::string> OSTreeRepo::getBranches() {
         return branches;
     }
 
-    auto OSTreeRepo::isCommitSigned(const Commit& commit) -> bool {
+    bool OSTreeRepo::isCommitSigned(const Commit& commit) {
         return commit.signatures.size() > 0;
     }
 
     // source: https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-dump.c#L52
-    static auto formatTimestamp(guint64 timestamp, gboolean local_tz) -> gchar* {
-        GDateTime *dt;
-        gchar *str;
+    static gchar* formatTimestamp(gint64 timestamp, gboolean local_tz) {
+        GDateTime *dt{nullptr};
+        gchar *str{nullptr};
 
         dt = g_date_time_new_from_unix_utc (timestamp);
         if (dt == nullptr) {
@@ -82,24 +88,24 @@ namespace cpplibostree {
         return str;
     }
 
-    auto OSTreeRepo::parseCommit(GVariant *variant, std::string branch, std::string hash) -> Commit {
+    Commit OSTreeRepo::parseCommit(GVariant *variant, const std::string& branch, const std::string& hash) {
         Commit commit = {"error", "", 0, "", "", "", "", {}, {}};
 
-        const gchar *subject;
-        const gchar *body;
-        guint64 timestamp;
-        g_autofree char *parent = nullptr;
-        g_autofree char *date = nullptr;
-        g_autofree char *version = nullptr;
-        //g_autoptr (GError) local_error = nullptr;
+        const gchar *subject    {nullptr};
+        const gchar *body       {nullptr};
+        guint64 timestamp       {0};
+        g_autofree char *parent {nullptr};
+        g_autofree char *date   {nullptr};
+        g_autofree char *version{nullptr};
 
         // see OSTREE_COMMIT_GVARIANT_FORMAT
         g_variant_get(variant, "(a{sv}aya(say)&s&stayay)", nullptr, nullptr, nullptr, &subject, &body, &timestamp, nullptr, nullptr);
 
         timestamp = GUINT64_FROM_BE(timestamp);
-        date = formatTimestamp(timestamp, FALSE);
+        date = formatTimestamp(static_cast<gint64>(timestamp), FALSE);
 
-        if ((parent = ostree_commit_get_parent(variant))) {
+        parent = ostree_commit_get_parent(variant);
+        if (parent) {
             commit.parent = parent;
         } else {
             commit.parent = "(no parent)";
@@ -137,9 +143,7 @@ namespace cpplibostree {
         g_autoptr (GError) local_error = nullptr;
         result = ostree_repo_verify_commit_ext (repo, commit.parent.c_str(), nullptr, nullptr, nullptr,
                                                       &local_error);
-        if (g_error_matches (local_error, OSTREE_GPG_ERROR, OSTREE_GPG_ERROR_NO_SIGNATURE)) {
-            /* Ignore */
-        } else if (local_error != nullptr) {
+        if (g_error_matches (local_error, OSTREE_GPG_ERROR, OSTREE_GPG_ERROR_NO_SIGNATURE) || local_error != nullptr) {
             /* Ignore */
         } else {
             guint n_sigs = ostree_gpg_verify_result_count_all (result);
@@ -148,12 +152,12 @@ namespace cpplibostree {
                 g_autoptr (GVariant) variant = nullptr;
                 variant = ostree_gpg_verify_result_get_all (result, ii);
                 // see ostree_gpg_verify_result_describe_variant for reference
-                gint64 timestamp;
-                gint64 exp_timestamp;
-                const char *fingerprint;
-                const char *pubkey_algo;
-                const char *user_name;
-                const char *user_email;
+                gint64 timestamp        {0};
+                gint64 exp_timestamp    {0};
+                const char *fingerprint {nullptr};
+                const char *pubkey_algo {nullptr};
+                const char *user_name   {nullptr};
+                const char *user_email  {nullptr};
 
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_PUBKEY_ALGO_NAME, "&s", &pubkey_algo);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT, "&s", &fingerprint);
@@ -180,9 +184,9 @@ namespace cpplibostree {
     }
 
     // modified log_commit() from https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
-    auto OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
-                    std::unordered_map<std::string,Commit> *commit_list, std::string branch, gboolean is_recurse) -> gboolean {
-        GError *local_error = nullptr;
+    gboolean OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
+                    std::unordered_map<std::string,Commit> *commit_list, const std::string& branch, gboolean is_recurse) {
+        GError *local_error{nullptr};
 
         g_autoptr (GVariant) variant = nullptr;
         if (!ostree_repo_load_variant(repo, OSTREE_OBJECT_TYPE_COMMIT, checksum, &variant, &local_error)) {
@@ -196,14 +200,11 @@ namespace cpplibostree {
 
         // parent recursion
         g_autofree char *parent = ostree_commit_get_parent(variant);
-        if (parent && !parseCommitsRecursive(repo, parent, error, commit_list, branch, true)) {
-            return false;
-        }
 
-        return true;
+        return !(parent && !parseCommitsRecursive(repo, parent, error, commit_list, branch, true));
     }
 
-    auto OSTreeRepo::parseCommitsOfBranch(std::string branch) -> std::unordered_map<std::string,Commit> {
+    std::unordered_map<std::string,Commit> OSTreeRepo::parseCommitsOfBranch(const std::string& branch) {
         auto ret = std::unordered_map<std::string,Commit>();
 
         // open repo
@@ -226,7 +227,7 @@ namespace cpplibostree {
         return ret;
     }
 
-    auto OSTreeRepo::parseCommitsAllBranches() -> std::unordered_map<std::string,Commit> {
+    std::unordered_map<std::string,Commit> OSTreeRepo::parseCommitsAllBranches() {
 
         std::istringstream branches_string(getBranchesAsString());
         std::string branch;
@@ -241,11 +242,11 @@ namespace cpplibostree {
         return commits_all_branches;
     }
 
-    auto OSTreeRepo::getBranchesAsString() -> std::string {
-        std::string branches_str = "";
+    std::string OSTreeRepo::getBranchesAsString() {
+        std::string branches_str;
 
         // open repo
-        GError *error = nullptr;
+        GError *error {nullptr};
         OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
 
         if (repo == nullptr) {
@@ -255,7 +256,7 @@ namespace cpplibostree {
         }
 
         // get a list of refs
-        GHashTable *refs_hash = nullptr;
+        GHashTable *refs_hash {nullptr};
         gboolean result = ostree_repo_list_refs_ext(repo, nullptr, &refs_hash, OSTREE_REPO_LIST_REFS_EXT_NONE, nullptr, &error);
         if (!result) {
             g_printerr("Error listing refs: %s\n", error->message);
@@ -267,10 +268,11 @@ namespace cpplibostree {
 
         // iterate through the refs
         GHashTableIter iter;
-        gpointer key, value;
+        gpointer key {nullptr};
+        gpointer value {nullptr};
         g_hash_table_iter_init(&iter, refs_hash);
         while (g_hash_table_iter_next(&iter, &key, &value)) {
-            const gchar *ref_name = (const gchar *)key;
+            const gchar *ref_name = static_cast<const gchar *>(key);
             branches_str += " " + std::string(ref_name);
         }
 

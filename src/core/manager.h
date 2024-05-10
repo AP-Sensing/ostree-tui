@@ -8,7 +8,6 @@
 
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include "ftxui/component/component.hpp"  // for Component
 
@@ -21,8 +20,8 @@ public:
     ftxui::Component branch_boxes = ftxui::Container::Vertical({});
 
 //public:
-    Manager(cpplibostree::OSTreeRepo repo, std::unordered_map<std::string, bool> *visible_branches);
+    Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches);
     
     ftxui::Element branchBoxRender();
-    ftxui::Element render(cpplibostree::Commit display_commit);
+    static ftxui::Element render(const cpplibostree::Commit& display_commit);
 };

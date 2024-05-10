@@ -34,17 +34,17 @@ int OSTreeTUI::main(const std::string& repo) {
 	cpplibostree::OSTreeRepo ostree_repo(repo);
 	// View
 	size_t selected_commit{0}; 								 // view-index
-	std::unordered_map<std::string, bool>  visible_branches; // map branch visibility to branch
-	std::vector<std::string> visible_commit_view_map;		 // map from view-index to commit-hash
-	std::unordered_map<std::string, Color> branch_color_map; // map branch to color
+	std::unordered_map<std::string, bool>  visible_branches{}; // map branch visibility to branch
+	std::vector<std::string> visible_commit_view_map{};		 // map from view-index to commit-hash
+	std::unordered_map<std::string, Color> branch_color_map{}; // map branch to color
 	//
 	auto screen = ScreenInteractive::Fullscreen();
 
 // - INIT -
-	for (auto branch : ostree_repo.getBranches()) {
+	for (const auto& branch : ostree_repo.getBranches()) {
 		visible_branches[branch] = true;
 		// color
-		std::hash<std::string> name_hash;
+		std::hash<std::string> name_hash{};
 		branch_color_map[branch] = Color::Palette256((name_hash(branch) + 10) % 256);
 	}
 
@@ -53,9 +53,9 @@ int OSTreeTUI::main(const std::string& repo) {
 	auto parse_visible_commit_map = [&] {
 		// get filtered commits
 		visible_commit_view_map = {};
-		for (auto& commit_pair : ostree_repo.getCommitList()) {
+		for (const auto& commit_pair : ostree_repo.getCommitList()) {
 			// filter branches
-			for (auto branch : commit_pair.second.branches) {
+			for (const auto& branch : commit_pair.second.branches) {
 				if (visible_branches[branch]) {
 					visible_commit_view_map.push_back(commit_pair.first);
 				}
@@ -76,14 +76,16 @@ int OSTreeTUI::main(const std::string& repo) {
 	};
 
 	auto next_commit = [&] {
-		if (selected_commit + 1 == visible_commit_view_map.size()) {
+		if (selected_commit + 1 >= visible_commit_view_map.size()) {
+			selected_commit = visible_commit_view_map.size() - 1;
 			return false;
 		}
 		++selected_commit;
 		return true;
 	};
 	auto prev_commit = [&] {
-		if (selected_commit == 0) {
+		if (selected_commit <= 0) {
+			selected_commit = 0;
 			return false;
 		}
 		--selected_commit;
@@ -91,16 +93,16 @@ int OSTreeTUI::main(const std::string& repo) {
 	};
 
 // - ELEMENTS ---------- ----------
-	Manager manager = Manager(ostree_repo, &visible_branches);
-	auto branch_boxes = manager.branch_boxes;
-	auto manager_renderer = Renderer(branch_boxes, [&] {
+	Manager manager(ostree_repo, visible_branches);
+	Component branch_boxes = manager.branch_boxes;
+	Component manager_renderer = Renderer(branch_boxes, [&] {
 
 		Element commit_info;
-		if (visible_commit_view_map.size() == 0) {
+		if (visible_commit_view_map.size() <= 0) {
 			commit_info = text(" no commit info available ") | color(Color::RedLight) | bold | center;
 		} else {
 			cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
-			commit_info = manager.render(display_commit);
+			commit_info = Manager::render(display_commit);
 		}
 		
 	    return vbox({
@@ -110,13 +112,13 @@ int OSTreeTUI::main(const std::string& repo) {
 			});
     });
 
-	auto log_renderer = Scroller(&selected_commit, Renderer([&] {
+	Component log_renderer = Scroller(&selected_commit, Renderer([&] {
 		parse_visible_commit_map();
 		selected_commit = std::min(selected_commit, visible_commit_view_map.size() - 1);
 		return CommitRender::commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit);
 	}));
 
-  	auto footer_renderer = footer::footerRender();
+  	Component footer_renderer = footer::footerRender();
 
 // - FINALIZE ---------- ----------
 	// window specific shortcuts
@@ -131,14 +133,14 @@ int OSTreeTUI::main(const std::string& repo) {
 		return false;
 	});
 
-  	int log_size = 45;
-  	int footer_size = 1;
-  	auto container = manager_renderer;
+  	int log_size{45};
+  	int footer_size{1};
+  	Component container{manager_renderer};
   	container = ResizableSplitLeft(log_renderer, container, &log_size);
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
 	// add shortcuts
-	auto main_container = CatchEvent(container | border, [&](const Event& event) {
+	Component main_container = CatchEvent(container | border, [&](const Event& event) {
 		// apply changes
     	if (event == Event::Character('s')) {
     	  	std::cout << "apply not implemented yet" << std::endl;

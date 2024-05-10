@@ -3,23 +3,17 @@
 #include <cstdio>
 #include <string>
 
-#include "ftxui/component/captured_mouse.hpp"  // for ftxui
-#include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
-#include "ftxui/component/component_base.hpp"      // for ComponentBase
-#include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
-#include "ftxui/screen/screen.hpp"
-#include "ftxui/screen/string.hpp"
 
 #include "../util/cpplibostree.h"
 
 
-Manager::Manager(cpplibostree::OSTreeRepo repo, std::unordered_map<std::string, bool> *visible_branches) {
+Manager::Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches) {
     using namespace ftxui;
 
 	// branch visibility
-	for (auto branch : repo.getBranches()) {
-		branch_boxes->Add(Checkbox(branch, &(visible_branches->at(branch))));
+	for (const auto& branch : repo.getBranches()) {
+		branch_boxes->Add(Checkbox(branch, &(visible_branches.at(branch))));
 	}
 }
 
@@ -35,12 +29,12 @@ ftxui::Element Manager::branchBoxRender(){
 	return vbox(bfb_elements);
 }
 
-ftxui::Element Manager::render(cpplibostree::Commit display_commit) {
+ftxui::Element Manager::render(const cpplibostree::Commit& display_commit) {
 	using namespace ftxui;
 	
 	// selected commit info
 	Elements signatures;
-	for (auto signature : display_commit.signatures) {
+	for (const auto& signature : display_commit.signatures) {
 		signatures.push_back(
 			text("    " + signature.pubkey_algorithm + " " + signature.fingerprint)
 		);

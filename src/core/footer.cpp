@@ -15,7 +15,7 @@ ftxui::Component footer::footerRender() {
 		return hbox({
 			text(" OSTree TUI ") | bold,
 			separator(),
-			text("  || (Q)uit || (R)efresh || (C)opy commit hash ||  "), // || rebase_mode: b || apply changes: s
+			text("  || (Q)uit || (R)efresh || (C)opy commit hash ||  "),
 		});
 	});
 }

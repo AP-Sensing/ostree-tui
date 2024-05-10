@@ -6,10 +6,18 @@
 #include "ftxui/component/component_base.hpp"  // for Component
 
 namespace ftxui {
+    /**
+     * @brief This Scroller Element is a modified version of the Scroller in the following repository:
+     *    Title: git-tui
+     *    Author: Arthur Sonzogni
+     *    Date: 2021
+     *    Availability: https://github.com/ArthurSonzogni/git-tui/blob/master/src/scroller.cpp
+     *
+     * @param selected_commit 
+     * @param child 
+     * @return Component
+     */
     Component Scroller(size_t *selected_commit, Component child);
+
 } // namespace ftxui
 #endif /* end of include guard: SCROLLER_H */
-
-// Copyright 2021 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

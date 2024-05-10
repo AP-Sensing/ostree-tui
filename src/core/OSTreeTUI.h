@@ -4,6 +4,7 @@
  |___________________________________________________________*/
 
 #include <string>
+#include <vector>
 
 
 namespace OSTreeTUI {
