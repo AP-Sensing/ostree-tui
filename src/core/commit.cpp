@@ -20,7 +20,7 @@
 #include "commit.h"
 #include "../util/cpplibostree.h"
 
-auto commitRender(cpplibostree::OSTreeRepo repo,
+auto CommitRender::commitRender(cpplibostree::OSTreeRepo repo,
 				std::vector<std::string> visible_commit_map,
 				std::unordered_map<std::string, bool>  visible_branches,
 				std::unordered_map<std::string, ftxui::Color> branch_color_map,
@@ -57,7 +57,7 @@ auto commitRender(cpplibostree::OSTreeRepo repo,
 
 	for (auto visible_commit_index : visible_commit_map) {
 		
-		Commit commit = repo.getCommitList().at(visible_commit_index);
+		cpplibostree::Commit commit = repo.getCommitList().at(visible_commit_index);
 
 		// TODO properly use all branches
 		std::string relevant_branch = commit.branches.at(0);

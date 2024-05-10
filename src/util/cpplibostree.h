@@ -26,31 +26,32 @@
 #include <glib-2.0/glib.h>
 #include <ostree.h>
 
-struct Signature {
-    std::string pubkey_algorithm;
-    std::string fingerprint;
-    std::string timestamp;
-    std::string expire_timestamp;
-    std::string username;
-    std::string usermail;
-};
-
-struct Commit {
-    // GVariant
-    std::string subject;
-    std::string body;
-    u_int64_t timestamp;
-    std::string parent;
-    // 
-    std::string contentChecksum;
-    std::string hash;
-    std::string date;
-    // a commit already stores, to which branches it belongs to
-	std::vector<std::string> branches;
-    std::vector<Signature> signatures;
-};
 
 namespace cpplibostree {
+
+    struct Signature {
+        std::string pubkey_algorithm;
+        std::string fingerprint;
+        std::string timestamp;
+        std::string expire_timestamp;
+        std::string username;
+        std::string usermail;
+    };
+
+    struct Commit {
+        // GVariant
+        std::string subject;
+        std::string body;
+        u_int64_t timestamp;
+        std::string parent;
+        // 
+        std::string contentChecksum;
+        std::string hash;
+        std::string date;
+        // a commit already stores, to which branches it belongs to
+	    std::vector<std::string> branches;
+        std::vector<Signature> signatures;
+    } __attribute__((aligned(128)));
 
     /**
      * @brief OSTreeRepo functions as a C++ wrapper around libostree's OstreeRepo. 

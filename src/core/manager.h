@@ -12,17 +12,17 @@
 
 #include "ftxui/component/component.hpp"  // for Component
 
-#include "commit.h"
 #include "../util/cpplibostree.h"
+#include "commit.h"
 
 /// Right postion of main window
 class Manager {
 public:
     ftxui::Component branch_boxes = ftxui::Container::Vertical({});
 
-public:
+//public:
     Manager(cpplibostree::OSTreeRepo repo, std::unordered_map<std::string, bool> *visible_branches);
     
     ftxui::Element branchBoxRender();
-    ftxui::Element render(Commit display_commit);
+    ftxui::Element render(cpplibostree::Commit display_commit);
 };

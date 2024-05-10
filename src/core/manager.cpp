@@ -1,7 +1,6 @@
 #include "manager.h"
 
 #include <cstdio>
-#include <sstream>
 #include <string>
 
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
@@ -36,7 +35,7 @@ ftxui::Element Manager::branchBoxRender(){
 	return vbox(bfb_elements);
 }
 
-ftxui::Element Manager::render(Commit display_commit) {
+ftxui::Element Manager::render(cpplibostree::Commit display_commit) {
 	using namespace ftxui;
 	
 	// selected commit info

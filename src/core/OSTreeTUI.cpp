@@ -99,7 +99,7 @@ int OSTreeTUI::main(const std::string& repo) {
 		if (visible_commit_view_map.size() == 0) {
 			commit_info = text(" no commit info available ") | color(Color::RedLight) | bold | center;
 		} else {
-			Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
+			cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
 			commit_info = manager.render(display_commit);
 		}
 		
@@ -113,7 +113,7 @@ int OSTreeTUI::main(const std::string& repo) {
 	auto log_renderer = Scroller(&selected_commit, Renderer([&] {
 		parse_visible_commit_map();
 		selected_commit = std::min(selected_commit, visible_commit_view_map.size() - 1);
-		return commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit);
+		return CommitRender::commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit);
 	}));
 
   	auto footer_renderer = footer::footerRender();

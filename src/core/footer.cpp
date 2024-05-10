@@ -11,7 +11,7 @@
 ftxui::Component footer::footerRender() {
 	using namespace ftxui;
 	
-	return Renderer([] {
+	return ftxui::Renderer([] {
 		return hbox({
 			text(" OSTree TUI ") | bold,
 			separator(),
