@@ -61,9 +61,9 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 		if (! used_branches.at(relevant_branch)) {
 			for (const auto& branch : used_branches) {
 				if (branch.second) {
-					tree_branch_elements.push_back(text("  │") | color(branch_color_map.at(branch.first)));
+					tree_branch_elements.push_back(text(COMMIT_TREE) | color(branch_color_map.at(branch.first)));
 				} else {
-					tree_branch_elements.push_back(text("   ") | color(branch_color_map.at(branch.first)));
+					tree_branch_elements.push_back(text(COMMIT_NONE) | color(branch_color_map.at(branch.first)));
 				}
 			}
 			tree_elements.push_back(hbox(std::move(tree_branch_elements)));
@@ -76,18 +76,18 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 		for (const auto& branch : used_branches) {
 			if (branch.second) {
 				if (branch.first == relevant_branch) {
-					tree_top_elements.push_back(text("  ☐") | color(branch_color_map.at(branch.first)));
+					tree_top_elements.push_back(text(COMMIT_NODE) | color(branch_color_map.at(branch.first)));
 				} else {
-					tree_top_elements.push_back(text("  │") | color(branch_color_map.at(branch.first)));
+					tree_top_elements.push_back(text(COMMIT_TREE) | color(branch_color_map.at(branch.first)));
 				}
-				tree_root_elements.push_back(text("  │") | color(branch_color_map.at(branch.first)));
-				tree_bottom_elements.push_back(text("  │") | color(branch_color_map.at(branch.first)));
-				sign_elements.push_back(text("  │") | color(branch_color_map.at(branch.first)));
+				tree_root_elements.push_back(text(COMMIT_TREE) | color(branch_color_map.at(branch.first)));
+				tree_bottom_elements.push_back(text(COMMIT_TREE) | color(branch_color_map.at(branch.first)));
+				sign_elements.push_back(text(COMMIT_TREE) | color(branch_color_map.at(branch.first)));
 			} else {
-				tree_top_elements.push_back(text("   ") | color(branch_color_map.at(branch.first)));
-				tree_root_elements.push_back(text("   ") | color(branch_color_map.at(branch.first)));
-				tree_bottom_elements.push_back(text("   ") | color(branch_color_map.at(branch.first)));
-				sign_elements.push_back(text("   ") | color(branch_color_map.at(branch.first)));
+				tree_top_elements.push_back(text(COMMIT_NONE) | color(branch_color_map.at(branch.first)));
+				tree_root_elements.push_back(text(COMMIT_NONE) | color(branch_color_map.at(branch.first)));
+				tree_bottom_elements.push_back(text(COMMIT_NONE) | color(branch_color_map.at(branch.first)));
+				sign_elements.push_back(text(COMMIT_NONE) | color(branch_color_map.at(branch.first)));
 			}
 		}
 
@@ -99,7 +99,7 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 
 		std::string commit_top_text = commit.hash;
 		if (commit_top_text.size() > 8) {
-			commit_top_text = "   " + commit.hash.substr(commit.hash.size() - 8);
+			commit_top_text = GAP_TREE_COMMITS + commit.hash.substr(commit.hash.size() - 8);
 		}
 		Element commit_top_text_element = text(commit_top_text);
 		// selected
@@ -107,11 +107,11 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 			commit_top_text_element = commit_top_text_element | bold | inverted;
 		}
 		comm_elements.push_back(commit_top_text_element);
-		comm_elements.push_back(text("   " + commit.date));
+		comm_elements.push_back(text(GAP_TREE_COMMITS + commit.date));
 		// signed
 		if (cpplibostree::OSTreeRepo::isCommitSigned(commit)) {
 			tree_elements.push_back(hbox(std::move(sign_elements)));
-			std::string signed_text = "   signed " + (commit.signatures.size() > 1 ? std::to_string(commit.signatures.size()) + "x" : "");
+			std::string signed_text = GAP_TREE_COMMITS + "signed " + (commit.signatures.size() > 1 ? std::to_string(commit.signatures.size()) + "x" : "");
 			comm_elements.push_back(text(signed_text) | color(Color::Green));
 		}
 		comm_elements.push_back(text(""));

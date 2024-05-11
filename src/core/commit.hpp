@@ -18,6 +18,13 @@
 #include "../util/cpplibostree.hpp"
 
 namespace CommitRender {
+
+    static const std::string COMMIT_NODE        = " ☐";
+    static const std::string COMMIT_TREE        = " │";
+    static const std::string COMMIT_NONE        = "  ";
+    static const std::string INDENT             = " ";
+    static const std::string GAP_TREE_COMMITS   = "  ";
+
     /**
      * @brief create a Renderer for the commit section
      * 
