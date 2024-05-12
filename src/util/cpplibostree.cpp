@@ -131,30 +131,57 @@ namespace cpplibostree {
                 g_autoptr (GVariant) variant = nullptr;
                 variant = ostree_gpg_verify_result_get_all (result, ii);
                 // see ostree_gpg_verify_result_describe_variant for reference
-                gint64 timestamp        {0};
-                gint64 exp_timestamp    {0};
-                const char *fingerprint {nullptr};
-                const char *pubkey_algo {nullptr};
-                const char *user_name   {nullptr};
-                const char *user_email  {nullptr};
+                gint64 timestamp                {0};
+                gint64 exp_timestamp            {0};
+                gint64 key_exp_timestamp        {0};
+                gint64 key_exp_timestamp_primary{0};
+                const char *fingerprint         {nullptr};
+                const char *fingerprint_primary {nullptr};
+                const char *pubkey_algo         {nullptr};
+                const char *user_name           {nullptr};
+                const char *user_email          {nullptr};
+                gboolean valid                  {false};
+                gboolean sig_expired            {false};
+                gboolean key_expired            {false};
+                gboolean key_revoked            {false};
+                gboolean key_missing            {false};
 
-                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_PUBKEY_ALGO_NAME, "&s", &pubkey_algo);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_VALID, "b", &valid);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_SIG_EXPIRED, "b", &sig_expired);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXPIRED, "b", &key_expired);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_REVOKED, "b", &key_revoked);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_MISSING, "b", &key_missing);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT, "&s", &fingerprint);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT_PRIMARY, "&s", &fingerprint_primary);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_TIMESTAMP, "x", &timestamp);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_EXP_TIMESTAMP, "x", &exp_timestamp);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_PUBKEY_ALGO_NAME, "&s", &pubkey_algo);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_USER_NAME, "&s", &user_name);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_USER_EMAIL, "&s", &user_email);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXP_TIMESTAMP, "x", &key_exp_timestamp);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXP_TIMESTAMP_PRIMARY, "x", &key_exp_timestamp_primary);
 
                 // create signature struct
                 Signature sig;
-                sig.pubkey_algorithm = pubkey_algo;
+
+                sig.valid = valid;
+                sig.sig_expired = sig_expired;
+                sig.key_expired = key_expired;
+                sig.key_revoked = key_revoked;
+                sig.key_missing = key_missing;
                 sig.fingerprint = fingerprint;
+                sig.fingerprint_primary = fingerprint_primary;
                 sig.timestamp = std::chrono::time_point<std::chrono::utc_clock>(
                                         std::chrono::seconds(timestamp));
                 sig.expire_timestamp = std::chrono::time_point<std::chrono::utc_clock>(
                                         std::chrono::seconds(exp_timestamp));
+                sig.pubkey_algorithm = pubkey_algo;
                 sig.username = user_name;
                 sig.usermail = user_email;
+                sig.key_expire_timestamp = std::chrono::time_point<std::chrono::utc_clock>(
+                                        std::chrono::seconds(key_exp_timestamp));
+                sig.key_expire_timestamp_primary = std::chrono::time_point<std::chrono::utc_clock>(
+                                        std::chrono::seconds(key_exp_timestamp_primary));
 
                 commit.signatures.push_back(std::move(sig));
             }

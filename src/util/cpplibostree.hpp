@@ -30,12 +30,20 @@
 namespace cpplibostree {
 
     struct Signature {
-        std::string pubkey_algorithm;
+        bool valid      {false};
+        bool sig_expired{true};
+        bool key_expired{true};
+        bool key_revoked{false};
+        bool key_missing{true};
         std::string fingerprint;
+        std::string fingerprint_primary;
         std::chrono::time_point<std::chrono::utc_clock> timestamp;
         std::chrono::time_point<std::chrono::utc_clock> expire_timestamp;
+        std::string pubkey_algorithm;
         std::string username;
         std::string usermail;
+        std::chrono::time_point<std::chrono::utc_clock> key_expire_timestamp;
+        std::chrono::time_point<std::chrono::utc_clock> key_expire_timestamp_primary;
     } __attribute__((aligned(128)));
 
     struct Commit {
