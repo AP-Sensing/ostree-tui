@@ -13,6 +13,7 @@
 
 #pragma once
 // C++
+#include <chrono>
 #include <string>
 #include <sys/types.h>
 #include <unordered_map>
@@ -31,22 +32,21 @@ namespace cpplibostree {
     struct Signature {
         std::string pubkey_algorithm;
         std::string fingerprint;
-        std::string timestamp;
-        std::string expire_timestamp;
+        std::chrono::time_point<std::chrono::utc_clock> timestamp;
+        std::chrono::time_point<std::chrono::utc_clock> expire_timestamp;
         std::string username;
         std::string usermail;
     } __attribute__((aligned(128)));
 
     struct Commit {
         // GVariant
-        std::string subject;
+        std::string subject{"Error - invalid commit state"};
         std::string body;
-        u_int64_t timestamp;
+        std::chrono::time_point<std::chrono::utc_clock> timestamp;
         std::string parent;
         // 
         std::string contentChecksum;
         std::string hash;
-        std::string date;
         // a commit already stores, to which branches it belongs to
 	    std::vector<std::string> branches;
         std::vector<Signature> signatures;

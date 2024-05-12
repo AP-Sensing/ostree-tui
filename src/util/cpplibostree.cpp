@@ -1,6 +1,7 @@
 #include "cpplibostree.hpp"
 
 // C++
+#include <chrono>
 #include <cstdlib>
 #include <sstream>
 #include <string>
@@ -66,30 +67,8 @@ namespace cpplibostree {
         return commit.signatures.size() > 0;
     }
 
-    // source: https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-dump.c#L52
-    static gchar* formatTimestamp(gint64 timestamp, gboolean local_tz) {
-        GDateTime *dt{nullptr};
-        gchar *str{nullptr};
-
-        dt = g_date_time_new_from_unix_utc (timestamp);
-        if (dt == nullptr) {
-            return nullptr;
-        }
-
-        if (local_tz) {
-            // convert to local time and display in the locale's preferred representation.
-            g_autoptr (GDateTime) dt_local = g_date_time_to_local (dt);
-            str = g_date_time_format (dt_local, "%c");
-        } else {
-            str = g_date_time_format (dt, "%Y-%m-%d %H:%M:%S +0000");
-        }
-
-        g_date_time_unref (dt);
-        return str;
-    }
-
     Commit OSTreeRepo::parseCommit(GVariant *variant, const std::string& branch, const std::string& hash) {
-        Commit commit = {"error", "", 0, "", "", "", "", {}, {}};
+        Commit commit;
 
         const gchar *subject    {nullptr};
         const gchar *body       {nullptr};
@@ -102,7 +81,9 @@ namespace cpplibostree {
         g_variant_get(variant, "(a{sv}aya(say)&s&stayay)", nullptr, nullptr, nullptr, &subject, &body, &timestamp, nullptr, nullptr);
 
         timestamp = GUINT64_FROM_BE(timestamp);
-        date = formatTimestamp(static_cast<gint64>(timestamp), FALSE);
+
+        commit.timestamp = std::chrono::time_point<std::chrono::utc_clock>(
+                                        std::chrono::seconds(timestamp));
 
         parent = ostree_commit_get_parent(variant);
         if (parent) {
@@ -113,8 +94,6 @@ namespace cpplibostree {
 
         g_autofree char *contents = ostree_commit_get_content_checksum(variant);
         commit.contentChecksum = contents;
-        commit.timestamp = timestamp;
-        commit.date = date;
 
         if (subject[0]) {
             std::string val = subject;
@@ -167,11 +146,13 @@ namespace cpplibostree {
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_USER_EMAIL, "&s", &user_email);
 
                 // create signature struct
-                Signature sig = {"error","","","","",""};
+                Signature sig;
                 sig.pubkey_algorithm = pubkey_algo;
                 sig.fingerprint = fingerprint;
-                sig.timestamp = std::to_string(timestamp);
-                sig.expire_timestamp = std::to_string(exp_timestamp);
+                sig.timestamp = std::chrono::time_point<std::chrono::utc_clock>(
+                                        std::chrono::seconds(timestamp));
+                sig.expire_timestamp = std::chrono::time_point<std::chrono::utc_clock>(
+                                        std::chrono::seconds(exp_timestamp));
                 sig.username = user_name;
                 sig.usermail = user_email;
 

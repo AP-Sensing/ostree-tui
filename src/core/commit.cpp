@@ -107,7 +107,9 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 			commit_top_text_element = commit_top_text_element | bold | inverted;
 		}
 		comm_elements.push_back(commit_top_text_element);
-		comm_elements.push_back(text(GAP_TREE_COMMITS + commit.date));
+		std::string ts = std::format("{:%Y-%m-%d %T %Ez}",
+								std::chrono::time_point_cast<std::chrono::seconds>(commit.timestamp));
+		comm_elements.push_back(text(GAP_TREE_COMMITS + ts));
 		// signed
 		if (cpplibostree::OSTreeRepo::isCommitSigned(commit)) {
 			tree_elements.push_back(hbox(std::move(sign_elements)));
