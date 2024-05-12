@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 // C
@@ -55,7 +54,7 @@ namespace cpplibostree {
         return &repo_path;
     }
 
-    std::unordered_map<std::string,Commit> OSTreeRepo::getCommitList() {
+    CommitList OSTreeRepo::getCommitList() {
         return commit_list;
     }
 
@@ -79,11 +78,9 @@ namespace cpplibostree {
 
         // see OSTREE_COMMIT_GVARIANT_FORMAT
         g_variant_get(variant, "(a{sv}aya(say)&s&stayay)", nullptr, nullptr, nullptr, &subject, &body, &timestamp, nullptr, nullptr);
-
+        
         timestamp = GUINT64_FROM_BE(timestamp);
-
-        commit.timestamp = std::chrono::time_point<std::chrono::utc_clock>(
-                                        std::chrono::seconds(timestamp));
+        commit.timestamp = Timepoint(std::chrono::seconds(timestamp));
 
         parent = ostree_commit_get_parent(variant);
         if (parent) {
@@ -171,17 +168,13 @@ namespace cpplibostree {
                 sig.key_missing = key_missing;
                 sig.fingerprint = fingerprint;
                 sig.fingerprint_primary = fingerprint_primary;
-                sig.timestamp = std::chrono::time_point<std::chrono::utc_clock>(
-                                        std::chrono::seconds(timestamp));
-                sig.expire_timestamp = std::chrono::time_point<std::chrono::utc_clock>(
-                                        std::chrono::seconds(exp_timestamp));
+                sig.timestamp = Timepoint(std::chrono::seconds(timestamp));
+                sig.expire_timestamp = Timepoint(std::chrono::seconds(exp_timestamp));
                 sig.pubkey_algorithm = pubkey_algo;
                 sig.username = user_name;
                 sig.usermail = user_email;
-                sig.key_expire_timestamp = std::chrono::time_point<std::chrono::utc_clock>(
-                                        std::chrono::seconds(key_exp_timestamp));
-                sig.key_expire_timestamp_primary = std::chrono::time_point<std::chrono::utc_clock>(
-                                        std::chrono::seconds(key_exp_timestamp_primary));
+                sig.key_expire_timestamp = Timepoint(std::chrono::seconds(key_exp_timestamp));
+                sig.key_expire_timestamp_primary = Timepoint(std::chrono::seconds(key_exp_timestamp_primary));
 
                 commit.signatures.push_back(std::move(sig));
             }
@@ -193,7 +186,7 @@ namespace cpplibostree {
 
     // modified log_commit() from https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
     gboolean OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
-                    std::unordered_map<std::string,Commit> *commit_list, const std::string& branch, gboolean is_recurse) {
+                    CommitList *commit_list, const std::string& branch, gboolean is_recurse) {
         GError *local_error{nullptr};
 
         g_autoptr (GVariant) variant = nullptr;
@@ -212,8 +205,8 @@ namespace cpplibostree {
         return !(parent && !parseCommitsRecursive(repo, parent, error, commit_list, branch, true));
     }
 
-    std::unordered_map<std::string,Commit> OSTreeRepo::parseCommitsOfBranch(const std::string& branch) {
-        auto ret = std::unordered_map<std::string,Commit>();
+    CommitList OSTreeRepo::parseCommitsOfBranch(const std::string& branch) {
+        auto ret = CommitList();
 
         // open repo
         GError *error = nullptr;
@@ -235,12 +228,12 @@ namespace cpplibostree {
         return ret;
     }
 
-    std::unordered_map<std::string,Commit> OSTreeRepo::parseCommitsAllBranches() {
+    CommitList OSTreeRepo::parseCommitsAllBranches() {
 
         std::istringstream branches_string(getBranchesAsString());
         std::string branch;
 
-        std::unordered_map<std::string,Commit> commits_all_branches;
+        CommitList commits_all_branches;
 
         while (branches_string >> branch) {
             auto commits = parseCommitsOfBranch(branch);

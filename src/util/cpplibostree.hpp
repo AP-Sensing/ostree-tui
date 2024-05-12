@@ -29,6 +29,9 @@
 
 namespace cpplibostree {
 
+    using Clock = std::chrono::utc_clock;
+    using Timepoint = std::chrono::time_point<Clock>;
+
     struct Signature {
         bool valid      {false};
         bool sig_expired{true};
@@ -37,28 +40,29 @@ namespace cpplibostree {
         bool key_missing{true};
         std::string fingerprint;
         std::string fingerprint_primary;
-        std::chrono::time_point<std::chrono::utc_clock> timestamp;
-        std::chrono::time_point<std::chrono::utc_clock> expire_timestamp;
+        Timepoint timestamp;
+        Timepoint expire_timestamp;
         std::string pubkey_algorithm;
         std::string username;
         std::string usermail;
-        std::chrono::time_point<std::chrono::utc_clock> key_expire_timestamp;
-        std::chrono::time_point<std::chrono::utc_clock> key_expire_timestamp_primary;
+        Timepoint key_expire_timestamp;
+        Timepoint key_expire_timestamp_primary;
     } __attribute__((aligned(128)));
 
     struct Commit {
-        // GVariant
+        std::string hash;
+        std::string contentChecksum;
         std::string subject{"Error - invalid commit state"};
         std::string body;
-        std::chrono::time_point<std::chrono::utc_clock> timestamp;
+        Timepoint timestamp;
         std::string parent;
-        // 
-        std::string contentChecksum;
-        std::string hash;
         // a commit already stores, to which branches it belongs to
 	    std::vector<std::string> branches;
         std::vector<Signature> signatures;
     } __attribute__((aligned(128)));
+
+    // map commit hash to commit
+    using CommitList = std::unordered_map<std::string,Commit>;
 
     /**
      * @brief OSTreeRepo functions as a C++ wrapper around libostree's OstreeRepo. 
@@ -69,7 +73,7 @@ namespace cpplibostree {
     class OSTreeRepo {
     private:
         std::string repo_path;
-        std::unordered_map<std::string,Commit> commit_list; // map commit hash to commit
+        CommitList commit_list;
         std::vector<std::string> branches;
 
     public:
@@ -88,12 +92,10 @@ namespace cpplibostree {
          */
         OstreeRepo* _c();
 
-        // Getters
-
         /// Getter
         std::string* getRepoPath();
         /// Getter
-        std::unordered_map<std::string,Commit> getCommitList();
+        CommitList getCommitList();
         /// Getter
         std::vector<std::string> getBranches();
 
@@ -124,7 +126,7 @@ namespace cpplibostree {
          * @param branch 
          * @return std::unordered_map<std::string,Commit> 
          */
-        std::unordered_map<std::string,Commit> parseCommitsOfBranch(const std::string& branch);
+        CommitList parseCommitsOfBranch(const std::string& branch);
         
         /**
          * @brief Performs parseCommitsOfBranch() on all available branches and
@@ -132,7 +134,7 @@ namespace cpplibostree {
          * 
          * @return std::unordered_map<std::string,Commit> 
          */
-        std::unordered_map<std::string,Commit> parseCommitsAllBranches();
+        CommitList parseCommitsAllBranches();
 
     private:
         /**
@@ -165,8 +167,8 @@ namespace cpplibostree {
          * @return false if an error occurred during parsing
          */
         gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
-                                        std::unordered_map<std::string,Commit> *commit_list,
-                                        const std::string& branch, gboolean is_recurse = false);
+                                        CommitList *commit_list, const std::string& branch,
+                                        gboolean is_recurse = false);
     };
 
 } // namespace cpplibostree
