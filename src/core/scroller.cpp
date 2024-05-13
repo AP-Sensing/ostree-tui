@@ -45,7 +45,7 @@ class ScrollerBase : public ComponentBase {
     	    }) | vscroll_indicator | yframe | yflex | reflect(box_);
 	}
 
-	//bool Focusable() const final { return true; }
+	bool Focusable() const final { return true; }
 
 	int size_ = 0;
 	Box box_{};
