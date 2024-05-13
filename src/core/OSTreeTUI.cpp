@@ -23,6 +23,28 @@
 
 #include "../util/cpplibostree.hpp"
 
+std::vector<std::string> OSTreeTUI::parseVisibleCommitMap(cpplibostree::OSTreeRepo& repo,
+                            std::unordered_map<std::string, bool>& visible_branches) {
+    
+	std::vector<std::string> visible_commit_view_map{};
+	// get filtered commits
+	visible_commit_view_map = {};
+	for (const auto& commit_pair : repo.getCommitList()) {
+		// filter branches
+		for (const auto& branch : commit_pair.second.branches) {
+			if (visible_branches[branch]) {
+				visible_commit_view_map.push_back(commit_pair.first);
+			}
+		}
+	}
+	// sort by date
+	std::sort(visible_commit_view_map.begin(), visible_commit_view_map.end(), [&](const std::string& a, const std::string& b) {
+		return repo.getCommitList().at(a).timestamp
+			 > repo.getCommitList().at(b).timestamp;
+	});
+
+	return visible_commit_view_map;
+}
 
 int OSTreeTUI::main(const std::string& repo) {
 	using namespace ftxui;
@@ -49,32 +71,11 @@ int OSTreeTUI::main(const std::string& repo) {
 	}
 
 // - UPDATES -
-	// TODO probably should be in a separate method, not a lambda
-	auto parse_visible_commit_map = [&] {
-		// get filtered commits
-		visible_commit_view_map = {};
-		for (const auto& commit_pair : ostree_repo.getCommitList()) {
-			// filter branches
-			for (const auto& branch : commit_pair.second.branches) {
-				if (visible_branches[branch]) {
-					visible_commit_view_map.push_back(commit_pair.first);
-				}
-			}
-		}
-		// sort by date
-		std::sort(visible_commit_view_map.begin(), visible_commit_view_map.end(), [&](const std::string& a, const std::string& b) {
-			return ostree_repo.getCommitList().at(a).timestamp
-				 > ostree_repo.getCommitList().at(b).timestamp;
-		});
-	};
-	parse_visible_commit_map();
-
 	auto refresh_repository = [&] {
 		ostree_repo.updateData();
-		parse_visible_commit_map();
+		visible_commit_view_map = parseVisibleCommitMap(ostree_repo, visible_branches);
 		return true;
 	};
-
 	auto next_commit = [&] {
 		if (selected_commit + 1 >= visible_commit_view_map.size()) {
 			selected_commit = visible_commit_view_map.size() - 1;
@@ -113,7 +114,7 @@ int OSTreeTUI::main(const std::string& repo) {
     });
 
 	Component log_renderer = Scroller(&selected_commit, Renderer([&] {
-		parse_visible_commit_map();
+		visible_commit_view_map = parseVisibleCommitMap(ostree_repo, visible_branches);
 		selected_commit = std::min(selected_commit, visible_commit_view_map.size() - 1);
 		return CommitRender::commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit);
 	}));

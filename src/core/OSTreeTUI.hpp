@@ -4,7 +4,9 @@
  |___________________________________________________________*/
 
 #include <string>
+#include <vector>
 
+#include "../util/cpplibostree.hpp"
 
 namespace OSTreeTUI {
 
@@ -14,5 +16,8 @@ namespace OSTreeTUI {
      * @param repo ostree repository path
      */
     int main(const std::string& repo);
+
+    std::vector<std::string> parseVisibleCommitMap(cpplibostree::OSTreeRepo& repo,
+                            std::unordered_map<std::string, bool>& visible_branches);
 
 } // namespace OSTreeTUI
