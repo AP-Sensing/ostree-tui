@@ -93,7 +93,7 @@ namespace cpplibostree {
         OstreeRepo* _c();
 
         /// Getter
-        std::string* getRepoPath();
+        std::string getRepoPath();
         /// Getter
         CommitList getCommitList();
         /// Getter

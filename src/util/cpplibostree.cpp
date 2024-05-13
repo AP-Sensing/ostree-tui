@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <ostree.h>
+#include <assert.h>
 
 namespace cpplibostree {
 
@@ -23,7 +24,7 @@ namespace cpplibostree {
     }
 
     bool OSTreeRepo::updateData() {
-
+        // parse branches
         std::string branchString = getBranchesAsString();
         std::stringstream bss(branchString);
         std::string word;
@@ -31,6 +32,7 @@ namespace cpplibostree {
             branches.push_back(word);
         }
 
+        // parse commits
         commit_list = parseCommitsAllBranches();
 
         return true;
@@ -50,8 +52,8 @@ namespace cpplibostree {
         return repo;
     }
 
-    std::string* OSTreeRepo::getRepoPath() {
-        return &repo_path;
+    std::string OSTreeRepo::getRepoPath() {
+        return repo_path;
     }
 
     CommitList OSTreeRepo::getCommitList() {
@@ -73,12 +75,12 @@ namespace cpplibostree {
         const gchar *body       {nullptr};
         guint64 timestamp       {0};
         g_autofree char *parent {nullptr};
-        g_autofree char *date   {nullptr};
-        g_autofree char *version{nullptr};
 
         // see OSTREE_COMMIT_GVARIANT_FORMAT
         g_variant_get(variant, "(a{sv}aya(say)&s&stayay)", nullptr, nullptr, nullptr, &subject, &body, &timestamp, nullptr, nullptr);
-        
+        assert(body);
+        assert(timestamp);
+
         timestamp = GUINT64_FROM_BE(timestamp);
         commit.timestamp = Timepoint(std::chrono::seconds(timestamp));
 
@@ -90,6 +92,7 @@ namespace cpplibostree {
         }
 
         g_autofree char *contents = ostree_commit_get_content_checksum(variant);
+        assert(contents);
         commit.contentChecksum = contents;
 
         if (subject[0]) {
@@ -113,19 +116,21 @@ namespace cpplibostree {
         if (repo == nullptr) {
             g_printerr("Error opening repository: %s\n", error->message);
             g_error_free(error);
+            assert(repo);
         }
         // see ostree print_object for reference
-        g_autoptr (OstreeGpgVerifyResult) result = nullptr;
-        g_autoptr (GError) local_error = nullptr;
+        g_autoptr(OstreeGpgVerifyResult) result = nullptr;
+        g_autoptr(GError) local_error = nullptr;
         result = ostree_repo_verify_commit_ext (repo, commit.parent.c_str(), nullptr, nullptr, nullptr,
                                                       &local_error);
         if (g_error_matches (local_error, OSTREE_GPG_ERROR, OSTREE_GPG_ERROR_NO_SIGNATURE) || local_error != nullptr) {
             /* Ignore */
         } else {
+            assert(result);
             guint n_sigs = ostree_gpg_verify_result_count_all (result);
             // parse all found signatures
             for (guint ii = 0; ii < n_sigs; ii++) {
-                g_autoptr (GVariant) variant = nullptr;
+                g_autoptr(GVariant) variant = nullptr;
                 variant = ostree_gpg_verify_result_get_all (result, ii);
                 // see ostree_gpg_verify_result_describe_variant for reference
                 gint64 timestamp                {0};
@@ -157,7 +162,7 @@ namespace cpplibostree {
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_USER_EMAIL, "&s", &user_email);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXP_TIMESTAMP, "x", &key_exp_timestamp);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXP_TIMESTAMP_PRIMARY, "x", &key_exp_timestamp_primary);
-
+                
                 // create signature struct
                 Signature sig;
 
@@ -179,7 +184,6 @@ namespace cpplibostree {
                 commit.signatures.push_back(std::move(sig));
             }
         }
-
 
         return commit;
     }
