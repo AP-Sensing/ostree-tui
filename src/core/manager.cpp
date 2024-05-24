@@ -29,7 +29,7 @@ ftxui::Element Manager::branchBoxRender(){
 	return vbox(bfb_elements);
 }
 
-ftxui::Element Manager::render(const cpplibostree::Commit& display_commit) {
+ftxui::Element Manager::renderInfo(const cpplibostree::Commit& display_commit) {
 	using namespace ftxui;
 	
 	// selected commit info
@@ -56,5 +56,26 @@ ftxui::Element Manager::render(const cpplibostree::Commit& display_commit) {
 			display_commit.signatures.size() > 0 ? text("signatures: ") : text(""),
 			vbox(signatures),
 			filler(),
+		});
+}
+
+ftxui::Element Manager::renderPromotionWindow(const cpplibostree::Commit& display_commit) {
+	using namespace ftxui;
+
+	return vbox({
+			text("commit info") | bold,
+			filler(),
+			text("hash:       " + display_commit.hash),
+			filler(),
+			text("subject:    " + display_commit.subject),
+			filler(),
+			text("date:       " + std::format("{:%Y-%m-%d %T %Ez}",
+								std::chrono::time_point_cast<std::chrono::seconds>(display_commit.timestamp))),
+			separator(),
+			text(" promote to...") | bold,
+			filler(),
+			text("TODO insert ref selection"),
+			filler(),
+			text(" promote to...")
 		});
 }

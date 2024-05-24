@@ -60,7 +60,9 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	std::vector<std::string> visible_commit_view_map{};			// map from view-index to commit-hash
 	std::unordered_map<std::string, Color> branch_color_map{};	// map branch to color
 
-	// set all branch visibilities and define a branch color
+	bool rebaseMode{false};
+	
+	// set all branches as visible and define a branch color
 	for (const auto& branch : ostree_repo.getBranches()) {
 		// if startupBranches are defined, set all as non-visible
 		visible_branches[branch] = startupBranches.size() == 0 ? true : false;
@@ -112,9 +114,12 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		Element commit_info;
 		if (visible_commit_view_map.size() <= 0) {
 			commit_info = text(" no commit info available ") | color(Color::RedLight) | bold | center;
+		} else if (rebaseMode) {
+			cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
+			commit_info = Manager::renderPromotionWindow(display_commit);
 		} else {
 			cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
-			commit_info = Manager::render(display_commit);
+			commit_info = Manager::renderInfo(display_commit);
 		}
 		
 	    return vbox({
@@ -158,8 +163,9 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
     	  	return true;
     	}
 		// enter rebase mode
-    	if (event == Event::Character('b')) {
+    	if (event == Event::Character('p')) {
     	  	std::cout << "rebase not implemented yet" << std::endl;
+			rebaseMode = !rebaseMode;
     	  	return true;
     	}
 		// copy commit id
