@@ -8,13 +8,15 @@
 #include "../util/cpplibostree.hpp"
 
 
-Manager::Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches) {
+Manager::Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches, std::vector<std::string>& branches) {
     using namespace ftxui;
 
 	// branch visibility
 	for (const auto& branch : repo.getBranches()) {
 		branch_boxes->Add(Checkbox(branch, &(visible_branches.at(branch))));
 	}
+
+	promotionRefSelection = Radiobox(&branches, &selectedPromotionRef);
 }
 
 ftxui::Element Manager::branchBoxRender(){
@@ -55,11 +57,11 @@ ftxui::Element Manager::renderInfo(const cpplibostree::Commit& display_commit) {
 			filler(),
 			display_commit.signatures.size() > 0 ? text("signatures: ") : text(""),
 			vbox(signatures),
-			filler(),
+			filler()
 		});
 }
 
-ftxui::Element Manager::renderPromotionWindow(const cpplibostree::Commit& display_commit) {
+ftxui::Element Manager::renderPromotionWindow(const cpplibostree::Commit& display_commit, ftxui::Component& rb) {
 	using namespace ftxui;
 
 	return vbox({
@@ -71,11 +73,12 @@ ftxui::Element Manager::renderPromotionWindow(const cpplibostree::Commit& displa
 			filler(),
 			text("date:       " + std::format("{:%Y-%m-%d %T %Ez}",
 								std::chrono::time_point_cast<std::chrono::seconds>(display_commit.timestamp))),
-			separator(),
-			text(" promote to...") | bold,
+			filler(),
+			text(""),
+			text("  promote commit...") | bold | color(Color::Green),
 			filler(),
 			text("TODO insert ref selection"),
 			filler(),
-			text(" promote to...")
+			rb->Render()
 		});
 }
