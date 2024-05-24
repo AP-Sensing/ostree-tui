@@ -24,7 +24,7 @@ ftxui::Element Manager::branchBoxRender(){
 	Elements bfb_elements = {
 			text(L"filter branches") | bold,
 			filler(),
-			branch_boxes->Render() | vscroll_indicator,
+			branch_boxes->Render() | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 10),
 		};
 	return vbox(bfb_elements);
 }
