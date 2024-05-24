@@ -23,5 +23,7 @@ public:
     Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches);
     
     ftxui::Element branchBoxRender();
-    static ftxui::Element render(const cpplibostree::Commit& display_commit);
+
+    static ftxui::Element renderInfo(const cpplibostree::Commit& display_commit);
+    static ftxui::Element renderPromotionWindow(const cpplibostree::Commit& display_commit);
 };
