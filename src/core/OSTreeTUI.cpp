@@ -51,26 +51,25 @@ int OSTreeTUI::main(const std::string& repo) {
 
 	std::cout << "OSTree TUI on '" << repo << "'";
 
-// - STATES -
+	// - STATES ---------- ----------
+	
 	// Model
 	cpplibostree::OSTreeRepo ostree_repo(repo);
 	// View
-	size_t selected_commit{0}; 								 // view-index
-	std::unordered_map<std::string, bool>  visible_branches{}; // map branch visibility to branch
-	std::vector<std::string> visible_commit_view_map{};		 // map from view-index to commit-hash
-	std::unordered_map<std::string, Color> branch_color_map{}; // map branch to color
-	//
-	auto screen = ScreenInteractive::Fullscreen();
+	size_t selected_commit{0};									// view-index
+	std::unordered_map<std::string, bool>  visible_branches{};	// map branch visibility to branch
+	std::vector<std::string> visible_commit_view_map{};			// map from view-index to commit-hash
+	std::unordered_map<std::string, Color> branch_color_map{};	// map branch to color
 
-// - INIT -
+	// set all branches as visible and define a branch color
 	for (const auto& branch : ostree_repo.getBranches()) {
 		visible_branches[branch] = true;
-		// color
 		std::hash<std::string> name_hash{};
 		branch_color_map[branch] = Color::Palette256((name_hash(branch) + 10) % 256);
 	}
 
-// - UPDATES -
+	// - UPDATES ---------- ----------
+
 	auto refresh_repository = [&] {
 		ostree_repo.updateData();
 		visible_commit_view_map = parseVisibleCommitMap(ostree_repo, visible_branches);
@@ -93,7 +92,10 @@ int OSTreeTUI::main(const std::string& repo) {
 		return true;
 	};
 
-// - ELEMENTS ---------- ----------
+	// - UI ELEMENTS ---------- ----------
+
+	auto screen = ScreenInteractive::Fullscreen();
+	
 	Manager manager(ostree_repo, visible_branches);
 	Component branch_boxes = manager.branch_boxes;
 	Component manager_renderer = Renderer(branch_boxes, [&] {
@@ -121,7 +123,6 @@ int OSTreeTUI::main(const std::string& repo) {
 
   	Component footer_renderer = footer::footerRender();
 
-// - FINALIZE ---------- ----------
 	// window specific shortcuts
 	log_renderer = CatchEvent(log_renderer | border, [&](Event event) {
 		// switch through commits
