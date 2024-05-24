@@ -25,10 +25,16 @@ namespace ftxui {
 
 class ScrollerBase : public ComponentBase {
 	public:
-		ScrollerBase(size_t *selected_commit, Component child) : sc(selected_commit) { Add(child);  }
+		ScrollerBase(size_t *selected_commit, size_t element_length, Component child):
+					sc(selected_commit),
+					el_len(element_length)
+		{
+			Add(child);
+		}
 
 	private:
 		size_t *sc{nullptr};
+		size_t el_len{1};
 
 	Element Render() final {
     	auto focused = Focused() ? focus : ftxui::select;
@@ -39,7 +45,8 @@ class ScrollerBase : public ComponentBase {
     	return dbox({
     	        std::move(background),
     	        vbox({
-    	            text(L"") | size(HEIGHT, EQUAL, static_cast<int>(*sc) * 3),
+					// TODO change *4 for dynamic height, or make height stay the same 
+    	            text(L"") | size(HEIGHT, EQUAL, static_cast<int>(*sc * el_len)),
     	            text(L"") | focused,
     	        }),
     	    }) | vscroll_indicator | yframe | yflex | reflect(box_);
@@ -51,8 +58,8 @@ class ScrollerBase : public ComponentBase {
 	Box box_{};
 };
 
-Component Scroller(size_t *selected_commit, Component child) {
-	return Make<ScrollerBase>(selected_commit, std::move(child));
+Component Scroller(size_t *selected_commit, size_t element_length, Component child) {
+	return Make<ScrollerBase>(selected_commit, element_length, std::move(child));
 }
 
 }  // namespace ftxui

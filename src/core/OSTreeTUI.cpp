@@ -11,6 +11,7 @@
 
 //#include "clip.hpp"
 
+#include "commit.hpp"
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
@@ -115,7 +116,7 @@ int OSTreeTUI::main(const std::string& repo) {
 			});
     });
 
-	Component log_renderer = Scroller(&selected_commit, Renderer([&] {
+	Component log_renderer = Scroller(&selected_commit, CommitRender::COMMIT_DETAIL_LEVEL, Renderer([&] {
 		visible_commit_view_map = parseVisibleCommitMap(ostree_repo, visible_branches);
 		selected_commit = std::min(selected_commit, visible_commit_view_map.size() - 1);
 		return CommitRender::commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit);

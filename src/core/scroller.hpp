@@ -17,7 +17,7 @@ namespace ftxui {
      * @param child 
      * @return Component
      */
-    Component Scroller(size_t *selected_commit, Component child);
+    Component Scroller(size_t *selected_commit, size_t element_length, Component child);
 
 } // namespace ftxui
 #endif /* end of include guard: SCROLLER_H */

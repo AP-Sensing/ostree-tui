@@ -19,11 +19,13 @@
 
 namespace CommitRender {
 
-    static const std::string COMMIT_NODE        = " ☐";
-    static const std::string COMMIT_TREE        = " │";
-    static const std::string COMMIT_NONE        = "  ";
-    static const std::string INDENT             = " ";
-    static const std::string GAP_TREE_COMMITS   = "  ";
+    constexpr size_t COMMIT_DETAIL_LEVEL     {4};
+
+    constexpr std::string COMMIT_NODE        {" ☐"};
+    constexpr std::string COMMIT_TREE        {" │"};
+    constexpr std::string COMMIT_NONE        {"  "};
+    constexpr std::string INDENT             {" "};
+    constexpr std::string GAP_TREE_COMMITS   {"  "};
 
     /**
      * @brief create a Renderer for the commit section
