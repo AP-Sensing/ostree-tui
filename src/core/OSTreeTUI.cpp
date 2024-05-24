@@ -107,7 +107,9 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 
 	auto screen = ScreenInteractive::Fullscreen();
 	
-	Manager manager(ostree_repo, visible_branches);
+	std::vector<std::string> allBranches = ostree_repo.getBranches();
+
+	Manager manager(ostree_repo, visible_branches, allBranches);
 	Component branch_boxes = manager.branch_boxes;
 	Component manager_renderer = Renderer(branch_boxes, [&] {
 
@@ -116,7 +118,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 			commit_info = text(" no commit info available ") | color(Color::RedLight) | bold | center;
 		} else if (rebaseMode) {
 			cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
-			commit_info = Manager::renderPromotionWindow(display_commit);
+			commit_info = Manager::renderPromotionWindow(display_commit, manager.promotionRefSelection);
 		} else {
 			cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
 			commit_info = Manager::renderInfo(display_commit);
