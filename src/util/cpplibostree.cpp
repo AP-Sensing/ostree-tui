@@ -287,4 +287,8 @@ namespace cpplibostree {
         return branches_str;
     }
 
+    bool promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject) {
+        return false;
+    }
+
 } // namespace cpplibostree

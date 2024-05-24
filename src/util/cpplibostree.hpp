@@ -136,6 +136,20 @@ namespace cpplibostree {
          */
         CommitList parseCommitsAllBranches();
 
+        // read & write access to OSTree repo:
+
+        /**
+         * @brief Promotes a commit to another branch. Similar to: 
+         * `ostree commit --repo=repo -b newRef -s newSubject --tree=ref=hash`
+         * 
+         * @param hash hash of the commit to promote
+         * @param newRef branch to promote to
+         * @param newSubject new commit subject, it needed
+         * @return true on success
+         * @return false on failed promotion
+         */
+        bool promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject = "");
+
     private:
         /**
          * @brief Get all branches as a single string, separated by spaces.
