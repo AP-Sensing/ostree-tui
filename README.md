@@ -23,7 +23,7 @@
 Welcome to OSTree-TUI. This project provides a more user friendly approach to a OSTree interface. It's purpose is to assist developers when using the command line to interact with OSTree (not to replace the command line interface completely).
 
 ## Usage & Features
-To start the OSTree-TUI, simply type `ostree-tui <repo_path>` (replace `<repo_path>` with the path to the desired repository). Navigating the application is possible with the arrow keys, or mouse input. Special actions are described in the bottom-bar.
+To start the OSTree-TUI, simply type `ostree-tui <repo_path>` (replace `<repo_path>` with the path to the desired repository), or `ostree-tui --help` to see its options. Navigating the application is possible with the arrow keys, or mouse input. Special actions are described in the bottom-bar.
 
 The features currently include:
  * Display a commit tree on the left

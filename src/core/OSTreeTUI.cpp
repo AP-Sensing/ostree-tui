@@ -47,10 +47,8 @@ std::vector<std::string> OSTreeTUI::parseVisibleCommitMap(cpplibostree::OSTreeRe
 	return visible_commit_view_map;
 }
 
-int OSTreeTUI::main(const std::string& repo) {
+int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& startupBranches) {
 	using namespace ftxui;
-
-	std::cout << "OSTree TUI on '" << repo << "'";
 
 	// - STATES ---------- ----------
 	
@@ -62,11 +60,21 @@ int OSTreeTUI::main(const std::string& repo) {
 	std::vector<std::string> visible_commit_view_map{};			// map from view-index to commit-hash
 	std::unordered_map<std::string, Color> branch_color_map{};	// map branch to color
 
-	// set all branches as visible and define a branch color
+	// set all branch visibilities and define a branch color
 	for (const auto& branch : ostree_repo.getBranches()) {
-		visible_branches[branch] = true;
+		// if startupBranches are defined, set all as non-visible
+		visible_branches[branch] = startupBranches.size() == 0 ? true : false;
 		std::hash<std::string> name_hash{};
 		branch_color_map[branch] = Color::Palette256((name_hash(branch) + 10) % 256);
+	}
+	// if startupBranches are defined, only set those visible
+	if (startupBranches.size() != 0) {
+		for (const auto& branch : startupBranches) {
+			if (visible_branches.find(branch) == visible_branches.end()) {
+        		return help("ostree","no such branch: " + branch);
+			}
+			visible_branches[branch] = true;
+		}
 	}
 
 	// - UPDATES ---------- ----------
@@ -176,4 +184,48 @@ int OSTreeTUI::main(const std::string& repo) {
   	screen.Loop(main_container);
 
   	return EXIT_SUCCESS;
+}
+
+int OSTreeTUI::help(const std::string& caller, const std::string& errorMessage) {
+	using namespace ftxui;
+
+	// define command line options
+	std::vector<std::vector<std::string>> command_options = {
+		// option, arguments, meaning
+		{"-h, --help", "", "Show help options the REPOSITORY_PATH can be ommited"},
+		{"-r, --refs", "REF [REF...]", "Specify a list of visible refs at startup if not specified, show all refs"},
+	};
+
+	Elements options   = {text("Options:")};
+	Elements arguments = {text("Arguments:")};
+	Elements meanings  = {text("Meaning:")};
+	for (const auto& command : command_options) {
+		options.push_back(text(command.at(0) + "  ") | color(Color::GrayLight));
+		arguments.push_back(text(command.at(1) + "  ") | color(Color::GrayLight));
+		meanings.push_back(text(command.at(2) + "  "));
+	}
+
+	auto helpPage = vbox({
+			errorMessage.size() == 0 ? filler() : (text(errorMessage) | bold | color(Color::Red) | flex),
+			hbox({
+	            text("Usage: "),
+				text(caller) | color(Color::GrayLight),
+	            text(" REPOSITORY_PATH") | color(Color::Yellow),
+				text(" [OPTION...]") | color(Color::Yellow)
+	        }),
+			text(""),
+	        hbox({
+				vbox(options),
+				vbox(arguments),
+				vbox(meanings),
+	        }),
+			text("")
+	    });
+
+	auto screen = Screen::Create(Dimension::Fit(helpPage));
+	Render(screen, helpPage);
+	screen.Print();
+	std::cout << "\n";
+
+	return errorMessage.size() == 0;
 }
