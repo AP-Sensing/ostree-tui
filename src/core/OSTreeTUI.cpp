@@ -9,8 +9,6 @@
 
 #include <fcntl.h>
 
-//#include "clip.hpp"
-
 #include "commit.hpp"
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
@@ -21,6 +19,8 @@
 
 #include "footer.hpp"
 #include "manager.hpp"
+
+#include "clip.h"
 
 #include "../util/cpplibostree.hpp"
 
@@ -164,8 +164,8 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
     	}
 		// copy commit id
     	if (event == Event::Character('c')) {
-			// TODO add (working) clipboard library
-			std::cout << "copy not implemented yet" << std::endl;
+			std::string hash = visible_commit_view_map.at(selected_commit);
+			clip::set_text(hash);
     	  	return true;
     	}
 		// refresh repository
