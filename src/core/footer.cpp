@@ -8,14 +8,16 @@
 
 #include "footer.hpp"
 
-ftxui::Component footer::footerRender() {
+ftxui::Element Footer::footerRender() {
 	using namespace ftxui;
 	
-	return ftxui::Renderer([] {
-		return hbox({
-			text(" OSTree TUI ") | bold,
-			separator(),
-			text("  || (Q)uit || (R)efresh || (C)opy commit hash || "),
-		});
+	return hbox({
+		text(" OSTree TUI ") | bold,
+		separator(),
+		text(content) | (content == DEFAULT_CONTENT ? color(Color::White) : color(Color::YellowLight)),
 	});
+}
+
+void Footer::resetContent() {
+	content = DEFAULT_CONTENT;
 }

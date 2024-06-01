@@ -7,9 +7,17 @@
 #include "ftxui/component/component.hpp"        // for ftxui
 #include "ftxui/component/component_base.hpp"   // for Component
 
-namespace footer{
+class Footer {
+public:
+    const std::string DEFAULT_CONTENT   {"  || (Q)uit || (R)efresh || (C)opy commit hash || "};
+    std::string content                 {DEFAULT_CONTENT};
+
+public:
+    Footer() = default;
+    
+    /// reset footer text to default string
+    void resetContent();
 
     /// create a Renderer for the footer section
-    ftxui::Component footerRender();
-
-} // namespace footer
+    ftxui::Element footerRender();
+};
