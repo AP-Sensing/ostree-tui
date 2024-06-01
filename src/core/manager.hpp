@@ -14,31 +14,47 @@
 #include "../util/cpplibostree.hpp"
 #include "commit.hpp"
 
-/// Right postion of main window
+/// Interchangeable View
 class Manager {
 public:
-    ftxui::Component branch_boxes = ftxui::Container::Vertical({});
+    int tab_index{0};
 
-//public:
-    Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches);
-    
-    ftxui::Element branchBoxRender();
+    std::vector<std::string> tab_entries = {
+    	" Info ", " Filter ", " Promote "
+  	};
 
-    static ftxui::Element renderInfo(const cpplibostree::Commit& display_commit);
-    static ftxui::Element renderPromotionWindow(const cpplibostree::Commit& display_commit, ftxui::Component& rb);
+    ftxui::Component tab_selection;
+    ftxui::Component tab_content;
+
+    ftxui::Component top_text_box;
+
+    // because the combination of all interchangeable views is very simple,
+    // we can (in contrast to the other ones) render this one immediately
+    ftxui::Component manager_renderer;
+
+public:
+    Manager(const ftxui::Component& info_view, const ftxui::Component& filter_view, const ftxui::Component& promotion_view);
 };
 
 class CommitInfoManager {
-
+public:
+    static ftxui::Element renderInfoView(const cpplibostree::Commit& display_commit);
 };
 
 class BranchBoxManager {
+public:
+    ftxui::Component branch_boxes = ftxui::Container::Vertical({});
 
+public:
+    BranchBoxManager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches);
+    
+    ftxui::Element branchBoxRender();
 };
 
 class ContentPromotionManager {
 public:
     // branch selection
+    ftxui::Component branch_selection; // must be set from OSTreeTUI
     int branch_selected{0};
 
     // flag selection
@@ -67,12 +83,18 @@ public:
 
     std::string new_subject{""};
 
+    // apply button
+    ftxui::Component apply_button; // must be set from OSTreeTUI
+
 public:
     ContentPromotionManager();
 
-    ftxui::Component composePromotionComponent(ftxui::Component& branch_selection, ftxui::Component& apply_button);
+    /// Warning: branch_selection & apply_button have to be set first (TODO check in method)
+    ftxui::Component composePromotionComponent();
 
+    /// renders the promotion command resulting from the current user settings (ostree commit ...) 
     ftxui::Elements renderPromotionCommand(cpplibostree::OSTreeRepo& ostree_repo, const std::string& selected_commit_hash);
 
-    ftxui::Element renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit, ftxui::Component& branch_selection, ftxui::Component& apply_button);
+    /// Warning: branch_selection & apply_button have to be set first (TODO check in method)
+    ftxui::Element renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit);
 };
