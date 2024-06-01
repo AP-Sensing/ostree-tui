@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <thread>
 
 #include <fcntl.h>
 
@@ -59,6 +60,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	std::unordered_map<std::string, bool>  visible_branches{};	// map branch visibility to branch
 	std::vector<std::string> visible_commit_view_map{};			// map from view-index to commit-hash
 	std::unordered_map<std::string, Color> branch_color_map{};	// map branch to color
+	std::string notification_text = "";							// footer notification
 	
 	// set all branches as visible and define a branch color
 	for (const auto& branch : ostree_repo.getBranches()) {
@@ -102,7 +104,6 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	};
 
 	// - UI ELEMENTS ---------- ----------
-
 	auto screen = ScreenInteractive::Fullscreen();
 	
 	std::vector<std::string> allBranches = ostree_repo.getBranches();
@@ -142,6 +143,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 
 	auto apply_button = Button("Apply", [&] {
 		refresh_repository();
+		notification_text = " Applied content promotion. ";
 	}, ButtonOption::Simple());
  
   	auto promotion_component = Container::Vertical({
@@ -276,7 +278,11 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		return CommitRender::commitRender(ostree_repo, visible_commit_view_map, visible_branches, branch_color_map, selected_commit);
 	}));
 
-  	Component footer_renderer = footer::footerRender();
+	// FOOTER
+	Footer footer;
+  	Component footer_renderer = Renderer([&] {
+		return footer.footerRender();
+	});
 
 	// window specific shortcuts
 	log_renderer = CatchEvent(log_renderer | border, [&](Event event) {
@@ -317,10 +323,31 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
     	return false;
   	});
 
+	bool run_sub_threads{true};
+	std::thread footer_notification_updater([&] {
+		while (run_sub_threads) {
+			using namespace std::chrono_literals;
+			// notification is set
+			if (notification_text != "") {
+				footer.content = notification_text;
+				screen.Post(Event::Custom);
+				std::this_thread::sleep_for(2s);
+				// clear notification
+				notification_text = "";
+				footer.resetContent();
+				screen.Post(Event::Custom);
+			}
+			std::this_thread::sleep_for(0.5s);
+		}
+	});
+
   	screen.Loop(main_container);
+	run_sub_threads = false;
+	footer_notification_updater.join();
 
   	return EXIT_SUCCESS;
 }
+
 
 int OSTreeTUI::help(const std::string& caller, const std::string& errorMessage) {
 	using namespace ftxui;
