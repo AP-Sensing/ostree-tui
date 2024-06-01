@@ -145,10 +145,11 @@ namespace cpplibostree {
          * @param hash hash of the commit to promote
          * @param newRef branch to promote to
          * @param newSubject new commit subject, it needed
+         * @param keepMetadata should new commit keep metadata of old commit
          * @return true on success
          * @return false on failed promotion
          */
-        bool promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject = "");
+        bool promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject = "", bool keepMetadata = false);
 
     private:
         /**
