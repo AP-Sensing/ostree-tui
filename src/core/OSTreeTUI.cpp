@@ -107,72 +107,41 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	auto screen = ScreenInteractive::Fullscreen();
 	
 	std::vector<std::string> allBranches = ostree_repo.getBranches();
-
-	Manager manager(ostree_repo, visible_branches);
-	Component branch_boxes = manager.branch_boxes;
  
 	// INTERCHANGEABLE VIEW
-	ContentPromotionManager promotionManager;
-	
-	// TODO set as values in ContentPromotionManager, where possible...
-	// only declare components that are dependant on ostree-content,
-	// the rest is defined in the promotionManager
-	Component branch_selection = Radiobox(&allBranches, &promotionManager.branch_selected);
-
-	auto apply_button = Button("Apply", [&] {
-		refresh_repository();
-		notification_text = " Applied content promotion. ";
-	}, ButtonOption::Simple());
- 
-	Component promotion_view = Renderer(promotionManager.composePromotionComponent(branch_selection, apply_button), [&] {
-		if (visible_commit_view_map.size() <= 0) {
-			return text(" please select a commit to continue commit-promotion... ") | color(Color::RedLight) | bold | center;
-		}
-		
-		return promotionManager.renderPromotionView(
-			ostree_repo,
-			ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit)),
-			branch_selection,
-			apply_button
-		);
-    });
-
-	Component filter_view = Renderer(branch_boxes, [&] {
-		return manager.branchBoxRender();
-	});
-
+	// info
 	Component info_view = Renderer([&] {
-		// TODO refactor all this into a method in ContentPromotionManager
-		// return CommitInfoManager::renderInfoView(...);
-
 		if (visible_commit_view_map.size() <= 0) {
 			return text(" no commit info available ") | color(Color::RedLight) | bold | center;
 		}
-		
-		cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
-		return Manager::renderInfo(display_commit);
+		return CommitInfoManager::renderInfoView(ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit)));
     });
 
-	int tab_index = 0;
-	std::vector<std::string> tab_entries = {
-    	" Info ", " Filter ", " Promote "
-  	};
-  	auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
-  	auto tab_content = Container::Tab({
-          info_view,
-		  filter_view,
-		  promotion_view
-      },
-      &tab_index);
-	Component top_text_box = Renderer([&] { return text("Commit... ") | bold; });
- 
-  	Component manager_renderer = Container::Vertical({
-      	Container::Horizontal({
-			top_text_box,
-          	tab_selection
-      	}),
-      	tab_content,
-  	});
+	// filter
+	BranchBoxManager filterManager(ostree_repo, visible_branches);
+	Component filter_view = Renderer(filterManager.branch_boxes, [&] {
+		return filterManager.branchBoxRender();
+	});
+
+	// promotion
+	ContentPromotionManager promotionManager;
+	promotionManager.branch_selection = Radiobox(&allBranches, &promotionManager.branch_selected);
+	promotionManager.apply_button = Button("Apply", [&] {
+		// TODO call promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject = "", bool keepMetadata = false);  
+		refresh_repository();
+		notification_text = " Applied content promotion. ";
+	}, ButtonOption::Simple());
+	Component promotion_view = Renderer(promotionManager.composePromotionComponent(), [&] {
+		if (visible_commit_view_map.size() <= 0) {
+			return text(" please select a commit to continue commit-promotion... ") | color(Color::RedLight) | bold | center;
+		}
+		return promotionManager.renderPromotionView(ostree_repo,
+			ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit)));
+    });
+
+	// interchangeable view (composed)
+	Manager manager(info_view, filter_view, promotion_view);
+  	Component manager_renderer = manager.manager_renderer;
 	
 	// COMMIT TREE
 	Component log_renderer = Scroller(&selected_commit, CommitRender::COMMIT_DETAIL_LEVEL, Renderer([&] {

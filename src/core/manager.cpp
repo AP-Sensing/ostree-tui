@@ -7,8 +7,34 @@
 
 #include "../util/cpplibostree.hpp"
 
+// Manager
 
-Manager::Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches) {
+Manager::Manager(const ftxui::Component& info_view, const ftxui::Component& filter_view, const ftxui::Component& promotion_view) {
+	using namespace ftxui;
+
+	tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
+
+	tab_content = Container::Tab({
+        	info_view,
+			filter_view,
+			promotion_view
+    	},
+    	&tab_index);
+	
+	top_text_box = Renderer([&] { return text("Commit... ") | bold; });
+
+	manager_renderer = Container::Vertical({
+      	Container::Horizontal({
+			top_text_box,
+          	tab_selection
+      	}),
+      	tab_content,
+  	});
+}
+
+// BranchBoxManager
+
+BranchBoxManager::BranchBoxManager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches) {
     using namespace ftxui;
 
 	// branch visibility
@@ -17,7 +43,7 @@ Manager::Manager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string,
 	}
 }
 
-ftxui::Element Manager::branchBoxRender(){
+ftxui::Element BranchBoxManager::branchBoxRender(){
 	using namespace ftxui;
 	
 	// branch filter
@@ -29,7 +55,9 @@ ftxui::Element Manager::branchBoxRender(){
 	return vbox(bfb_elements);
 }
 
-ftxui::Element Manager::renderInfo(const cpplibostree::Commit& display_commit) {
+// CommitInfoManager
+
+ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& display_commit) {
 	using namespace ftxui;
 	
 	// selected commit info
@@ -57,15 +85,6 @@ ftxui::Element Manager::renderInfo(const cpplibostree::Commit& display_commit) {
 		});
 }
 
-ftxui::Element Manager::renderPromotionWindow(const cpplibostree::Commit& display_commit, ftxui::Component& rb) {
-	using namespace ftxui;
-
-	return  window(text("Commit"), vbox({
-			text("hash:       " + display_commit.hash),
-		}));
-}
-
-
 // ContentPromotionManager
 
 ContentPromotionManager::ContentPromotionManager() {
@@ -86,7 +105,7 @@ ContentPromotionManager::ContentPromotionManager() {
   	});
 }
 
-ftxui::Component ContentPromotionManager::composePromotionComponent(ftxui::Component& branch_selection, ftxui::Component& apply_button) {
+ftxui::Component ContentPromotionManager::composePromotionComponent() {
 	using namespace ftxui;
 
 	return Container::Vertical({
@@ -138,33 +157,25 @@ ftxui::Elements ContentPromotionManager::renderPromotionCommand(cpplibostree::OS
     return line;
 }
 
-ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit, ftxui::Component& branch_selection, ftxui::Component& apply_button) {
+ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit) {
 	using namespace ftxui;
 
-	auto commit_hash =
-		window(text("Commit"), text(display_commit.hash) | flex) | size(HEIGHT, LESS_THAN, 3);
-	auto branch_win =
-		window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame);
-    auto flags_win =
-        window(text("Flags"), flags->Render() | vscroll_indicator | frame);
-    auto subject_win =
-		window(text("Subject"), subject_component->Render());
-    auto metadata_win =
-        window(text("Metadata Strings"), hbox({
-                                  vbox({
-                                      hbox({
-                                          text("Add: "),
-                                          metadata_add->Render(),
-                                      }) | size(WIDTH, EQUAL, 20) |
-                                          size(HEIGHT, EQUAL, 1),
-                                      filler(),
-                                  }),
-                                  separator(),
-                                  metadata_input->Render() | vscroll_indicator | frame |
-                                      size(HEIGHT, EQUAL, 3) | flex,
-                              }));
-	auto aButton_win =
-		apply_button->Render() | color(Color::Green);
+	auto commit_hash	= window(text("Commit"), text(display_commit.hash) | flex) | size(HEIGHT, LESS_THAN, 3);
+	auto branch_win 	= window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame);
+    auto flags_win 		= window(text("Flags"), flags->Render() | vscroll_indicator | frame);
+    auto subject_win 	= window(text("Subject"), subject_component->Render());
+    auto metadata_win 	= 
+		window(text("Metadata Strings"),
+			hbox({
+                hbox({
+                    text("Add: "),
+                    metadata_add->Render(),
+                }) | size(WIDTH, EQUAL, 20) | size(HEIGHT, EQUAL, 1),
+                separator(),
+                metadata_input->Render() | vscroll_indicator | frame | size(HEIGHT, EQUAL, 3) | flex,
+            })
+		);
+	auto aButton_win 	= apply_button->Render() | color(Color::Green);
 	
     return vbox({
 			commit_hash,
