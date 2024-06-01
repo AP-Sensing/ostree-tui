@@ -108,133 +108,33 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	
 	std::vector<std::string> allBranches = ostree_repo.getBranches();
 
-	Manager manager(ostree_repo, visible_branches, allBranches);
+	Manager manager(ostree_repo, visible_branches);
 	Component branch_boxes = manager.branch_boxes;
  
-	// CONTENT PROMOTION
-	int branch_selected = 0;
-	Component branch_selection = Radiobox(&allBranches, &branch_selected);
- 
-  	std::array<std::string, 8> options_label = {
-  	    "--keep-metadata",
-  	};
-  	std::array<bool, 8> options_state = {
-  	    false,
-  	};
- 
-  	std::vector<std::string> metadata_entries;
-  	int input_selected = 0;
-  	Component input = Menu(&metadata_entries, &input_selected);
- 
-  	auto metadata_option = InputOption();
-  	std::string metadata_add_content;
-  	metadata_option.on_enter = [&] {
-  	  	metadata_entries.push_back(metadata_add_content);
-  	  	metadata_add_content = "";
-  	};
-  	Component metadata_add = Input(&metadata_add_content, "metadata string", metadata_option);
- 
-  	std::string new_subject = "";
-  	Component subject_component = Input(&new_subject, "subject");
- 
-  	Component flags = Container::Vertical({
-  	    Checkbox(&options_label[0], &options_state[0]),
-  	});
+	// INTERCHANGEABLE VIEW
+	ContentPromotionManager promotionManager;
+	
+	// TODO set as values in ContentPromotionManager, where possible...
+	// only declare components that are dependant on ostree-content,
+	// the rest is defined in the promotionManager
+	Component branch_selection = Radiobox(&allBranches, &promotionManager.branch_selected);
 
 	auto apply_button = Button("Apply", [&] {
 		refresh_repository();
 		notification_text = " Applied content promotion. ";
 	}, ButtonOption::Simple());
  
-  	auto promotion_component = Container::Vertical({
-		branch_selection,
-		Container::Horizontal({
-  	    	flags,
-  	    	Container::Vertical({
-  	    	    subject_component,
-  	    	    Container::Horizontal({
-  	    	        metadata_add,
-  	    	        input,
-  	    	    }),
-  	    	}),
-  		}),
-		apply_button
-	});
- 	// render final command to be executed
-  	auto render_command = [&] {
-    	Elements line;
-		line.push_back(text("ostree commit") | bold);
-    	line.push_back(text(" --repo=" + ostree_repo.getRepoPath()) | bold);
-		line.push_back(text(" -b " + allBranches[branch_selected]) | bold);
-    	// flags
-    	for (int i = 0; i < 8; ++i) {
-    	  if (options_state[i]) {
-    	    line.push_back(text(" "));
-    	    line.push_back(text(options_label[i]) | dim);
-    	  }
-    	}
-    	// optional subject
-    	if (!new_subject.empty()) {
-    	  line.push_back(text(" -s ") | bold);
-    	  line.push_back(text(new_subject) | color(Color::BlueLight) |
-    	                 bold);
-    	}
-    	// Input
-		if (!metadata_entries.empty()) {
-			line.push_back(text(" --add-metadata-string=\"") | bold);
-    		for (auto& it : metadata_entries) {
-    		  line.push_back(text(" " + it) | color(Color::RedLight));
-    		}
-			line.push_back(text("\"") | bold);
-		}
-    	return line;
-  	};
-
-	Component promotion_view = Renderer(promotion_component, [&] {
+	Component promotion_view = Renderer(promotionManager.composePromotionComponent(branch_selection, apply_button), [&] {
 		if (visible_commit_view_map.size() <= 0) {
 			return text(" please select a commit to continue commit-promotion... ") | color(Color::RedLight) | bold | center;
 		}
-
-		cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
-		auto commit_hash =
-			window(text("Commit"), text(display_commit.hash) | flex) | size(HEIGHT, LESS_THAN, 3);
-		auto branch_win =
-			window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame);
-    	auto flags_win =
-    	    window(text("Flags"), flags->Render() | vscroll_indicator | frame);
-    	auto subject_win =
-			window(text("Subject"), subject_component->Render());
-    	auto metadata_win =
-    	    window(text("Metadata Strings"), hbox({
-    	                              vbox({
-    	                                  hbox({
-    	                                      text("Add: "),
-    	                                      metadata_add->Render(),
-    	                                  }) | size(WIDTH, EQUAL, 20) |
-    	                                      size(HEIGHT, EQUAL, 1),
-    	                                  filler(),
-    	                              }),
-    	                              separator(),
-    	                              input->Render() | vscroll_indicator | frame |
-    	                                  size(HEIGHT, EQUAL, 3) | flex,
-    	                          }));
-		auto aButton_win =
-			apply_button->Render() | color(Color::Green);
-
-    	return vbox({
-				commit_hash,
-				branch_win,
-    	        hbox({
-    	            flags_win,
-    	            vbox({
-    	                subject_win | size(WIDTH, EQUAL, 20),
-    	                metadata_win | size(WIDTH, EQUAL, 60),
-    	            }),
-    	            filler(),
-    	        }) | size(HEIGHT, LESS_THAN, 8),
-    	        hflow(render_command()) | flex_grow,
-				aButton_win,
-    	}) | flex_grow;
+		
+		return promotionManager.renderPromotionView(
+			ostree_repo,
+			ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit)),
+			branch_selection,
+			apply_button
+		);
     });
 
 	Component filter_view = Renderer(branch_boxes, [&] {
@@ -242,6 +142,9 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	});
 
 	Component info_view = Renderer([&] {
+		// TODO refactor all this into a method in ContentPromotionManager
+		// return CommitInfoManager::renderInfoView(...);
+
 		if (visible_commit_view_map.size() <= 0) {
 			return text(" no commit info available ") | color(Color::RedLight) | bold | center;
 		}
@@ -285,7 +188,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	});
 
 	// window specific shortcuts
-	log_renderer = CatchEvent(log_renderer | border, [&](Event event) {
+	log_renderer = CatchEvent(log_renderer, [&](Event event) {
 		// switch through commits
     	if (event == Event::ArrowUp || event == Event::Character('k') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
     	  	return prev_commit();
