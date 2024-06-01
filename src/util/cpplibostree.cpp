@@ -287,8 +287,43 @@ namespace cpplibostree {
         return branches_str;
     }
 
-    bool promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject) {
-        return false;
+    std::string exec(const char* cmd) {
+            std::array<char, 128> buffer;
+            std::string result;
+            std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+            if (!pipe) {
+                throw std::runtime_error("popen() failed!");
+            }
+            while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+                result += buffer.data();
+                result += " ";
+            }
+            return result;
+        }
+
+    /// TODO This implementation is dirty, it should not rely on the ostree CLI
+    bool OSTreeRepo::promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject, bool keepMetadata) {
+        if (hash.size() <= 0 || newRef.size() <= 0) {
+            return false;
+        }
+        
+        auto repo   = " --repo=" + repo_path;
+        auto branch = " -b " + newRef;
+        auto subj   = (newSubject.size() <= 0
+                            ? ""
+                            : " -s " + newSubject);
+        auto meta   = (keepMetadata
+                            ? ""
+                            : " --keep-metadata");
+        auto tree   = " --tree=ref=" + hash;
+        
+        std::string command = "ostree commit" + repo + branch + newRef + subj + meta + tree;
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+        
+        if (!pipe) {
+            return false;
+        }
+        return true;
     }
 
 } // namespace cpplibostree
