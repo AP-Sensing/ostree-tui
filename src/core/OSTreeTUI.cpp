@@ -59,8 +59,6 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	std::unordered_map<std::string, bool>  visible_branches{};	// map branch visibility to branch
 	std::vector<std::string> visible_commit_view_map{};			// map from view-index to commit-hash
 	std::unordered_map<std::string, Color> branch_color_map{};	// map branch to color
-
-	bool rebaseMode{false};
 	
 	// set all branches as visible and define a branch color
 	for (const auto& branch : ostree_repo.getBranches()) {
@@ -111,26 +109,167 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 
 	Manager manager(ostree_repo, visible_branches, allBranches);
 	Component branch_boxes = manager.branch_boxes;
-	Component manager_renderer = Renderer(branch_boxes, [&] {
+ 
+	// CONTENT PROMOTION
+	int branch_selected = 0;
+	Component branch_selection = Radiobox(&allBranches, &branch_selected);
+ 
+  	std::array<std::string, 8> options_label = {
+  	    "--keep-metadata",
+  	};
+  	std::array<bool, 8> options_state = {
+  	    false,
+  	};
+ 
+  	std::vector<std::string> metadata_entries;
+  	int input_selected = 0;
+  	Component input = Menu(&metadata_entries, &input_selected);
+ 
+  	auto metadata_option = InputOption();
+  	std::string metadata_add_content;
+  	metadata_option.on_enter = [&] {
+  	  	metadata_entries.push_back(metadata_add_content);
+  	  	metadata_add_content = "";
+  	};
+  	Component metadata_add = Input(&metadata_add_content, "metadata string", metadata_option);
+ 
+  	std::string new_subject = "";
+  	Component subject_component = Input(&new_subject, "subject");
+ 
+  	Component flags = Container::Vertical({
+  	    Checkbox(&options_label[0], &options_state[0]),
+  	});
 
-		Element commit_info;
-		if (visible_commit_view_map.size() <= 0) {
-			commit_info = text(" no commit info available ") | color(Color::RedLight) | bold | center;
-		} else if (rebaseMode) {
-			cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
-			commit_info = Manager::renderPromotionWindow(display_commit, manager.promotionRefSelection);
-		} else {
-			cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
-			commit_info = Manager::renderInfo(display_commit);
+	auto apply_button = Button("Apply", [&] {
+		refresh_repository();
+	}, ButtonOption::Simple());
+ 
+  	auto promotion_component = Container::Vertical({
+		branch_selection,
+		Container::Horizontal({
+  	    	flags,
+  	    	Container::Vertical({
+  	    	    subject_component,
+  	    	    Container::Horizontal({
+  	    	        metadata_add,
+  	    	        input,
+  	    	    }),
+  	    	}),
+  		}),
+		apply_button
+	});
+ 	// render final command to be executed
+  	auto render_command = [&] {
+    	Elements line;
+		line.push_back(text("ostree commit") | bold);
+    	line.push_back(text(" --repo=" + ostree_repo.getRepoPath()) | bold);
+		line.push_back(text(" -b " + allBranches[branch_selected]) | bold);
+    	// flags
+    	for (int i = 0; i < 8; ++i) {
+    	  if (options_state[i]) {
+    	    line.push_back(text(" "));
+    	    line.push_back(text(options_label[i]) | dim);
+    	  }
+    	}
+    	// optional subject
+    	if (!new_subject.empty()) {
+    	  line.push_back(text(" -s ") | bold);
+    	  line.push_back(text(new_subject) | color(Color::BlueLight) |
+    	                 bold);
+    	}
+    	// Input
+		if (!metadata_entries.empty()) {
+			line.push_back(text(" --add-metadata-string=\"") | bold);
+    		for (auto& it : metadata_entries) {
+    		  line.push_back(text(" " + it) | color(Color::RedLight));
+    		}
+			line.push_back(text("\"") | bold);
 		}
-		
-	    return vbox({
-				manager.branchBoxRender(),
-				separator(),
-				commit_info
-			});
+    	return line;
+  	};
+
+	Component promotion_view = Renderer(promotion_component, [&] {
+		if (visible_commit_view_map.size() <= 0) {
+			return text(" please select a commit to continue commit-promotion... ") | color(Color::RedLight) | bold | center;
+		}
+
+		cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
+		auto commit_hash =
+			window(text("Commit"), text(display_commit.hash) | flex) | size(HEIGHT, LESS_THAN, 3);
+		auto branch_win =
+			window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame);
+    	auto flags_win =
+    	    window(text("Flags"), flags->Render() | vscroll_indicator | frame);
+    	auto subject_win =
+			window(text("Subject"), subject_component->Render());
+    	auto metadata_win =
+    	    window(text("Metadata Strings"), hbox({
+    	                              vbox({
+    	                                  hbox({
+    	                                      text("Add: "),
+    	                                      metadata_add->Render(),
+    	                                  }) | size(WIDTH, EQUAL, 20) |
+    	                                      size(HEIGHT, EQUAL, 1),
+    	                                  filler(),
+    	                              }),
+    	                              separator(),
+    	                              input->Render() | vscroll_indicator | frame |
+    	                                  size(HEIGHT, EQUAL, 3) | flex,
+    	                          }));
+		auto aButton_win =
+			apply_button->Render() | color(Color::Green);
+
+    	return vbox({
+				commit_hash,
+				branch_win,
+    	        hbox({
+    	            flags_win,
+    	            vbox({
+    	                subject_win | size(WIDTH, EQUAL, 20),
+    	                metadata_win | size(WIDTH, EQUAL, 60),
+    	            }),
+    	            filler(),
+    	        }) | size(HEIGHT, LESS_THAN, 8),
+    	        hflow(render_command()) | flex_grow,
+				aButton_win,
+    	}) | flex_grow;
     });
 
+	Component filter_view = Renderer(branch_boxes, [&] {
+		return manager.branchBoxRender();
+	});
+
+	Component info_view = Renderer([&] {
+		if (visible_commit_view_map.size() <= 0) {
+			return text(" no commit info available ") | color(Color::RedLight) | bold | center;
+		}
+		
+		cpplibostree::Commit display_commit = ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit));
+		return Manager::renderInfo(display_commit);
+    });
+
+	int tab_index = 0;
+	std::vector<std::string> tab_entries = {
+    	" Info ", " Filter ", " Promote "
+  	};
+  	auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
+  	auto tab_content = Container::Tab({
+          info_view,
+		  filter_view,
+		  promotion_view
+      },
+      &tab_index);
+	Component top_text_box = Renderer([&] { return text("Commit... ") | bold; });
+ 
+  	Component manager_renderer = Container::Vertical({
+      	Container::Horizontal({
+			top_text_box,
+          	tab_selection
+      	}),
+      	tab_content,
+  	});
+	
+	// COMMIT TREE
 	Component log_renderer = Scroller(&selected_commit, CommitRender::COMMIT_DETAIL_LEVEL, Renderer([&] {
 		visible_commit_view_map = parseVisibleCommitMap(ostree_repo, visible_branches);
 		selected_commit = std::min(selected_commit, visible_commit_view_map.size() - 1);
@@ -159,17 +298,6 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	
 	// add shortcuts
 	Component main_container = CatchEvent(container | border, [&](const Event& event) {
-		// apply changes
-    	if (event == Event::Character('s')) {
-    	  	std::cout << "apply not implemented yet" << std::endl;
-    	  	return true;
-    	}
-		// enter rebase mode
-    	if (event == Event::Character('p')) {
-    	  	std::cout << "rebase not implemented yet" << std::endl;
-			rebaseMode = !rebaseMode;
-    	  	return true;
-    	}
 		// copy commit id
     	if (event == Event::Character('c')) {
 			std::string hash = visible_commit_view_map.at(selected_commit);

@@ -24,7 +24,7 @@ ftxui::Element Manager::branchBoxRender(){
 	
 	// branch filter
 	Elements bfb_elements = {
-			text(L"filter branches") | bold,
+			text(L"branches:") | bold,
 			filler(),
 			branch_boxes->Render() | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 10),
 		};
@@ -42,11 +42,9 @@ ftxui::Element Manager::renderInfo(const cpplibostree::Commit& display_commit) {
 		);
 	}
 	return vbox({
-			text("commit info") | bold,
-			filler(),
 			text("hash:       " + display_commit.hash),
 			filler(),
-			text("subject:    " + display_commit.subject),
+			paragraph("subject:    " + display_commit.subject),
 			filler(),
 			text("date:       " + std::format("{:%Y-%m-%d %T %Ez}",
 								std::chrono::time_point_cast<std::chrono::seconds>(display_commit.timestamp))),
@@ -64,21 +62,7 @@ ftxui::Element Manager::renderInfo(const cpplibostree::Commit& display_commit) {
 ftxui::Element Manager::renderPromotionWindow(const cpplibostree::Commit& display_commit, ftxui::Component& rb) {
 	using namespace ftxui;
 
-	return vbox({
-			text("commit info") | bold,
-			filler(),
+	return  window(text("Commit"), vbox({
 			text("hash:       " + display_commit.hash),
-			filler(),
-			text("subject:    " + display_commit.subject),
-			filler(),
-			text("date:       " + std::format("{:%Y-%m-%d %T %Ez}",
-								std::chrono::time_point_cast<std::chrono::seconds>(display_commit.timestamp))),
-			filler(),
-			text(""),
-			text("  promote commit...") | bold | color(Color::Green),
-			filler(),
-			text("TODO insert ref selection"),
-			filler(),
-			rb->Render()
-		});
+		}));
 }
