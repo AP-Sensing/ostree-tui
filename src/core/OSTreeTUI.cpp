@@ -127,7 +127,10 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	ContentPromotionManager promotionManager;
 	promotionManager.branch_selection = Radiobox(&allBranches, &promotionManager.branch_selected);
 	promotionManager.apply_button = Button("Apply", [&] {
-		// TODO call promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject = "", bool keepMetadata = false);  
+		ostree_repo.promoteCommit(visible_commit_view_map.at(selected_commit),
+								  ostree_repo.getBranches().at(static_cast<size_t>(promotionManager.branch_selected)),
+								  promotionManager.metadata_entries, promotionManager.new_subject,
+								  promotionManager.options_state[0]);
 		refresh_repository();
 		notification_text = " Applied content promotion. ";
 	}, ButtonOption::Simple());
