@@ -184,19 +184,21 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	// blocks the chosen letters from any TUI-internal text input
 	Component main_container = CatchEvent(container | border, [&](const Event& event) {
 		// copy commit id
-    	if (event == Event::Character('c')) {
+    	if (event == Event::AltC) {
 			std::string hash = visible_commit_view_map.at(selected_commit);
 			clip::set_text(hash);
+			notification_text = " Copied Hash " + hash + " ";
     	  	return true;
     	}
 		// refresh repository
-		if (event == Event::Character('r')) {
+		if (event == Event::AltR) {
 			refresh_repository();
+			notification_text = " Refreshed Repository Data ";
 			return true;
 		}
 		// exit
-    	if (event == Event::Character('q') || event == Event::Escape) {
-    	  	screen.ExitLoopClosure()();
+    	if (event == Event::AltQ || event == Event::Escape) {
+			screen.ExitLoopClosure()();
     	  	return true;
     	}
     	return false;
