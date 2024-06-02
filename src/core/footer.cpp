@@ -12,7 +12,7 @@ ftxui::Element Footer::footerRender() {
 	using namespace ftxui;
 	
 	return hbox({
-		text(" OSTree TUI ") | bold,
+		text("OSTree TUI") | bold | hyperlink("https://github.com/AP-Sensing/ostree-tui"),
 		separator(),
 		text(content) | (content == DEFAULT_CONTENT ? color(Color::White) : color(Color::YellowLight)),
 	});
