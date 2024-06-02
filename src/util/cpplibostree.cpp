@@ -300,7 +300,7 @@ namespace cpplibostree {
         command += " -b " + newRef;
         command += (newSubject.size() <= 0
                             ? ""
-                            : " -s " + newSubject);
+                            : " -s \"" + newSubject + "\"");
         command += (keepMetadata
                             ? ""
                             : " --keep-metadata");
