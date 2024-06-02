@@ -136,9 +136,9 @@ ftxui::Elements ContentPromotionManager::renderPromotionCommand(cpplibostree::OS
 	Elements line;
 	line.push_back(text("ostree commit") | bold);
     line.push_back(text(" --repo=" + ostree_repo.getRepoPath()) | bold);
-	line.push_back(text(" -b " + ostree_repo.getBranches().at(branch_selected)) | bold);
+	line.push_back(text(" -b " + ostree_repo.getBranches().at(static_cast<size_t>(branch_selected))) | bold);
     // flags
-    for (int i = 0; i < 8; ++i) {
+    for (size_t i = 0; i < 8; ++i) {
       	if (options_state[i]) {
         	line.push_back(text(" "));
         	line.push_back(text(options_label[i]) | dim);
@@ -146,16 +146,17 @@ ftxui::Elements ContentPromotionManager::renderPromotionCommand(cpplibostree::OS
     }
     // optional subject
     if (!new_subject.empty()) {
-    	line.push_back(text(" -s ") | bold);
+    	line.push_back(text(" -s \"") | bold);
     	line.push_back(text(new_subject) | color(Color::BlueLight) | bold);
+		line.push_back(text("\"") | bold);
     }
     // metadata additions
 	if (!metadata_entries.empty()) {
-		line.push_back(text(" --add-metadata-string=\"") | bold);
     	for (auto& it : metadata_entries) {
-    		line.push_back(text(" " + it) | color(Color::RedLight));
+			line.push_back(text(" --add-metadata-string=\"") | bold);
+    		line.push_back(text(it) | color(Color::RedLight));
+			line.push_back(text("\"") | bold);
     	}
-		line.push_back(text("\"") | bold);
 	}
 	// commit
 	line.push_back(text(" --tree=ref=" + selected_commit_hash) | bold);

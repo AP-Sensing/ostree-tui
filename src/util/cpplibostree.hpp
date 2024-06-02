@@ -149,7 +149,7 @@ namespace cpplibostree {
          * @return true on success
          * @return false on failed promotion
          */
-        bool promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject = "", bool keepMetadata = false);
+        bool promoteCommit(const std::string& hash, const std::string& newRef, const std::vector<std::string> addMetadataStrings, const std::string& newSubject = "", bool keepMetadata = false);
 
     private:
         /**

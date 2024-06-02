@@ -287,23 +287,29 @@ namespace cpplibostree {
         return branches_str;
     }
 
-    /// TODO This implementation is dirty, it should not rely on the ostree CLI
-    bool OSTreeRepo::promoteCommit(const std::string& hash, const std::string& newRef, const std::string& newSubject, bool keepMetadata) {
+    /// TODO This implementation should not rely on the ostree CLI -> change to libostree usage.
+    bool OSTreeRepo::promoteCommit(const std::string& hash, const std::string& newRef,
+                                   const std::vector<std::string> addMetadataStrings,
+                                   const std::string& newSubject, bool keepMetadata) {
         if (hash.size() <= 0 || newRef.size() <= 0) {
             return false;
         }
         
-        auto repo   = " --repo=" + repo_path;
-        auto branch = " -b " + newRef;
-        auto subj   = (newSubject.size() <= 0
+        std::string command = "ostree commit";
+        command += " --repo=" + repo_path;
+        command += " -b " + newRef;
+        command += (newSubject.size() <= 0
                             ? ""
                             : " -s " + newSubject);
-        auto meta   = (keepMetadata
+        command += (keepMetadata
                             ? ""
                             : " --keep-metadata");
-        auto tree   = " --tree=ref=" + hash;
+        for (auto str : addMetadataStrings) {
+            command += "--add-metadata-string=\"" + str + "\"";
+        }
+        command += " --tree=ref=" + hash;
         
-        std::string command = "ostree commit" + repo + branch + newRef + subj + meta + tree;
+        // run as CLI command
         std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
         
         if (!pipe) {
