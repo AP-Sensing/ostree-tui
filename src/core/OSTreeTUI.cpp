@@ -174,7 +174,11 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
   	container = ResizableSplitLeft(log_renderer, container, &log_size);
   	container = ResizableSplitBottom(footer_renderer, container, &footer_size);
 	
+	log_renderer->TakeFocus();
+
 	// add shortcuts
+	// TODO change to shift+ctrl+, or change any other way, as it currently
+	// blocks the chosen letters from any TUI-internal text input
 	Component main_container = CatchEvent(container | border, [&](const Event& event) {
 		// copy commit id
     	if (event == Event::Character('c')) {
@@ -209,7 +213,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 				footer.resetContent();
 				screen.Post(Event::Custom);
 			}
-			std::this_thread::sleep_for(0.5s);
+			std::this_thread::sleep_for(0.2s);
 		}
 	});
 
@@ -227,7 +231,7 @@ int OSTreeTUI::help(const std::string& caller, const std::string& errorMessage) 
 	// define command line options
 	std::vector<std::vector<std::string>> command_options = {
 		// option, arguments, meaning
-		{"-h, --help", "", "Show help options the REPOSITORY_PATH can be ommited"},
+		{"-h, --help", "", "Show help options. The REPOSITORY_PATH can be omitted"},
 		{"-r, --refs", "REF [REF...]", "Specify a list of visible refs at startup if not specified, show all refs"},
 	};
 

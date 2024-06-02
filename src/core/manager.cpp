@@ -68,18 +68,24 @@ ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& dis
 		);
 	}
 	return vbox({
-			window(text("subject"), paragraph(display_commit.subject)),
+			window(text("Subject:"),
+				paragraph(display_commit.subject) | color(Color::White)
+			) | color(Color::Green),
 			filler(),
-			text("hash:       " + display_commit.hash),
+			text(" Hash:        ") | color(Color::Green), 
+			text(display_commit.hash),
 			filler(),
-			text("date:       " + std::format("{:%Y-%m-%d %T %Ez}",
+			text(" Date:        ") | color(Color::Green),
+			text(std::format("{:%Y-%m-%d %T %Ez}",
 								std::chrono::time_point_cast<std::chrono::seconds>(display_commit.timestamp))),
 			filler(),
-			text("parent:     " + display_commit.parent),
+			text(" Parent:      ") | color(Color::Green),
+			text(display_commit.parent),
 			filler(),
-			text("checksum:   " + display_commit.contentChecksum),
+			text(" C.-Checksum: ") | color(Color::Green),
+			text(display_commit.contentChecksum),
 			filler(),
-			display_commit.signatures.size() > 0 ? text("signatures: ") : text(""),
+			display_commit.signatures.size() > 0 ? text("signatures: ") | color(Color::Green) : text(""),
 			vbox(signatures),
 			filler()
 		});
