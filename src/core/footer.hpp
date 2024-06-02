@@ -9,7 +9,7 @@
 
 class Footer {
 public:
-    const std::string DEFAULT_CONTENT   {"  || (Q)uit || (R)efresh || (C)opy commit hash || "};
+    const std::string DEFAULT_CONTENT   {"  || Alt+Q / Esc : Quit || Alt+R : Refresh || Alt+C : Copy commit hash || "};
     std::string content                 {DEFAULT_CONTENT};
 
 public:
