@@ -36,6 +36,12 @@ public:
 
 class CommitInfoManager {
 public:
+    /**
+     * @brief Build the info view Element.
+     * 
+     * @param display_commit Commit to display the information of.
+     * @return ftxui::Element 
+     */
     static ftxui::Element renderInfoView(const cpplibostree::Commit& display_commit);
 };
 
@@ -46,6 +52,11 @@ public:
 public:
     BranchBoxManager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches);
     
+    /**
+     * @brief Build the branch box Element.
+     * 
+     * @return ftxui::Element 
+     */
     ftxui::Element branchBoxRender();
 };
 
@@ -74,17 +85,36 @@ public:
     ftxui::Component apply_button; // must be set from OSTreeTUI
 
 public:
+    /**
+     * @brief Constructor for the Promotion Manager.
+     * 
+     * @warning The branch_selection and apply_button have to be set
+     * using the respective set-methods AFTER construction, as they
+     * have to be constructed in the OSTreeTUI::main
+     */
     ContentPromotionManager();
 
+    /// Setter
     void setBranchRadiobox(ftxui::Component radiobox);
+    /// Setter
     void setApplyButton(ftxui::Component button);
 
-    /// Warning: branch_selection & apply_button have to be set first
+    /**
+     * @brief Build the promotion view Component
+     * 
+     * @warning branch_selection & apply_button have to be set first (checked through assert)
+     * @return ftxui::Component 
+     */
     ftxui::Component composePromotionComponent();
 
     /// renders the promotion command resulting from the current user settings (ostree commit ...) 
     ftxui::Elements renderPromotionCommand(cpplibostree::OSTreeRepo& ostree_repo, const std::string& selected_commit_hash);
 
-    /// Warning: branch_selection & apply_button have to be set first
+    /**
+     * @brief Build the promotion view Element
+     * 
+     * @warning branch_selection & apply_button have to be set first (checked through assert)
+     * @return ftxui::Element
+     */
     ftxui::Element renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit);
 };
