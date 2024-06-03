@@ -26,8 +26,6 @@ public:
     ftxui::Component tab_selection;
     ftxui::Component tab_content;
 
-    ftxui::Component top_text_box;
-
     // because the combination of all interchangeable views is very simple,
     // we can (in contrast to the other ones) render this one immediately
     ftxui::Component manager_renderer;

@@ -20,15 +20,10 @@ Manager::Manager(const ftxui::Component& info_view, const ftxui::Component& filt
 			promotion_view
     	},
     	&tab_index);
-	
-	top_text_box = Renderer([&] { return text("Commit... ") | bold; });
 
 	manager_renderer = Container::Vertical({
-      	Container::Horizontal({
-			top_text_box,
-          	tab_selection
-      	}),
-      	tab_content,
+        tab_selection,
+      	tab_content
   	});
 }
 
