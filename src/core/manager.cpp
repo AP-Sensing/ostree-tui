@@ -160,17 +160,19 @@ ftxui::Component ContentPromotionManager::composePromotionComponent() {
 	});
 }
 
-ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, int screenHeight, cpplibostree::Commit& display_commit) {
+ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, int screenHeight, const cpplibostree::Commit& display_commit) {
 	using namespace ftxui;
 
 	assert(branch_selection);
 	assert(apply_button);
 
 	// compute screen element sizes
-	int commit_win_height {3};
-	int apsect_win_height {8};
+	int screen_overhead		{8}; // borders, footer, etc.
+	int commit_win_height 	{3};
+	int apsect_win_height 	{8};
 	int tooltips_win_height {2};
-	int branch_select_win_height = screenHeight - 8 /*overhead screen*/ - commit_win_height - apsect_win_height - tooltips_win_height;
+	int branch_select_win_height = screenHeight - screen_overhead - commit_win_height - apsect_win_height - tooltips_win_height;
+	// tooltips only get shown, if the window is sufficiently large
 	if (branch_select_win_height < 4) {
 		tooltips_win_height = 0;
 		branch_select_win_height = 4;
@@ -182,7 +184,7 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
     auto flags_win 		= window(text("Flags"), flags->Render() | vscroll_indicator | frame);
     auto subject_win 	= window(text("Subject"), subject_component->Render()) | flex;
 	auto aButton_win 	= apply_button->Render() | color(Color::Green) | size(WIDTH, GREATER_THAN, 9) | flex;
-	
+
 	auto toolTipContent = [&](size_t tip) {
 		return vbox({
 			separatorCharacter("⎯"),

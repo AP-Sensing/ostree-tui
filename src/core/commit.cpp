@@ -11,6 +11,16 @@
 
 namespace CommitRender {
 
+void addLine(const RenderTree& treeLineType, const RenderLine& lineType,
+			 ftxui::Elements& tree_elements, ftxui::Elements& comm_elements,
+			 const cpplibostree::Commit& commit,
+			 const bool& highlight,
+			 const std::unordered_map<std::string, bool>& used_branches,
+			 const std::unordered_map<std::string, ftxui::Color>& branch_color_map) {
+	tree_elements.push_back(addTreeLine(treeLineType, commit, used_branches, branch_color_map));
+	comm_elements.push_back(addCommLine(lineType, commit, highlight, branch_color_map));
+}
+
 ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
                             const std::vector<std::string>& visible_commit_map,
                             const std::unordered_map<std::string, bool>& visible_branches,
@@ -61,18 +71,6 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 		vbox(std::move(comm_elements))
 	});
 }
-
-
-void addLine(const RenderTree& treeLineType, const RenderLine& lineType,
-			 ftxui::Elements& tree_elements, ftxui::Elements& comm_elements,
-			 const cpplibostree::Commit& commit,
-			 const bool& highlight,
-			 const std::unordered_map<std::string, bool>& used_branches,
-			 const std::unordered_map<std::string, ftxui::Color>& branch_color_map) {
-	tree_elements.push_back(addTreeLine(treeLineType, commit, used_branches, branch_color_map));
-	comm_elements.push_back(addCommLine(lineType, commit, highlight, branch_color_map));
-}
-
 
 ftxui::Element addTreeLine(const RenderTree& treeLineType,
 				 const cpplibostree::Commit& commit,

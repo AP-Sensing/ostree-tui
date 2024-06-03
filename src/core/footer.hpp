@@ -4,8 +4,6 @@
  |   keyboard shortcuts info.
  |___________________________________________________________*/
 
-#include "ftxui/component/component.hpp"        // for ftxui
-#include "ftxui/component/component_base.hpp"   // for Component
 
 class Footer {
 public:
