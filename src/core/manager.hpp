@@ -76,12 +76,15 @@ public:
 public:
     ContentPromotionManager();
 
-    /// Warning: branch_selection & apply_button have to be set first (TODO check in method)
+    void setBranchRadiobox(ftxui::Component radiobox);
+    void setApplyButton(ftxui::Component button);
+
+    /// Warning: branch_selection & apply_button have to be set first
     ftxui::Component composePromotionComponent();
 
     /// renders the promotion command resulting from the current user settings (ostree commit ...) 
     ftxui::Elements renderPromotionCommand(cpplibostree::OSTreeRepo& ostree_repo, const std::string& selected_commit_hash);
 
-    /// Warning: branch_selection & apply_button have to be set first (TODO check in method)
+    /// Warning: branch_selection & apply_button have to be set first
     ftxui::Element renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit);
 };

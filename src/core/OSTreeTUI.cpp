@@ -125,15 +125,15 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 
 	// promotion
 	ContentPromotionManager promotionManager;
-	promotionManager.branch_selection = Radiobox(&allBranches, &promotionManager.branch_selected);
-	promotionManager.apply_button = Button(" Apply ", [&] {
+	promotionManager.setBranchRadiobox(Radiobox(&allBranches, &promotionManager.branch_selected));
+	promotionManager.setApplyButton(Button(" Apply ", [&] {
 		ostree_repo.promoteCommit(visible_commit_view_map.at(selected_commit),
 								  ostree_repo.getBranches().at(static_cast<size_t>(promotionManager.branch_selected)),
 								  {}, promotionManager.new_subject,
 								  promotionManager.options_state[0]);
 		refresh_repository();
 		notification_text = " Applied content promotion. ";
-	}, ButtonOption::Simple());
+	}, ButtonOption::Simple()));
 	Component promotion_view = Renderer(promotionManager.composePromotionComponent(), [&] {
 		if (visible_commit_view_map.size() <= 0) {
 			return text(" please select a commit to continue commit-promotion... ") | color(Color::RedLight) | bold | center;
