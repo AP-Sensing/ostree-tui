@@ -62,7 +62,7 @@ ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& dis
 	Elements signatures;
 	for (const auto& signature : display_commit.signatures) {
 		signatures.push_back(
-			text("    " + signature.pubkey_algorithm + " " + signature.fingerprint)
+			text("• " + signature.pubkey_algorithm + " " + signature.fingerprint)
 		);
 	}
 	return vbox({
@@ -70,20 +70,20 @@ ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& dis
 				paragraph(display_commit.subject) | color(Color::White)
 			) | color(Color::Green),
 			filler(),
-			text(" Hash:        ") | color(Color::Green), 
+			text(" Hash: ") | color(Color::Green), 
 			text(display_commit.hash),
 			filler(),
-			text(" Date:        ") | color(Color::Green),
+			text(" Date: ") | color(Color::Green),
 			text(std::format("{:%Y-%m-%d %T %Ez}",
 								std::chrono::time_point_cast<std::chrono::seconds>(display_commit.timestamp))),
 			filler(),
-			text(" Parent:      ") | color(Color::Green),
+			text(" Parent: ") | color(Color::Green),
 			text(display_commit.parent),
 			filler(),
-			text(" C.-Checksum: ") | color(Color::Green),
+			text(" Checksum: ") | color(Color::Green),
 			text(display_commit.contentChecksum),
 			filler(),
-			display_commit.signatures.size() > 0 ? text("signatures: ") | color(Color::Green) : text(""),
+			display_commit.signatures.size() > 0 ? text(" Signatures: ") | color(Color::Green) : text(""),
 			vbox(signatures),
 			filler()
 		});
