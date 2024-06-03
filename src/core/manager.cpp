@@ -66,9 +66,8 @@ ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& dis
 		);
 	}
 	return vbox({
-			window(text("Subject:"),
-				paragraph(display_commit.subject) | color(Color::White)
-			) | color(Color::Green),
+			text(" Subject:") | color(Color::Green),
+			paragraph(display_commit.subject) | color(Color::White),
 			filler(),
 			text(" Hash: ") | color(Color::Green), 
 			text(display_commit.hash),
@@ -178,7 +177,7 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
 	}
 
 	// build elements
-	auto commit_hash	= window(text("Commit"), text(display_commit.hash) | flex);
+	auto commit_hash	= vbox({text(" Commit: ") | bold | color(Color::Green), text(" " + display_commit.hash)}) | flex;
 	auto branch_win 	= window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame);
     auto flags_win 		= window(text("Flags"), flags->Render() | vscroll_indicator | frame);
     auto subject_win 	= window(text("Subject"), subject_component->Render()) | flex;
