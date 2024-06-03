@@ -2,7 +2,10 @@
 
 #include <cstdio>
 #include <string>
+#include <assert.h>
 
+#include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
+#include "ftxui/component/event.hpp"      // for Event
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 
 #include "../util/cpplibostree.hpp"
@@ -98,8 +101,27 @@ ContentPromotionManager::ContentPromotionManager() {
   	});
 }
 
+void ContentPromotionManager::setBranchRadiobox(ftxui::Component radiobox) {
+    using namespace ftxui;
+
+    branch_selection = CatchEvent(radiobox, [&](const Event& event) {
+    	// copy commit id
+    	if (event == Event::Return) {
+    		flags->TakeFocus();
+    	}
+    	return false;
+    });
+}
+
+void ContentPromotionManager::setApplyButton(ftxui::Component button) {
+	apply_button = button; 
+}
+
 ftxui::Elements ContentPromotionManager::renderPromotionCommand(cpplibostree::OSTreeRepo& ostree_repo, const std::string& selected_commit_hash) {
     using namespace ftxui;
+
+	assert(branch_selection);
+	assert(apply_button);
 	
 	Elements line;
 	line.push_back(text("ostree commit") | bold);
@@ -141,6 +163,9 @@ ftxui::Component ContentPromotionManager::composePromotionComponent() {
 
 ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit) {
 	using namespace ftxui;
+
+	assert(branch_selection);
+	assert(apply_button);
 
 	auto commit_hash	= window(text("Commit"), text(display_commit.hash) | flex) | size(HEIGHT, LESS_THAN, 3);
 	auto branch_win 	= window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 2));
