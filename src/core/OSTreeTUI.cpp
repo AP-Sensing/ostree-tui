@@ -138,7 +138,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		if (visible_commit_view_map.size() <= 0) {
 			return text(" please select a commit to continue commit-promotion... ") | color(Color::RedLight) | bold | center;
 		}
-		return promotionManager.renderPromotionView(ostree_repo,
+		return promotionManager.renderPromotionView(ostree_repo, screen.dimy(),
 			ostree_repo.getCommitList().at(visible_commit_view_map.at(selected_commit)));
     });
 

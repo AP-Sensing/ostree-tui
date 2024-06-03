@@ -161,14 +161,25 @@ ftxui::Component ContentPromotionManager::composePromotionComponent() {
 	});
 }
 
-ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit) {
+ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, int screenHeight, cpplibostree::Commit& display_commit) {
 	using namespace ftxui;
 
 	assert(branch_selection);
 	assert(apply_button);
 
-	auto commit_hash	= window(text("Commit"), text(display_commit.hash) | flex) | size(HEIGHT, LESS_THAN, 3);
-	auto branch_win 	= window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 2));
+	// compute screen element sizes
+	int commit_win_height {3};
+	int apsect_win_height {8};
+	int tooltips_win_height {2};
+	int branch_select_win_height = screenHeight - 8 /*overhead screen*/ - commit_win_height - apsect_win_height - tooltips_win_height;
+	if (branch_select_win_height < 4) {
+		tooltips_win_height = 0;
+		branch_select_win_height = 4;
+	}
+
+	// build elements
+	auto commit_hash	= window(text("Commit"), text(display_commit.hash) | flex);
+	auto branch_win 	= window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame);
     auto flags_win 		= window(text("Flags"), flags->Render() | vscroll_indicator | frame);
     auto subject_win 	= window(text("Subject"), subject_component->Render()) | flex;
 	auto aButton_win 	= apply_button->Render() | color(Color::Green) | size(WIDTH, GREATER_THAN, 9) | flex;
@@ -179,24 +190,26 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
 			text(" 🛈 " + tool_tip_strings.at(tip)),
 		});
 	};
-	auto tool_tips_win	= branch_selection->Focused()	? toolTipContent(0) :
+	auto tool_tips_win	= tooltips_win_height < 2 ? filler() : // only show if screen is reasonable size
+						  branch_selection->Focused()	? toolTipContent(0) :
 						  flags->Focused()				? toolTipContent(1) :
 						  subject_component->Focused()	? toolTipContent(2) :
 						  apply_button->Focused()		? toolTipContent(3) :
 						  filler();
 
+	// build element composition
     return vbox({
-			commit_hash,
-			branch_win,
+			commit_hash | size(HEIGHT, EQUAL, commit_win_height),
+			branch_win | size(HEIGHT, LESS_THAN, branch_select_win_height),
             hbox({
                 flags_win,
                 vbox({
-					subject_win | size(WIDTH, EQUAL, 60),
+					subject_win,
 					aButton_win,
-                }),
-                filler(),
-            }) | size(HEIGHT, LESS_THAN, 8),
+                }) | flex,
+            }) | size(HEIGHT, LESS_THAN, apsect_win_height),
             hflow(renderPromotionCommand(ostree_repo, display_commit.hash)) | flex_grow,
+			filler(),
 			tool_tips_win,
     }) | flex_grow;
 }

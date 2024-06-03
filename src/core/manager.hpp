@@ -125,5 +125,5 @@ public:
      * @warning branch_selection & apply_button have to be set first (checked through assert)
      * @return ftxui::Element
      */
-    ftxui::Element renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, cpplibostree::Commit& display_commit);
+    ftxui::Element renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, int screenHeight, cpplibostree::Commit& display_commit);
 };
