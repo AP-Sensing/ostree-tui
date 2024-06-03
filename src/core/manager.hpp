@@ -84,6 +84,15 @@ public:
     // apply button
     ftxui::Component apply_button; // must be set from OSTreeTUI
 
+    // tool-tips
+    ftxui::Component tool_tips_comp;
+    std::vector<std::string> tool_tip_strings = {
+        "Branch to promote the Commit to.",
+        "Additional Flags to set.",
+        "New subject for promoted Commit (optional).",
+        "Apply the Commit Promotion (write to repository).",
+    };
+
 public:
     /**
      * @brief Constructor for the Promotion Manager.

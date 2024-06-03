@@ -173,6 +173,18 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
     auto subject_win 	= window(text("Subject"), subject_component->Render()) | flex;
 	auto aButton_win 	= apply_button->Render() | color(Color::Green) | size(WIDTH, GREATER_THAN, 9) | flex;
 	
+	auto toolTipContent = [&](size_t tip) {
+		return vbox({
+			separatorCharacter("⎯"),
+			text(" 🛈 " + tool_tip_strings.at(tip)),
+		});
+	};
+	auto tool_tips_win	= branch_selection->Focused()	? toolTipContent(0) :
+						  flags->Focused()				? toolTipContent(1) :
+						  subject_component->Focused()	? toolTipContent(2) :
+						  apply_button->Focused()		? toolTipContent(3) :
+						  filler();
+
     return vbox({
 			commit_hash,
 			branch_win,
@@ -185,5 +197,6 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
                 filler(),
             }) | size(HEIGHT, LESS_THAN, 8),
             hflow(renderPromotionCommand(ostree_repo, display_commit.hash)) | flex_grow,
+			tool_tips_win,
     }) | flex_grow;
 }
