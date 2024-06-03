@@ -90,7 +90,7 @@ ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& dis
 
 // ContentPromotionManager
 
-ContentPromotionManager::ContentPromotionManager() {
+ContentPromotionManager::ContentPromotionManager(bool show_tooltips): show_tooltips(show_tooltips) {
 	using namespace ftxui;
 
 	subject_component = Input(&new_subject, "subject");
@@ -191,7 +191,7 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
 			text(" 🛈 " + tool_tip_strings.at(tip)),
 		});
 	};
-	auto tool_tips_win	= tooltips_win_height < 2 ? filler() : // only show if screen is reasonable size
+	auto tool_tips_win	= !show_tooltips || tooltips_win_height < 2 ? filler() : // only show if screen is reasonable size
 						  branch_selection->Focused()	? toolTipContent(0) :
 						  flags->Focused()				? toolTipContent(1) :
 						  subject_component->Focused()	? toolTipContent(2) :
