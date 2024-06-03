@@ -67,17 +67,6 @@ public:
   	    false,
   	};
 
-    // metadata entries
-    ftxui::Component metadata_add;
-
-    std::vector<std::string> metadata_entries;
-  	int input_selected{0};
-
-    ftxui::Component metadata_input;
-    
-    ftxui::InputOption metadata_option = ftxui::InputOption();
-  	std::string metadata_add_content;
-
     // subject
     ftxui::Component subject_component;
 
