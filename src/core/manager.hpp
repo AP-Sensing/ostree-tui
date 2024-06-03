@@ -12,7 +12,6 @@
 #include "ftxui/component/component.hpp"  // for Component
 
 #include "../util/cpplibostree.hpp"
-#include "commit.hpp"
 
 /// Interchangeable View
 class Manager {
@@ -69,7 +68,7 @@ public:
     // flag selection
     ftxui::Component flags;
 
-    std::array<std::string, 8> options_label = {
+    const std::array<std::string, 8> options_label = {
   	    "--keep-metadata",
   	};
   	std::array<bool, 8> options_state = {
@@ -86,7 +85,7 @@ public:
 
     // tool-tips
     ftxui::Component tool_tips_comp;
-    std::vector<std::string> tool_tip_strings = {
+    const std::vector<std::string> tool_tip_strings = {
         "Branch to promote the Commit to.",
         "Additional Flags to set.",
         "New subject for promoted Commit (optional).",
@@ -125,5 +124,5 @@ public:
      * @warning branch_selection & apply_button have to be set first (checked through assert)
      * @return ftxui::Element
      */
-    ftxui::Element renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, int screenHeight, cpplibostree::Commit& display_commit);
+    ftxui::Element renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, int screenHeight, const cpplibostree::Commit& display_commit);
 };
