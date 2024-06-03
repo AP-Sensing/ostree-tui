@@ -84,6 +84,7 @@ public:
     ftxui::Component apply_button; // must be set from OSTreeTUI
 
     // tool-tips
+    bool show_tooltips{true};
     ftxui::Component tool_tips_comp;
     const std::vector<std::string> tool_tip_strings = {
         "Branch to promote the Commit to.",
@@ -100,7 +101,7 @@ public:
      * using the respective set-methods AFTER construction, as they
      * have to be constructed in the OSTreeTUI::main
      */
-    ContentPromotionManager();
+    ContentPromotionManager(bool show_tooltips = true);
 
     /// Setter
     void setBranchRadiobox(ftxui::Component radiobox);

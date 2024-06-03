@@ -48,7 +48,7 @@ std::vector<std::string> OSTreeTUI::parseVisibleCommitMap(cpplibostree::OSTreeRe
 	return visible_commit_view_map;
 }
 
-int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& startupBranches) {
+int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& startupBranches, bool showTooltips) {
 	using namespace ftxui;
 
 	// - STATES ---------- ----------
@@ -124,7 +124,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	});
 
 	// promotion
-	ContentPromotionManager promotionManager;
+	ContentPromotionManager promotionManager(showTooltips);
 	promotionManager.setBranchRadiobox(Radiobox(&allBranches, &promotionManager.branch_selected));
 	promotionManager.setApplyButton(Button(" Apply ", [&] {
 		ostree_repo.promoteCommit(visible_commit_view_map.at(selected_commit),
@@ -238,6 +238,7 @@ int OSTreeTUI::help(const std::string& caller, const std::string& errorMessage) 
 		// option, arguments, meaning
 		{"-h, --help", "", "Show help options. The REPOSITORY_PATH can be omitted"},
 		{"-r, --refs", "REF [REF...]", "Specify a list of visible refs at startup if not specified, show all refs"},
+		{"-n, --no-tooltips", "", "Hide Tooltips in promotion view."}
 	};
 
 	Elements options   = {text("Options:")};
