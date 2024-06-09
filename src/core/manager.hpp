@@ -65,16 +65,6 @@ public:
     ftxui::Component branch_selection; // must be set from OSTreeTUI
     int branch_selected{0};
 
-    // flag selection
-    ftxui::Component flags;
-
-    const std::array<std::string, 8> options_label = {
-  	    "--keep-metadata",
-  	};
-  	std::array<bool, 8> options_state = {
-  	    false,
-  	};
-
     // subject
     ftxui::Component subject_component;
 

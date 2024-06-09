@@ -94,10 +94,6 @@ ContentPromotionManager::ContentPromotionManager(bool show_tooltips): show_toolt
 	using namespace ftxui;
 
 	subject_component = Input(&new_subject, "subject");
-
-	flags = Container::Vertical({
-  	    Checkbox(&options_label[0], &options_state[0]),
-  	});
 }
 
 void ContentPromotionManager::setBranchRadiobox(ftxui::Component radiobox) {
@@ -106,7 +102,7 @@ void ContentPromotionManager::setBranchRadiobox(ftxui::Component radiobox) {
     branch_selection = CatchEvent(radiobox, [&](const Event& event) {
     	// copy commit id
     	if (event == Event::Return) {
-    		flags->TakeFocus();
+    		subject_component->TakeFocus();
     	}
     	return false;
     });
@@ -126,14 +122,8 @@ ftxui::Elements ContentPromotionManager::renderPromotionCommand(cpplibostree::OS
 	line.push_back(text("ostree commit") | bold);
     line.push_back(text(" --repo=" + ostree_repo.getRepoPath()) | bold);
 	line.push_back(text(" -b " + ostree_repo.getBranches().at(static_cast<size_t>(branch_selected))) | bold);
-    // flags
-    for (size_t i = 0; i < 8; ++i) {
-      	if (options_state[i]) {
-        	line.push_back(text(" "));
-        	line.push_back(text(options_label[i]) | dim);
-     	}
-    }
-    // optional subject
+    line.push_back(text(" --keep-metadata") | bold);
+	// optional subject
     if (!new_subject.empty()) {
     	line.push_back(text(" -s \"") | bold);
     	line.push_back(text(new_subject) | color(Color::BlueLight) | bold);
@@ -150,13 +140,10 @@ ftxui::Component ContentPromotionManager::composePromotionComponent() {
 
 	return Container::Vertical({
 		branch_selection,
-		Container::Horizontal({
-  	    	flags,
-  	    	Container::Vertical({
-				subject_component,
-  	    	    apply_button,
-  	    	}),
-  		}),
+		Container::Vertical({
+			subject_component,
+  	        apply_button,
+  	    }),
 	});
 }
 
@@ -181,7 +168,6 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
 	// build elements
 	auto commit_hash	= vbox({text(" Commit: ") | bold | color(Color::Green), text(" " + display_commit.hash)}) | flex;
 	auto branch_win 	= window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame);
-    auto flags_win 		= window(text("Flags"), flags->Render() | vscroll_indicator | frame);
     auto subject_win 	= window(text("Subject"), subject_component->Render()) | flex;
 	auto aButton_win 	= apply_button->Render() | color(Color::Green) | size(WIDTH, GREATER_THAN, 9) | flex;
 
@@ -193,22 +179,18 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
 	};
 	auto tool_tips_win	= !show_tooltips || tooltips_win_height < 2 ? filler() : // only show if screen is reasonable size
 						  branch_selection->Focused()	? toolTipContent(0) :
-						  flags->Focused()				? toolTipContent(1) :
-						  subject_component->Focused()	? toolTipContent(2) :
-						  apply_button->Focused()		? toolTipContent(3) :
+						  subject_component->Focused()	? toolTipContent(1) :
+						  apply_button->Focused()		? toolTipContent(2) :
 						  filler();
 
 	// build element composition
     return vbox({
 			commit_hash | size(HEIGHT, EQUAL, commit_win_height),
 			branch_win | size(HEIGHT, LESS_THAN, branch_select_win_height),
-            hbox({
-                flags_win,
-                vbox({
-					subject_win,
-					aButton_win,
-                }) | flex,
-            }) | size(HEIGHT, LESS_THAN, apsect_win_height),
+            vbox({
+				subject_win,
+				aButton_win,
+            }) | flex | size(HEIGHT, LESS_THAN, apsect_win_height),
             hflow(renderPromotionCommand(ostree_repo, display_commit.hash)) | flex_grow,
 			filler(),
 			tool_tips_win,

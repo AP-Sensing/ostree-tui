@@ -130,7 +130,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		ostree_repo.promoteCommit(visible_commit_view_map.at(selected_commit),
 								  ostree_repo.getBranches().at(static_cast<size_t>(promotionManager.branch_selected)),
 								  {}, promotionManager.new_subject,
-								  promotionManager.options_state[0]);
+								  true);
 		refresh_repository();
 		notification_text = " Applied content promotion. ";
 	}, ButtonOption::Simple()));
