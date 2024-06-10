@@ -1,7 +1,8 @@
 # OSTree-TUI
 *A terminal user interface for OSTree.*
 
-![ostree-tui preview](https://github.com/AP-Sensing/ostree-tui/assets/88790311/3dc0e86f-ba43-4cc6-aef3-5a0e5d4a9d82)
+![ostree-tui preview](https://github.com/AP-Sensing/ostree-tui/assets/88790311/28f9ac99-d92b-411f-aab5-95d07e8916df)
+
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/c++-%2300599C.svg?style=flat&logo=c%2B%2B&logoColor=white"></img></a>
