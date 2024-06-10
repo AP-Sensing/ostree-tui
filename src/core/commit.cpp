@@ -136,7 +136,7 @@ ftxui::Element addCommLine(RenderLine lineType,
 			// length adapted hash
 			std::string commit_top_text = commit.hash;
 			if (commit_top_text.size() > 8) {
-				commit_top_text = GAP_TREE_COMMITS + commit.hash.substr(commit.hash.size() - 8);
+				commit_top_text = GAP_TREE_COMMITS + commit.hash.substr(0, 8);
 			}
 			Element commit_top_text_element = text(commit_top_text);
 			// highlighted / selected
