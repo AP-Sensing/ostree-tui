@@ -78,7 +78,6 @@ public:
     ftxui::Component tool_tips_comp;
     const std::vector<std::string> tool_tip_strings = {
         "Branch to promote the Commit to.",
-        "Additional Flags to set.",
         "New subject for promoted Commit (optional).",
         "Apply the Commit Promotion (write to repository).",
     };
