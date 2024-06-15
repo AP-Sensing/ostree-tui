@@ -28,6 +28,6 @@ namespace OSTreeTUI {
     int help(const std::string& caller, const std::string& errorMessage = "");
 
     std::vector<std::string> parseVisibleCommitMap(cpplibostree::OSTreeRepo& repo,
-                            std::unordered_map<std::string, bool>& visible_branches);
+                            std::unordered_map<std::string, bool>& visibleBranches);
 
 } // namespace OSTreeTUI

@@ -12,32 +12,32 @@
 
 // Manager
 
-Manager::Manager(const ftxui::Component& info_view, const ftxui::Component& filter_view, const ftxui::Component& promotion_view) {
+Manager::Manager(const ftxui::Component& infoView, const ftxui::Component& filterView, const ftxui::Component& promotionView) {
 	using namespace ftxui;
 
-	tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
+	tabSelection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
 
-	tab_content = Container::Tab({
-        	info_view,
-			filter_view,
-			promotion_view
+	tabContent = Container::Tab({
+        	infoView,
+			filterView,
+			promotionView
     	},
     	&tab_index);
 
-	manager_renderer = Container::Vertical({
-        tab_selection,
-      	tab_content
+	managerRenderer = Container::Vertical({
+        tabSelection,
+      	tabContent
   	});
 }
 
 // BranchBoxManager
 
-BranchBoxManager::BranchBoxManager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visible_branches) {
+BranchBoxManager::BranchBoxManager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visibleBranches) {
     using namespace ftxui;
 
 	// branch visibility
 	for (const auto& branch : repo.getBranches()) {
-		branch_boxes->Add(Checkbox(branch, &(visible_branches.at(branch))));
+		branchBoxes->Add(Checkbox(branch, &(visibleBranches.at(branch))));
 	}
 }
 
@@ -48,41 +48,41 @@ ftxui::Element BranchBoxManager::branchBoxRender(){
 	Elements bfb_elements = {
 			text(L"branches:") | bold,
 			filler(),
-			branch_boxes->Render() | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 10),
+			branchBoxes->Render() | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 10),
 		};
 	return vbox(bfb_elements);
 }
 
 // CommitInfoManager
 
-ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& display_commit) {
+ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& displayCommit) {
 	using namespace ftxui;
 	
 	// selected commit info
 	Elements signatures;
-	for (const auto& signature : display_commit.signatures) {
+	for (const auto& signature : displayCommit.signatures) {
 		signatures.push_back(
-			text("• " + signature.pubkey_algorithm + " " + signature.fingerprint)
+			text("• " + signature.pubkeyAlgorithm + " " + signature.fingerprint)
 		);
 	}
 	return vbox({
 			text(" Subject:") | color(Color::Green),
-			paragraph(display_commit.subject) | color(Color::White),
+			paragraph(displayCommit.subject) | color(Color::White),
 			filler(),
 			text(" Hash: ") | color(Color::Green), 
-			text(display_commit.hash),
+			text(displayCommit.hash),
 			filler(),
 			text(" Date: ") | color(Color::Green),
 			text(std::format("{:%Y-%m-%d %T %Ez}",
-								std::chrono::time_point_cast<std::chrono::seconds>(display_commit.timestamp))),
+								std::chrono::time_point_cast<std::chrono::seconds>(displayCommit.timestamp))),
 			filler(),
 			text(" Parent: ") | color(Color::Green),
-			text(display_commit.parent),
+			text(displayCommit.parent),
 			filler(),
 			text(" Checksum: ") | color(Color::Green),
-			text(display_commit.contentChecksum),
+			text(displayCommit.contentChecksum),
 			filler(),
-			display_commit.signatures.size() > 0 ? text(" Signatures: ") | color(Color::Green) : text(""),
+			displayCommit.signatures.size() > 0 ? text(" Signatures: ") | color(Color::Green) : text(""),
 			vbox(signatures),
 			filler()
 		});
@@ -93,44 +93,44 @@ ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& dis
 ContentPromotionManager::ContentPromotionManager(bool show_tooltips): show_tooltips(show_tooltips) {
 	using namespace ftxui;
 
-	subject_component = Input(&new_subject, "subject");
+	subjectComponent = Input(&newSubject, "subject");
 }
 
 void ContentPromotionManager::setBranchRadiobox(ftxui::Component radiobox) {
     using namespace ftxui;
 
-    branch_selection = CatchEvent(radiobox, [&](const Event& event) {
+    branchSelection = CatchEvent(radiobox, [&](const Event& event) {
     	// copy commit id
     	if (event == Event::Return) {
-    		subject_component->TakeFocus();
+    		subjectComponent->TakeFocus();
     	}
     	return false;
     });
 }
 
 void ContentPromotionManager::setApplyButton(ftxui::Component button) {
-	apply_button = button; 
+	applyButton = button; 
 }
 
-ftxui::Elements ContentPromotionManager::renderPromotionCommand(cpplibostree::OSTreeRepo& ostree_repo, const std::string& selected_commit_hash) {
+ftxui::Elements ContentPromotionManager::renderPromotionCommand(cpplibostree::OSTreeRepo& ostreeRepo, const std::string& selectedCommitHash) {
     using namespace ftxui;
 
-	assert(branch_selection);
-	assert(apply_button);
+	assert(branchSelection);
+	assert(applyButton);
 	
 	Elements line;
 	line.push_back(text("ostree commit") | bold);
-    line.push_back(text(" --repo=" + ostree_repo.getRepoPath()) | bold);
-	line.push_back(text(" -b " + ostree_repo.getBranches().at(static_cast<size_t>(branch_selected))) | bold);
+    line.push_back(text(" --repo=" + ostreeRepo.getRepoPath()) | bold);
+	line.push_back(text(" -b " + ostreeRepo.getBranches().at(static_cast<size_t>(selectedBranch))) | bold);
     line.push_back(text(" --keep-metadata") | bold);
 	// optional subject
-    if (!new_subject.empty()) {
+    if (!newSubject.empty()) {
     	line.push_back(text(" -s \"") | bold);
-    	line.push_back(text(new_subject) | color(Color::BlueLight) | bold);
+    	line.push_back(text(newSubject) | color(Color::BlueLight) | bold);
 		line.push_back(text("\"") | bold);
     }
 	// commit
-	line.push_back(text(" --tree=ref=" + selected_commit_hash) | bold);
+	line.push_back(text(" --tree=ref=" + selectedCommitHash) | bold);
 
     return line;
 }
@@ -139,37 +139,37 @@ ftxui::Component ContentPromotionManager::composePromotionComponent() {
 	using namespace ftxui;
 
 	return Container::Vertical({
-		branch_selection,
+		branchSelection,
 		Container::Vertical({
-			subject_component,
-  	        apply_button,
+			subjectComponent,
+  	        applyButton,
   	    }),
 	});
 }
 
-ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostree_repo, int screenHeight, const cpplibostree::Commit& display_commit) {
+ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTreeRepo& ostreeRepo, int screenHeight, const cpplibostree::Commit& displayCommit) {
 	using namespace ftxui;
 
-	assert(branch_selection);
-	assert(apply_button);
+	assert(branchSelection);
+	assert(applyButton);
 
 	// compute screen element sizes
-	int screen_overhead		{8}; // borders, footer, etc.
-	int commit_win_height 	{3};
-	int apsect_win_height 	{8};
-	int tooltips_win_height {2};
-	int branch_select_win_height = screenHeight - screen_overhead - commit_win_height - apsect_win_height - tooltips_win_height;
+	int screenOverhead		{8}; // borders, footer, etc.
+	int commitWinHeight 	{3};
+	int apsectWinHeight 	{8};
+	int tooltipsWinHeight	{2};
+	int branchSelectWinHeight = screenHeight - screenOverhead - commitWinHeight - apsectWinHeight - tooltipsWinHeight;
 	// tooltips only get shown, if the window is sufficiently large
-	if (branch_select_win_height < 4) {
-		tooltips_win_height = 0;
-		branch_select_win_height = 4;
+	if (branchSelectWinHeight < 4) {
+		tooltipsWinHeight = 0;
+		branchSelectWinHeight = 4;
 	}
 
 	// build elements
-	auto commit_hash	= vbox({text(" Commit: ") | bold | color(Color::Green), text(" " + display_commit.hash)}) | flex;
-	auto branch_win 	= window(text("New Branch"), branch_selection->Render() | vscroll_indicator | frame);
-    auto subject_win 	= window(text("Subject"), subject_component->Render()) | flex;
-	auto aButton_win 	= apply_button->Render() | color(Color::Green) | size(WIDTH, GREATER_THAN, 9) | flex;
+	auto commitHashElem	= vbox({text(" Commit: ") | bold | color(Color::Green), text(" " + displayCommit.hash)}) | flex;
+	auto branchWin 		= window(text("New Branch"), branchSelection->Render() | vscroll_indicator | frame);
+    auto subjectWin 	= window(text("Subject"), subjectComponent->Render()) | flex;
+	auto applyButtonWin = applyButton->Render() | color(Color::Green) | size(WIDTH, GREATER_THAN, 9) | flex;
 
 	auto toolTipContent = [&](size_t tip) {
 		return vbox({
@@ -177,22 +177,22 @@ ftxui::Element ContentPromotionManager::renderPromotionView(cpplibostree::OSTree
 			text(" 🛈 " + tool_tip_strings.at(tip)),
 		});
 	};
-	auto tool_tips_win	= !show_tooltips || tooltips_win_height < 2 ? filler() : // only show if screen is reasonable size
-						  branch_selection->Focused()	? toolTipContent(0) :
-						  subject_component->Focused()	? toolTipContent(1) :
-						  apply_button->Focused()		? toolTipContent(2) :
+	auto toolTipsWin	= !show_tooltips || tooltipsWinHeight < 2 ? filler() : // only show if screen is reasonable size
+						  branchSelection->Focused()	? toolTipContent(0) :
+						  subjectComponent->Focused()	? toolTipContent(1) :
+						  applyButton->Focused()		? toolTipContent(2) :
 						  filler();
 
 	// build element composition
     return vbox({
-			commit_hash | size(HEIGHT, EQUAL, commit_win_height),
-			branch_win | size(HEIGHT, LESS_THAN, branch_select_win_height),
+			commitHashElem | size(HEIGHT, EQUAL, commitWinHeight),
+			branchWin | size(HEIGHT, LESS_THAN, branchSelectWinHeight),
             vbox({
-				subject_win,
-				aButton_win,
-            }) | flex | size(HEIGHT, LESS_THAN, apsect_win_height),
-            hflow(renderPromotionCommand(ostree_repo, display_commit.hash)) | flex_grow,
+				subjectWin,
+				applyButtonWin,
+            }) | flex | size(HEIGHT, LESS_THAN, apsectWinHeight),
+            hflow(renderPromotionCommand(ostreeRepo, displayCommit.hash)) | flex_grow,
 			filler(),
-			tool_tips_win,
+			toolTipsWin,
     }) | flex_grow;
 }

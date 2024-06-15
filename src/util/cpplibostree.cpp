@@ -17,8 +17,8 @@
 namespace cpplibostree {
 
     OSTreeRepo::OSTreeRepo(std::string path):
-            repo_path(std::move(path)), 
-            commit_list({}),
+            repoPath(std::move(path)), 
+            commitList({}),
             branches({}) {
         updateData();
     }
@@ -33,7 +33,7 @@ namespace cpplibostree {
         }
 
         // parse commits
-        commit_list = parseCommitsAllBranches();
+        commitList = parseCommitsAllBranches();
 
         return true;
     }
@@ -43,7 +43,7 @@ namespace cpplibostree {
     OstreeRepo* OSTreeRepo::_c() {
         // open repo
         GError *error{nullptr};
-        OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
+        OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repoPath.c_str(), nullptr, &error);
         if (repo == nullptr) {
             g_printerr("Error opening repository: %s\n", error->message);
             g_error_free(error);
@@ -53,11 +53,11 @@ namespace cpplibostree {
     }
 
     std::string OSTreeRepo::getRepoPath() {
-        return repo_path;
+        return repoPath;
     }
 
     CommitList OSTreeRepo::getCommitList() {
-        return commit_list;
+        return commitList;
     }
 
     std::vector<std::string> OSTreeRepo::getBranches() {
@@ -112,7 +112,7 @@ namespace cpplibostree {
         // Signatures ___ refactor into own method
         // open repo
         GError *error = nullptr;
-        OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
+        OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repoPath.c_str(), nullptr, &error);
         if (repo == nullptr) {
             g_printerr("Error opening repository: %s\n", error->message);
             g_error_free(error);
@@ -138,23 +138,23 @@ namespace cpplibostree {
                 gint64 key_exp_timestamp        {0};
                 gint64 key_exp_timestamp_primary{0};
                 const char *fingerprint         {nullptr};
-                const char *fingerprint_primary {nullptr};
+                const char *fingerprintPrimary {nullptr};
                 const char *pubkey_algo         {nullptr};
                 const char *user_name           {nullptr};
                 const char *user_email          {nullptr};
                 gboolean valid                  {false};
-                gboolean sig_expired            {false};
-                gboolean key_expired            {false};
-                gboolean key_revoked            {false};
-                gboolean key_missing            {false};
+                gboolean sigExpired            {false};
+                gboolean keyExpired            {false};
+                gboolean keyRevoked            {false};
+                gboolean keyMissing            {false};
 
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_VALID, "b", &valid);
-                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_SIG_EXPIRED, "b", &sig_expired);
-                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXPIRED, "b", &key_expired);
-                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_REVOKED, "b", &key_revoked);
-                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_MISSING, "b", &key_missing);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_SIG_EXPIRED, "b", &sigExpired);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_EXPIRED, "b", &keyExpired);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_REVOKED, "b", &keyRevoked);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_KEY_MISSING, "b", &keyMissing);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT, "&s", &fingerprint);
-                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT_PRIMARY, "&s", &fingerprint_primary);
+                g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_FINGERPRINT_PRIMARY, "&s", &fingerprintPrimary);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_TIMESTAMP, "x", &timestamp);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_EXP_TIMESTAMP, "x", &exp_timestamp);
                 g_variant_get_child (variant, OSTREE_GPG_SIGNATURE_ATTR_PUBKEY_ALGO_NAME, "&s", &pubkey_algo);
@@ -167,19 +167,19 @@ namespace cpplibostree {
                 Signature sig;
 
                 sig.valid = valid;
-                sig.sig_expired = sig_expired;
-                sig.key_expired = key_expired;
-                sig.key_revoked = key_revoked;
-                sig.key_missing = key_missing;
+                sig.sigExpired = sigExpired;
+                sig.keyExpired = keyExpired;
+                sig.keyRevoked = keyRevoked;
+                sig.keyMissing = keyMissing;
                 sig.fingerprint = fingerprint;
-                sig.fingerprint_primary = fingerprint_primary;
+                sig.fingerprintPrimary = fingerprintPrimary;
                 sig.timestamp = Timepoint(std::chrono::seconds(timestamp));
-                sig.expire_timestamp = Timepoint(std::chrono::seconds(exp_timestamp));
-                sig.pubkey_algorithm = pubkey_algo;
+                sig.expireTimestamp = Timepoint(std::chrono::seconds(exp_timestamp));
+                sig.pubkeyAlgorithm = pubkey_algo;
                 sig.username = user_name;
                 sig.usermail = user_email;
-                sig.key_expire_timestamp = Timepoint(std::chrono::seconds(key_exp_timestamp));
-                sig.key_expire_timestamp_primary = Timepoint(std::chrono::seconds(key_exp_timestamp_primary));
+                sig.keyExpireTimestamp = Timepoint(std::chrono::seconds(key_exp_timestamp));
+                sig.keyExpireTimestampPrimary = Timepoint(std::chrono::seconds(key_exp_timestamp_primary));
 
                 commit.signatures.push_back(std::move(sig));
             }
@@ -190,15 +190,15 @@ namespace cpplibostree {
 
     // modified log_commit() from https://github.com/ostreedev/ostree/blob/main/src/ostree/ot-builtin-log.c#L40
     gboolean OSTreeRepo::parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
-                    CommitList *commit_list, const std::string& branch, gboolean is_recurse) {
+                    CommitList *commitList, const std::string& branch, gboolean isRecurse) {
         GError *local_error{nullptr};
 
         g_autoptr (GVariant) variant = nullptr;
         if (!ostree_repo_load_variant(repo, OSTREE_OBJECT_TYPE_COMMIT, checksum, &variant, &local_error)) {
-            return is_recurse && g_error_matches(local_error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
+            return isRecurse && g_error_matches(local_error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
         }
 
-        commit_list->insert({
+        commitList->insert({
             static_cast<std::string>(checksum),
             parseCommit(variant, branch, static_cast<std::string>(checksum))
         });
@@ -206,7 +206,7 @@ namespace cpplibostree {
         // parent recursion
         g_autofree char *parent = ostree_commit_get_parent(variant);
 
-        return !(parent && !parseCommitsRecursive(repo, parent, error, commit_list, branch, true));
+        return !(parent && !parseCommitsRecursive(repo, parent, error, commitList, branch, true));
     }
 
     CommitList OSTreeRepo::parseCommitsOfBranch(const std::string& branch) {
@@ -214,7 +214,7 @@ namespace cpplibostree {
 
         // open repo
         GError *error = nullptr;
-        OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
+        OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repoPath.c_str(), nullptr, &error);
         if (repo == nullptr) {
             g_printerr("Error opening repository: %s\n", error->message);
             g_error_free(error);
@@ -252,7 +252,7 @@ namespace cpplibostree {
 
         // open repo
         GError *error {nullptr};
-        OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repo_path.c_str(), nullptr, &error);
+        OstreeRepo *repo = ostree_repo_open_at(AT_FDCWD, repoPath.c_str(), nullptr, &error);
 
         if (repo == nullptr) {
             g_printerr("Error opening repository: %s\n", error->message);
@@ -296,7 +296,7 @@ namespace cpplibostree {
         }
         
         std::string command = "ostree commit";
-        command += " --repo=" + repo_path;
+        command += " --repo=" + repoPath;
         command += " -b " + newRef;
         command += (newSubject.size() <= 0
                             ? ""

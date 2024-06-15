@@ -12,98 +12,98 @@
 namespace CommitRender {
 
 void addLine(const RenderTree& treeLineType, const RenderLine& lineType,
-			 ftxui::Elements& tree_elements, ftxui::Elements& comm_elements,
+			 ftxui::Elements& treeElements, ftxui::Elements& commElements,
 			 const cpplibostree::Commit& commit,
 			 const bool& highlight,
-			 const std::unordered_map<std::string, bool>& used_branches,
-			 const std::unordered_map<std::string, ftxui::Color>& branch_color_map) {
-	tree_elements.push_back(addTreeLine(treeLineType, commit, used_branches, branch_color_map));
-	comm_elements.push_back(addCommLine(lineType, commit, highlight, branch_color_map));
+			 const std::unordered_map<std::string, bool>& usedBranches,
+			 const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
+	treeElements.push_back(addTreeLine(treeLineType, commit, usedBranches, branchColorMap));
+	commElements.push_back(addCommLine(lineType, commit, highlight, branchColorMap));
 }
 
 ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
-                            const std::vector<std::string>& visible_commit_map,
-                            const std::unordered_map<std::string, bool>& visible_branches,
-                            const std::unordered_map<std::string, ftxui::Color>& branch_color_map,
-                            size_t selected_commit) {
+                            const std::vector<std::string>& visibleCommitMap,
+                            const std::unordered_map<std::string, bool>& visibleBranches,
+                            const std::unordered_map<std::string, ftxui::Color>& branchColorMap,
+                            size_t selectedCommit) {
 	using namespace ftxui;
 
 	// check empty commit list
-	if (visible_commit_map.size() <= 0 || visible_branches.size() <= 0) {
+	if (visibleCommitMap.size() <= 0 || visibleBranches.size() <= 0) {
 		return color(Color::RedLight, text(" no commits to be shown ") | bold | center);
 	}
 
 	// set all branches to not displayed yet
-	std::unordered_map<std::string, bool> used_branches{};
-	for (const auto& branch_pair : visible_branches) {
-		if (branch_pair.second) {
-			used_branches[branch_pair.first] = false;
+	std::unordered_map<std::string, bool> usedBranches{};
+	for (const auto& branchPair : visibleBranches) {
+		if (branchPair.second) {
+			usedBranches[branchPair.first] = false;
 		}
 	}
 
 	// - RENDER -
 	// left tree, right commits
-	Elements tree_elements{};
-	Elements comm_elements{};
+	Elements treeElements{};
+	Elements commElements{};
 
-	std::string marked_string = repo.getCommitList().at(visible_commit_map.at(selected_commit)).hash;
-	for (const auto& visible_commit_index : visible_commit_map) {
-		cpplibostree::Commit commit = repo.getCommitList().at(visible_commit_index);
-		bool highlight = marked_string == commit.hash;
+	std::string markedString = repo.getCommitList().at(visibleCommitMap.at(selectedCommit)).hash;
+	for (const auto& visibleCommitIndex : visibleCommitMap) {
+		cpplibostree::Commit commit = repo.getCommitList().at(visibleCommitIndex);
+		bool highlight = markedString == commit.hash;
 		// branch head if it is first branch usage
-		std::string relevant_branch = commit.branches.at(0);
-		if (! used_branches.at(relevant_branch)) {
-			used_branches.at(relevant_branch) = true;
+		std::string relevantBranch = commit.branches.at(0);
+		if (! usedBranches.at(relevantBranch)) {
+			usedBranches.at(relevantBranch) = true;
 			addLine(RenderTree::TREE_LINE_IGNORE_BRANCH, RenderLine::BRANCH_HEAD,
-					tree_elements, comm_elements, commit, highlight, used_branches, branch_color_map);
+					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
 		}
 		// commit
 		addLine(RenderTree::TREE_LINE_NODE, RenderLine::COMMIT_HASH,
-					tree_elements, comm_elements, commit, highlight, used_branches, branch_color_map);
+					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
 		addLine(RenderTree::TREE_LINE_TREE, RenderLine::COMMIT_DATE,
-					tree_elements, comm_elements, commit, highlight, used_branches, branch_color_map);
+					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
 		addLine(RenderTree::TREE_LINE_TREE, RenderLine::EMPTY,
-					tree_elements, comm_elements, commit, highlight, used_branches, branch_color_map);
+					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
   	}
 
 	return hbox({
-		vbox(std::move(tree_elements)),
-		vbox(std::move(comm_elements))
+		vbox(std::move(treeElements)),
+		vbox(std::move(commElements))
 	});
 }
 
 ftxui::Element addTreeLine(const RenderTree& treeLineType,
 				 const cpplibostree::Commit& commit,
-				 const std::unordered_map<std::string, bool>& used_branches,
-				 const std::unordered_map<std::string, ftxui::Color>& branch_color_map) {
+				 const std::unordered_map<std::string, bool>& usedBranches,
+				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
 	using namespace ftxui;
 
-	std::string relevant_branch = commit.branches.at(0);
+	std::string relevantBranch = commit.branches.at(0);
 	Elements tree;
 	
 	// build branch by branch from left to right
-	for (const auto& branch : used_branches) {
+	for (const auto& branch : usedBranches) {
 		if (treeLineType == RenderTree::TREE_LINE_IGNORE_BRANCH) {
-			if (branch.second && branch.first != relevant_branch) {
-				tree.push_back(text(COMMIT_TREE) | color(branch_color_map.at(branch.first)));
+			if (branch.second && branch.first != relevantBranch) {
+				tree.push_back(text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
 			} else {
-				tree.push_back(text(COMMIT_NONE) | color(branch_color_map.at(branch.first)));
+				tree.push_back(text(COMMIT_NONE) | color(branchColorMap.at(branch.first)));
 			}
 		} else if (treeLineType == RenderTree::TREE_LINE_NODE) {
 			if (branch.second) {
-				if (branch.first == relevant_branch) {
-					tree.push_back(text(COMMIT_NODE) | color(branch_color_map.at(branch.first)));
+				if (branch.first == relevantBranch) {
+					tree.push_back(text(COMMIT_NODE) | color(branchColorMap.at(branch.first)));
 				} else {
-					tree.push_back(text(COMMIT_TREE) | color(branch_color_map.at(branch.first)));
+					tree.push_back(text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
 				}
 			} else {
-				tree.push_back(text(COMMIT_NONE) | color(branch_color_map.at(branch.first)));
+				tree.push_back(text(COMMIT_NONE) | color(branchColorMap.at(branch.first)));
 			}
 		} else if (treeLineType == RenderTree::TREE_LINE_TREE) {
 			if (branch.second) {
-				tree.push_back(text(COMMIT_TREE) | color(branch_color_map.at(branch.first)));
+				tree.push_back(text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
 			} else {
-				tree.push_back(text(COMMIT_NONE) | color(branch_color_map.at(branch.first)));
+				tree.push_back(text(COMMIT_NONE) | color(branchColorMap.at(branch.first)));
 			}
 		} else {
 			tree.push_back(text("error") | color(Color::Red));
@@ -117,10 +117,10 @@ ftxui::Element addTreeLine(const RenderTree& treeLineType,
 ftxui::Element addCommLine(RenderLine lineType,
 				 const cpplibostree::Commit& commit,
 				 const bool& highlight,
-				 const std::unordered_map<std::string, ftxui::Color>& branch_color_map) {
+				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
 	using namespace ftxui;
 
-	std::string relevant_branch = commit.branches.at(0);
+	std::string relevantBranch = commit.branches.at(0);
 	Elements comm;
 
 	switch (lineType) {
@@ -129,26 +129,26 @@ ftxui::Element addCommLine(RenderLine lineType,
 			break;
 		}
     	case BRANCH_HEAD: {
-			comm.push_back(text(relevant_branch) | color(branch_color_map.at(relevant_branch)));
+			comm.push_back(text(relevantBranch) | color(branchColorMap.at(relevantBranch)));
 			break;
 		}
     	case COMMIT_HASH: {
 			// length adapted hash
-			std::string commit_top_text = commit.hash;
-			if (commit_top_text.size() > 8) {
-				commit_top_text = GAP_TREE_COMMITS + commit.hash.substr(0, 8);
+			std::string commitTopText = commit.hash;
+			if (commitTopText.size() > 8) {
+				commitTopText = GAP_TREE_COMMITS + commit.hash.substr(0, 8);
 			}
-			Element commit_top_text_element = text(commit_top_text);
+			Element commitTopTextElement = text(commitTopText);
 			// highlighted / selected
 			if (highlight) {
-				commit_top_text_element = commit_top_text_element | bold | inverted;
+				commitTopTextElement = commitTopTextElement | bold | inverted;
 			}
 			// signed
 			if (cpplibostree::OSTreeRepo::isCommitSigned(commit)) {
-				std::string signed_text = " signed " + (commit.signatures.size() > 1 ? std::to_string(commit.signatures.size()) + "x" : "");
-				commit_top_text_element = hbox(commit_top_text_element, text(signed_text) | color(Color::Green));
+				std::string signedText = " signed " + (commit.signatures.size() > 1 ? std::to_string(commit.signatures.size()) + "x" : "");
+				commitTopTextElement = hbox(commitTopTextElement, text(signedText) | color(Color::Green));
 			}
-			comm.push_back(commit_top_text_element);
+			comm.push_back(commitTopTextElement);
 			break;
 		}
     	case COMMIT_DATE: {

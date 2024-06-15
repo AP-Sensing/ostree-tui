@@ -45,17 +45,17 @@ namespace CommitRender {
      * @brief create a Renderer for the commit section
      * 
      * @param repo OSTree repository
-     * @param visible_commit_map List of visible commit hashes
-     * @param visible_branches List of visible branches
-     * @param branch_color_map Map from branch to its display color
-     * @param selected_commit Commit that should be marked as selected
+     * @param visibleCommitMap List of visible commit hashes
+     * @param visibleBranches List of visible branches
+     * @param branchColorMap Map from branch to its display color
+     * @param selectedCommit Commit that should be marked as selected
      * @return ftxui::Element
      */
     ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
-                                const std::vector<std::string>& visible_commit_map,
-                                const std::unordered_map<std::string, bool>& visible_branches,
-                                const std::unordered_map<std::string, ftxui::Color>& branch_color_map,
-                                size_t selected_commit = 0);
+                                const std::vector<std::string>& visibleCommitMap,
+                                const std::unordered_map<std::string, bool>& visibleBranches,
+                                const std::unordered_map<std::string, ftxui::Color>& branchColorMap,
+                                size_t selectedCommit = 0);
 
     /**
      * @brief Add a line to a commit-tree-column and commit-info-column.
@@ -63,33 +63,33 @@ namespace CommitRender {
      * 
      * @param treeLineType      type of commit_tree
      * @param lineType          type of commit_info (e.g. hash, date,...)
-     * @param tree_elements     commit tree column
-     * @param comm_elements     commit info column
+     * @param treeElements     commit tree column
+     * @param commElements     commit info column
      * @param commit            commit to render / get info from
      * @param highlight         should commit be highlighted (as selected)
-     * @param used_branches     branches to render
-     * @param branch_color_map  branch colors
+     * @param usedBranches     branches to render
+     * @param branchColorMap  branch colors
      */
     void addLine(const RenderTree& treeLineType, const RenderLine& lineType,
-			 ftxui::Elements& tree_elements, ftxui::Elements& comm_elements,
+			 ftxui::Elements& treeElements, ftxui::Elements& commElements,
 			 const cpplibostree::Commit& commit,
 			 const bool& highlight,
-			 const std::unordered_map<std::string, bool>& used_branches,
-			 const std::unordered_map<std::string, ftxui::Color>& branch_color_map);
+			 const std::unordered_map<std::string, bool>& usedBranches,
+			 const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
 
     /**
      * @brief build a commit-tree line
      * 
      * @param treeLineType      type of commit-tree
      * @param commit            commit to render / get info from
-     * @param used_branches     branches to render
-     * @param branch_color_map  branch colors
+     * @param usedBranches     branches to render
+     * @param branchColorMap  branch colors
      * @return ftxui::Element   commit-tree line
      */
     ftxui::Element addTreeLine(const RenderTree& treeLineType,
 				 const cpplibostree::Commit& commit,
-				 const std::unordered_map<std::string, bool>& used_branches,
-				 const std::unordered_map<std::string, ftxui::Color>& branch_color_map);
+				 const std::unordered_map<std::string, bool>& usedBranches,
+				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
     
     /**
      * @brief build a commit-info line
@@ -97,12 +97,12 @@ namespace CommitRender {
      * @param lineType          type of commit-info
      * @param commit            commit to render / get info from
      * @param highlight         should commit be highlighted (as selected)
-     * @param branch_color_map  branch colors
+     * @param branchColorMap  branch colors
      * @return ftxui::Element   commit-info line
      */
     ftxui::Element addCommLine(RenderLine lineType,
 				 const cpplibostree::Commit& commit,
 				 const bool& highlight,
-				 const std::unordered_map<std::string, ftxui::Color>& branch_color_map);
+				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
     
 } // namespace CommitRender

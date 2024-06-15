@@ -34,19 +34,19 @@ namespace cpplibostree {
 
     struct Signature {
         bool valid      {false};
-        bool sig_expired{true};
-        bool key_expired{true};
-        bool key_revoked{false};
-        bool key_missing{true};
+        bool sigExpired{true};
+        bool keyExpired{true};
+        bool keyRevoked{false};
+        bool keyMissing{true};
         std::string fingerprint;
-        std::string fingerprint_primary;
+        std::string fingerprintPrimary;
         Timepoint timestamp;
-        Timepoint expire_timestamp;
-        std::string pubkey_algorithm;
+        Timepoint expireTimestamp;
+        std::string pubkeyAlgorithm;
         std::string username;
         std::string usermail;
-        Timepoint key_expire_timestamp;
-        Timepoint key_expire_timestamp_primary;
+        Timepoint keyExpireTimestamp;
+        Timepoint keyExpireTimestampPrimary;
     } __attribute__((aligned(128)));
 
     struct Commit {
@@ -67,22 +67,22 @@ namespace cpplibostree {
     /**
      * @brief OSTreeRepo functions as a C++ wrapper around libostree's OstreeRepo. 
      * The complete OSTree repository gets parsed into a complete commit list in
-     * commit_list and a list of refs in branches.
+     * commitList and a list of refs in branches.
      * 
      */
     class OSTreeRepo {
     private:
-        std::string repo_path;
-        CommitList commit_list;
+        std::string repoPath;
+        CommitList commitList;
         std::vector<std::string> branches;
 
     public:
         /**
          * @brief Construct a new OSTreeRepo.
          * 
-         * @param repo_path Path to the OSTree Repository
+         * @param repoPath Path to the OSTree Repository
          */
-        explicit OSTreeRepo(std::string repo_path);
+        explicit OSTreeRepo(std::string repoPath);
 
         /**
          * @brief Return a C-style pointer to a libostree OstreeRepo. This exists, to be
@@ -120,7 +120,7 @@ namespace cpplibostree {
         static bool isCommitSigned(const Commit& commit);
 
         /**
-         * @brief Parse commits from a ostree log output to a commit_list, mapping
+         * @brief Parse commits from a ostree log output to a commitList, mapping
          * the hashes to commits.
          * 
          * @param branch 
@@ -175,15 +175,15 @@ namespace cpplibostree {
          * @param repo pointer to libostree Ostree repository
          * @param checksum checksum of first commit
          * @param error gets set, if an error occurred during parsing
-         * @param commit_list commit list to parse the commits into
+         * @param commitList commit list to parse the commits into
          * @param branch branch to read the commit from
-         * @param is_recurse !Do not use!, or set to false. Used only for recursion.
+         * @param isRecurse !Do not use!, or set to false. Used only for recursion.
          * @return true if parsing was successful
          * @return false if an error occurred during parsing
          */
         gboolean parseCommitsRecursive (OstreeRepo *repo, const gchar *checksum, GError **error,
-                                        CommitList *commit_list, const std::string& branch,
-                                        gboolean is_recurse = false);
+                                        CommitList *commitList, const std::string& branch,
+                                        gboolean isRecurse = false);
     };
 
 } // namespace cpplibostree

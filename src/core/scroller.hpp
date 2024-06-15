@@ -13,11 +13,11 @@ namespace ftxui {
      *    Date: 2021
      *    Availability: https://github.com/ArthurSonzogni/git-tui/blob/master/src/scroller.cpp
      *
-     * @param selected_commit 
+     * @param selectedCommit 
      * @param child 
      * @return Component
      */
-    Component Scroller(size_t *selected_commit, size_t element_length, Component child);
+    Component Scroller(size_t *selectedCommit, size_t elementLength, Component child);
 
 } // namespace ftxui
 #endif /* end of include guard: SCROLLER_H */
