@@ -25,7 +25,14 @@ namespace OSTreeTUI {
      * @return 0, if no error message provided
      * @return 1, if error message is provided, assuming bad program stop
      */
-    int help(const std::string& caller, const std::string& errorMessage = "");
+    int showHelp(const std::string& caller, const std::string& errorMessage = "");
+
+    /**
+     * @brief Print the application version
+     * 
+     * @return int
+     */
+    int showVersion();
 
     std::vector<std::string> parseVisibleCommitMap(cpplibostree::OSTreeRepo& repo,
                             std::unordered_map<std::string, bool>& visibleBranches);

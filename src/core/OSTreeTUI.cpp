@@ -73,7 +73,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	if (startupBranches.size() != 0) {
 		for (const auto& branch : startupBranches) {
 			if (visibleBranches.find(branch) == visibleBranches.end()) {
-        		return help("ostree","no such branch: " + branch);
+        		return showHelp("ostree","no such branch: " + branch);
 			}
 			visibleBranches[branch] = true;
 		}
@@ -230,7 +230,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 }
 
 
-int OSTreeTUI::help(const std::string& caller, const std::string& errorMessage) {
+int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessage) {
 	using namespace ftxui;
 
 	// define command line options
@@ -264,6 +264,11 @@ int OSTreeTUI::help(const std::string& caller, const std::string& errorMessage) 
 				vbox(arguments),
 				vbox(meanings),
 	        }),
+			text(""),
+			hbox({
+				text("Report bugs at "),
+				text("https://github.com/AP-Sensing/ostree-tui") | hyperlink("https://github.com/AP-Sensing/ostree-tui")
+			}),
 			text("")
 	    });
 
@@ -273,4 +278,17 @@ int OSTreeTUI::help(const std::string& caller, const std::string& errorMessage) 
 	std::cout << "\n";
 
 	return errorMessage.size() == 0;
+}
+
+int OSTreeTUI::showVersion() {
+	using namespace ftxui;
+
+	auto versionText = text("ostree-tui 0.2.1");
+	
+	auto screen = Screen::Create(Dimension::Fit(versionText));
+	Render(screen, versionText);
+	screen.Print();
+	std::cout << "\n";
+	
+	return 0;
 }

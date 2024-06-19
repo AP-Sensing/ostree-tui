@@ -38,13 +38,17 @@ bool argExists(const std::vector<std::string>& args, std::string arg) {
 int main(int argc, const char** argv) {
 	// too few amount of arguments
 	if (argc <= 1) {
-		return OSTreeTUI::help(argc <= 0 ? "ostree" : argv[0], "no repository provided");
+		return OSTreeTUI::showHelp(argc <= 0 ? "ostree" : argv[0], "no repository provided");
 	}
 
 	std::vector<std::string> args(argv + 1, argv + argc);
 	// -h, --help
 	if (argExists(args,"-h") || argExists(args,"--help")) {
-		return OSTreeTUI::help(argv[0]);
+		return OSTreeTUI::showHelp(argv[0]);
+	}
+	// -v, --version
+	if (argExists(args,"-v") || argExists(args,"--version")) {
+		return OSTreeTUI::showVersion();
 	}
 	// assume ostree repository path as first argument
 	std::string repo = args.at(0);
