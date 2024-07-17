@@ -121,7 +121,7 @@ namespace cpplibostree {
         // see ostree print_object for reference
         g_autoptr(OstreeGpgVerifyResult) result = nullptr;
         g_autoptr(GError) local_error = nullptr;
-        result = ostree_repo_verify_commit_ext (repo, commit.parent.c_str(), nullptr, nullptr, nullptr,
+        result = ostree_repo_verify_commit_ext (repo, commit.hash.c_str(), nullptr, nullptr, nullptr,
                                                       &local_error);
         if (g_error_matches (local_error, OSTREE_GPG_ERROR, OSTREE_GPG_ERROR_NO_SIGNATURE) || local_error != nullptr) {
             /* Ignore */
