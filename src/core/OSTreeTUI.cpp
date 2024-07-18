@@ -32,11 +32,8 @@ std::vector<std::string> OSTreeTUI::parseVisibleCommitMap(cpplibostree::OSTreeRe
 	// get filtered commits
 	visibleCommitViewMap = {};
 	for (const auto& commitPair : repo.getCommitList()) {
-		// filter branches
-		for (const auto& branch : commitPair.second.branches) {
-			if (visibleBranches[branch]) {
-				visibleCommitViewMap.push_back(commitPair.first);
-			}
+		if (visibleBranches[commitPair.second.branch]) {
+			visibleCommitViewMap.push_back(commitPair.first);
 		}
 	}
 	// sort by date

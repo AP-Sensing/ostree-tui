@@ -51,7 +51,7 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 		cpplibostree::Commit commit = repo.getCommitList().at(visibleCommitIndex);
 		bool highlight = markedString == commit.hash;
 		// branch head if it is first branch usage
-		std::string relevantBranch = commit.branches.at(0);
+		std::string relevantBranch = commit.branch;
 		if (! usedBranches.at(relevantBranch)) {
 			usedBranches.at(relevantBranch) = true;
 			addLine(RenderTree::TREE_LINE_IGNORE_BRANCH, RenderLine::BRANCH_HEAD,
@@ -78,7 +78,7 @@ ftxui::Element addTreeLine(const RenderTree& treeLineType,
 				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
 	using namespace ftxui;
 
-	std::string relevantBranch = commit.branches.at(0);
+	std::string relevantBranch = commit.branch;
 	Elements tree;
 	
 	// build branch by branch from left to right
@@ -120,7 +120,7 @@ ftxui::Element addCommLine(RenderLine lineType,
 				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
 	using namespace ftxui;
 
-	std::string relevantBranch = commit.branches.at(0);
+	std::string relevantBranch = commit.branch;
 	Elements comm;
 
 	switch (lineType) {

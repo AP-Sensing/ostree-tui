@@ -58,7 +58,7 @@ namespace cpplibostree {
         Timepoint timestamp;
         std::string parent;
         // a commit already stores, to which branches it belongs to
-	    std::vector<std::string> branches;
+	    std::string branch;
         std::vector<Signature> signatures;
     } __attribute__((aligned(128)));
 

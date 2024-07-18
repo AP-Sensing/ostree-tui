@@ -121,7 +121,7 @@ namespace cpplibostree {
             commit.body = body;
         }
 
-        commit.branches.push_back(branch);
+        commit.branch = branch;
         commit.hash = hash;
 
         // Signatures ___ refactor into own method
