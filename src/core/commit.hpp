@@ -74,7 +74,7 @@ namespace CommitRender {
 			 ftxui::Elements& treeElements, ftxui::Elements& commElements,
 			 const cpplibostree::Commit& commit,
 			 const bool& highlight,
-			 const std::unordered_map<std::string, bool>& usedBranches,
+			 const std::unordered_map<std::string, int>& usedBranches,
 			 const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
 
     /**
@@ -88,7 +88,7 @@ namespace CommitRender {
      */
     ftxui::Element addTreeLine(const RenderTree& treeLineType,
 				 const cpplibostree::Commit& commit,
-				 const std::unordered_map<std::string, bool>& usedBranches,
+				 const std::unordered_map<std::string, int>& usedBranches,
 				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
     
     /**

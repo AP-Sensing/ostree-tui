@@ -15,7 +15,7 @@ void addLine(const RenderTree& treeLineType, const RenderLine& lineType,
 			 ftxui::Elements& treeElements, ftxui::Elements& commElements,
 			 const cpplibostree::Commit& commit,
 			 const bool& highlight,
-			 const std::unordered_map<std::string, bool>& usedBranches,
+			 const std::unordered_map<std::string, int>& usedBranches,
 			 const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
 	treeElements.push_back(addTreeLine(treeLineType, commit, usedBranches, branchColorMap));
 	commElements.push_back(addCommLine(lineType, commit, highlight, branchColorMap));
@@ -33,13 +33,14 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 		return color(Color::RedLight, text(" no commits to be shown ") | bold | center);
 	}
 
-	// set all branches to not displayed yet
-	std::unordered_map<std::string, bool> usedBranches{};
+	// stores the dedicated tree-column of each branch, -1 meaning not displayed yet
+	std::unordered_map<std::string, int> usedBranches{};
 	for (const auto& branchPair : visibleBranches) {
 		if (branchPair.second) {
-			usedBranches[branchPair.first] = false;
+			usedBranches[branchPair.first] = -1;
 		}
 	}
+	int nextAvailableSpace = usedBranches.size() - 1;
 
 	// - RENDER -
 	// left tree, right commits
@@ -52,8 +53,8 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 		bool highlight = markedString == commit.hash;
 		// branch head if it is first branch usage
 		std::string relevantBranch = commit.branch;
-		if (! usedBranches.at(relevantBranch)) {
-			usedBranches.at(relevantBranch) = true;
+		if (usedBranches.at(relevantBranch) == -1) {
+			usedBranches.at(relevantBranch) = nextAvailableSpace--;
 			addLine(RenderTree::TREE_LINE_IGNORE_BRANCH, RenderLine::BRANCH_HEAD,
 					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
 		}
@@ -74,39 +75,30 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 
 ftxui::Element addTreeLine(const RenderTree& treeLineType,
 				 const cpplibostree::Commit& commit,
-				 const std::unordered_map<std::string, bool>& usedBranches,
+				 const std::unordered_map<std::string, int>& usedBranches,
 				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
 	using namespace ftxui;
 
 	std::string relevantBranch = commit.branch;
-	Elements tree;
+	// create an empty branch tree line
+	Elements tree(usedBranches.size(), text(COMMIT_NONE));
 	
-	// build branch by branch from left to right
+	// populate tree with all displayed branches
 	for (const auto& branch : usedBranches) {
-		if (treeLineType == RenderTree::TREE_LINE_IGNORE_BRANCH) {
-			if (branch.second && branch.first != relevantBranch) {
-				tree.push_back(text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
-			} else {
-				tree.push_back(text(COMMIT_NONE) | color(branchColorMap.at(branch.first)));
-			}
+		if (branch.second == -1) {
+			continue;
+		}
+
+		if (treeLineType == RenderTree::TREE_LINE_IGNORE_BRANCH && branch.first != relevantBranch) {
+			tree.at(branch.second) = (text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
 		} else if (treeLineType == RenderTree::TREE_LINE_NODE) {
-			if (branch.second) {
-				if (branch.first == relevantBranch) {
-					tree.push_back(text(COMMIT_NODE) | color(branchColorMap.at(branch.first)));
-				} else {
-					tree.push_back(text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
-				}
+			if (branch.first == relevantBranch) {
+				tree.at(branch.second) = (text(COMMIT_NODE) | color(branchColorMap.at(branch.first)));
 			} else {
-				tree.push_back(text(COMMIT_NONE) | color(branchColorMap.at(branch.first)));
+				tree.at(branch.second) = (text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
 			}
 		} else if (treeLineType == RenderTree::TREE_LINE_TREE) {
-			if (branch.second) {
-				tree.push_back(text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
-			} else {
-				tree.push_back(text(COMMIT_NONE) | color(branchColorMap.at(branch.first)));
-			}
-		} else {
-			tree.push_back(text("error") | color(Color::Red));
+			tree.at(branch.second) = (text(COMMIT_TREE) | color(branchColorMap.at(branch.first)));
 		}
     }
 
