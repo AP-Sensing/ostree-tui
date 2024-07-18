@@ -52,12 +52,11 @@ namespace cpplibostree {
     struct Commit {
         std::string hash;
         std::string contentChecksum;
-        std::string subject{"Error - invalid commit state"};
+        std::string subject{"OSTree TUI Error - invalid commit state"};
         std::string body;
         std::string version;
         Timepoint timestamp;
         std::string parent;
-        // a commit already stores, to which branches it belongs to
 	    std::string branch;
         std::vector<Signature> signatures;
     } __attribute__((aligned(128)));
@@ -69,7 +68,6 @@ namespace cpplibostree {
      * @brief OSTreeRepo functions as a C++ wrapper around libostree's OstreeRepo. 
      * The complete OSTree repository gets parsed into a complete commit list in
      * commitList and a list of refs in branches.
-     * 
      */
     class OSTreeRepo {
     private:

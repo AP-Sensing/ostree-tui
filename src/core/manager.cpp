@@ -61,9 +61,17 @@ ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& dis
 	// selected commit info
 	Elements signatures;
 	for (const auto& signature : displayCommit.signatures) {
-		signatures.push_back(
-			text("• " + signature.pubkeyAlgorithm + " " + signature.fingerprint)
-		);
+		std::string ts = std::format("{:%Y-%m-%d %T %Ez}",
+								std::chrono::time_point_cast<std::chrono::seconds>(signature.timestamp));
+		signatures.push_back(vbox({
+			hbox({
+				text("‣ "),
+				text(signature.pubkeyAlgorithm) | bold,
+				text(" signature")
+			}),
+			text("  with key ID " + signature.fingerprint),
+			text("  made " + ts)
+		}));
 	}
 	return vbox({
 			text(" Subject:") | color(Color::Green),
