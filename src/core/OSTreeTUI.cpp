@@ -70,7 +70,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	if (startupBranches.size() != 0) {
 		for (const auto& branch : startupBranches) {
 			if (visibleBranches.find(branch) == visibleBranches.end()) {
-        		return showHelp("ostree","no such branch: " + branch);
+        		return showHelp("ostree-tui","no such branch in repository " + repo + ": " + branch);
 			}
 			visibleBranches[branch] = true;
 		}
@@ -176,9 +176,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	
 	logRenderer->TakeFocus();
 
-	// add shortcuts
-	// TODO change to shift+ctrl+, or change any other way, as it currently
-	// blocks the chosen letters from any TUI-internal text input
+	// add application shortcuts
 	Component mainContainer = CatchEvent(container | border, [&](const Event& event) {
 		// copy commit id
     	if (event == Event::AltC) {
@@ -201,6 +199,9 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
     	return false;
   	});
 
+	// footer notification update loader
+	// Probably not the best solution, having an active wait and should maybe
+	// only be started, once a notification is set...
 	bool runSubThreads{true};
 	std::thread footerNotificationUpdater([&] {
 		while (runSubThreads) {
@@ -231,16 +232,16 @@ int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessa
 	using namespace ftxui;
 
 	// define command line options
-	std::vector<std::vector<std::string>> command_options = {
+	std::vector<std::vector<std::string>> command_options{
 		// option, arguments, meaning
 		{"-h, --help", "", "Show help options. The REPOSITORY_PATH can be omitted"},
 		{"-r, --refs", "REF [REF...]", "Specify a list of visible refs at startup if not specified, show all refs"},
 		{"-n, --no-tooltips", "", "Hide Tooltips in promotion view."}
 	};
 
-	Elements options   = {text("Options:")};
-	Elements arguments = {text("Arguments:")};
-	Elements meanings  = {text("Meaning:")};
+	Elements options   {text("Options:")};
+	Elements arguments {text("Arguments:")};
+	Elements meanings  {text("Meaning:")};
 	for (const auto& command : command_options) {
 		options.push_back(text(command.at(0) + "  ") | color(Color::GrayLight));
 		arguments.push_back(text(command.at(1) + "  ") | color(Color::GrayLight));
@@ -248,7 +249,7 @@ int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessa
 	}
 
 	auto helpPage = vbox({
-			errorMessage.size() == 0 ? filler() : (text(errorMessage) | bold | color(Color::Red) | flex),
+			errorMessage.empty() ? filler() : (text(errorMessage) | bold | color(Color::Red) | flex),
 			hbox({
 	            text("Usage: "),
 				text(caller) | color(Color::GrayLight),
@@ -264,7 +265,7 @@ int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessa
 			text(""),
 			hbox({
 				text("Report bugs at "),
-				text("https://github.com/AP-Sensing/ostree-tui") | hyperlink("https://github.com/AP-Sensing/ostree-tui")
+				text("Github.com/AP-Sensing/ostree-tui") | hyperlink("https://github.com/AP-Sensing/ostree-tui")
 			}),
 			text("")
 	    });
@@ -274,7 +275,7 @@ int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessa
 	screen.Print();
 	std::cout << "\n";
 
-	return errorMessage.size() == 0;
+	return errorMessage.empty();
 }
 
 int OSTreeTUI::showVersion() {
