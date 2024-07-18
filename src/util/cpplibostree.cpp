@@ -73,6 +73,7 @@ namespace cpplibostree {
 
         const gchar *subject    {nullptr};
         const gchar *body       {nullptr};
+        const gchar *version    {nullptr};
         guint64 timestamp       {0};
         g_autofree char *parent {nullptr};
 
@@ -81,9 +82,11 @@ namespace cpplibostree {
         assert(body);
         assert(timestamp);
 
+        // timestamp
         timestamp = GUINT64_FROM_BE(timestamp);
         commit.timestamp = Timepoint(std::chrono::seconds(timestamp));
 
+        // parent
         parent = ostree_commit_get_parent(variant);
         if (parent) {
             commit.parent = parent;
@@ -91,10 +94,21 @@ namespace cpplibostree {
             commit.parent = "(no parent)";
         }
 
+        // content checksum
         g_autofree char *contents = ostree_commit_get_content_checksum(variant);
         assert(contents);
         commit.contentChecksum = contents;
 
+        // version
+        g_autoptr (GVariant) metadata = NULL;
+        const char *ret = NULL;
+        metadata = g_variant_get_child_value(variant, 0);
+        if (g_variant_lookup(metadata, OSTREE_COMMIT_META_KEY_VERSION, "&s", &ret)) {
+            version = g_strdup(ret);
+            commit.version = version;
+        }
+
+        // subject
         if (subject[0]) {
             std::string val = subject;
             commit.subject = val;
@@ -102,6 +116,7 @@ namespace cpplibostree {
             commit.subject = "(no subject)";
         }
 
+        // body
         if (body[0]) {
             commit.body = body;
         }

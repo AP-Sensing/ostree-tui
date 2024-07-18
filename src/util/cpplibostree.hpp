@@ -54,6 +54,7 @@ namespace cpplibostree {
         std::string contentChecksum;
         std::string subject{"Error - invalid commit state"};
         std::string body;
+        std::string version;
         Timepoint timestamp;
         std::string parent;
         // a commit already stores, to which branches it belongs to

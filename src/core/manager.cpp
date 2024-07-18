@@ -76,6 +76,13 @@ ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& dis
 			text(std::format("{:%Y-%m-%d %T %Ez}",
 								std::chrono::time_point_cast<std::chrono::seconds>(displayCommit.timestamp))),
 			filler(),
+			// TODO insert version, only if exists
+			displayCommit.version.empty()
+				? filler()
+				: text(" Version: ") | color(Color::Green),
+			displayCommit.version.empty()
+				? filler()
+				: text(displayCommit.version),
 			text(" Parent: ") | color(Color::Green),
 			text(displayCommit.parent),
 			filler(),
