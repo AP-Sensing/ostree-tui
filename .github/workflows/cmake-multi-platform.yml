@@ -19,8 +19,8 @@ jobs:
       run: dnf update -y
     - name: Install Dependencies
       run: |
-        dnf install -y gcc-c++ clang git gcc gdb make openssl-devel libcurl-devel cmake automake autoconf
-        dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
+        sudo dnf install -y gcc-c++ clang git gcc gdb make cmake automake autoconf
+        sudo dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
     - name: Checkout
       uses: actions/checkout@v3
     - name: "Build" # & Test"
@@ -51,8 +51,8 @@ jobs:
       run: dnf update -y
     - name: Install Dependencies
       run: |
-        dnf install -y gcc-c++ clang git gcc gdb make openssl-devel libcurl-devel cmake automake autoconf
-        dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
+        sudo dnf install -y gcc-c++ clang git gcc gdb make cmake automake autoconf
+        sudo dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
     - name: Checkout
       uses: actions/checkout@v3
     - name: "Build" # & Test"
@@ -69,3 +69,33 @@ jobs:
         build-type: ${{ matrix.buildType }}
         run-test: false # true
         ctest-options: ${{ env.CTEST_OPTIONS }}
+
+  clang-tidy:
+    strategy:
+      matrix:
+        container: ["fedora:latest"]
+        buildType: [Debug]
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    steps:
+    - name: Update package list
+      run: sudo dnf update -y
+    - name: Install dependencies
+      run: |
+        sudo dnf install -y cmake git gcc clang ninja-build automake autoconf
+        sudo dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
+        sudo dnf install -y clang-tools-extra
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: "Build Debug" # & Test"
+      env:
+        CPR_BUILD_TESTS: OFF # ON
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{github.workspace}}/build
+        source-dir: ${{github.workspace}}
+        cc: clang
+        cxx: clang++
+        build-type: ${{ matrix.buildType }}
+        run-test: false
+        configure-options: -DCPR_ENABLE_LINTING=ON
