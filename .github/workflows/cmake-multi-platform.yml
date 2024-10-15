@@ -7,11 +7,10 @@ on:
     branches: [ "main" ]
 
 jobs:
-  fedora-gcc-openssl:
+  fedora-clang:
     strategy:
       matrix:
         container: ["fedora:latest"]
-        # systemCurl: [ON, OFF]
         buildType: [Debug, Release]
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
@@ -29,7 +28,38 @@ jobs:
         CPR_BUILD_TESTS: OFF # ON
         CPR_BUILD_TESTS_SSL: OFF # ON
         CPR_FORCE_OPENSSL_BACKEND: ON
-        USE_SYSTEM_CURL: ${{ matrix.systemCurl }}
+        USE_SYSTEM_CURL: OFF
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{ github.workspace }}/build
+        source-dir: ${{ github.workspace }}
+        cc: clang
+        cxx: clang++
+        build-type: Release
+        run-test: false # true
+        ctest-options: ${{ env.CTEST_OPTIONS }}
+
+  fedora-gcc:
+    strategy:
+      matrix:
+        container: ["fedora:latest"]
+        buildType: [Debug, Release]
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    steps:
+    - name: Update package list
+      run: dnf update -y
+    - name: Install Dependencies
+      run: |
+        dnf install -y gcc-c++ clang git gcc gdb make openssl-devel libcurl-devel cmake automake autoconf
+        dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: "Build" # & Test"
+      env:
+        CPR_BUILD_TESTS: OFF # ON
+        CPR_BUILD_TESTS_SSL: OFF # ON
+        CPR_FORCE_OPENSSL_BACKEND: ON
       uses: ashutoshvarma/action-cmake-build@master
       with:
         build-dir: ${{ github.workspace }}/build
