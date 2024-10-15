@@ -1,3 +1,7 @@
+# Github CI config
+# Inspired by https://github.com/libcpr/cpr/blob/master/.github/workflows/ci.yml
+# Runs: clang format check, g++ & clang, release & debug, on Fedora
+
 name: OSTree-TUI CI
 
 on: [push, workflow_dispatch, pull_request]
