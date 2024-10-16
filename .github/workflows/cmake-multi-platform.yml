@@ -7,6 +7,7 @@ name: OSTree-TUI CI
 on: [push, workflow_dispatch, pull_request]
 
 env:
+  # ctest not used yet
   # standard dependencies for building & project
   BUILD_DEPENDENCIES: "gcc-c++ clang git gcc gdb make cmake automake autoconf"
   OSTREE_TUI_DEPENDENCIES: "glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel"
@@ -38,7 +39,7 @@ jobs:
         cxx: clang++
         build-type: Release
         run-test: false # true
-        ctest-options: ${{ env.CTEST_OPTIONS }}
+        # ctest-options: ${{ env.CTEST_OPTIONS }}
 
   fedora-gcc:
     strategy:
@@ -66,7 +67,7 @@ jobs:
         cxx: g++
         build-type: ${{ matrix.buildType }}
         run-test: false # true
-        ctest-options: ${{ env.CTEST_OPTIONS }}
+        # ctest-options: ${{ env.CTEST_OPTIONS }}
 
   fedora-gcc-sanitizer:
     strategy:
@@ -95,7 +96,7 @@ jobs:
         cxx: g++
         build-type: ${{ matrix.buildType }}
         run-test: false # true
-        ctest-options: ${{ env.CTEST_OPTIONS }}
+        # ctest-options: ${{ env.CTEST_OPTIONS }}
 
   clang-tidy:
     runs-on: ubuntu-latest
