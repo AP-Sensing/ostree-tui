@@ -6,6 +6,11 @@ name: OSTree-TUI CI
 
 on: [push, workflow_dispatch, pull_request]
 
+env:
+  # standard dependencies for building & project
+  BUILD_DEPENDENCIES: "gcc-c++ clang git gcc gdb make cmake automake autoconf"
+  OSTREE_TUI_DEPENDENCIES: "glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel"
+
 jobs:
   fedora-clang:
     strategy:
@@ -19,8 +24,8 @@ jobs:
       run: dnf update -y
     - name: Install Dependencies
       run: |
-        sudo dnf install -y gcc-c++ clang git gcc gdb make cmake automake autoconf
-        sudo dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
+        sudo dnf install -y ${{ env.BUILD_DEPENDENCIES }}
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
     - name: Checkout
       uses: actions/checkout@v3
     - name: "Build" # & Test"
@@ -48,8 +53,8 @@ jobs:
       run: dnf update -y
     - name: Install Dependencies
       run: |
-        sudo dnf install -y gcc-c++ clang git gcc gdb make cmake automake autoconf
-        sudo dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
+        sudo dnf install -y ${{ env.BUILD_DEPENDENCIES }}
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
     - name: Checkout
       uses: actions/checkout@v3
     - name: "Build" # & Test"
@@ -77,9 +82,8 @@ jobs:
       run: sudo dnf update -y
     - name: Install dependencies
       run: |
-        sudo dnf install -y cmake git gcc clang ninja-build automake autoconf
-        sudo dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
-        sudo dnf install -y clang-tools-extra
+        sudo dnf install -y cmake git gcc clang ninja-build automake autoconf clang-tools-extra
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
     - name: Checkout
       uses: actions/checkout@v3
     - name: "Build Debug" # & Test"
@@ -120,8 +124,8 @@ jobs:
       run: dnf update -y
     - name: Install Dependencies
       run: |
-        sudo dnf install -y gcc-c++ clang git gcc gdb make cmake automake autoconf
-        sudo dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
+        sudo dnf install -y ${{ env.BUILD_DEPENDENCIES }}
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
         sudo dnf install -y cppcheck
     - name: Checkout
       uses: actions/checkout@v3
