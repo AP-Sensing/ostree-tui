@@ -15,10 +15,9 @@ jobs:
   fedora-clang:
     strategy:
       matrix:
-        container: ["fedora:latest"]
         buildType: [Debug, Release]
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: "fedora:latest"
     steps:
     - name: Update package list
       run: dnf update -y
@@ -44,10 +43,9 @@ jobs:
   fedora-gcc:
     strategy:
       matrix:
-        container: ["fedora:latest"]
         buildType: [Debug, Release]
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: "fedora:latest"
     steps:
     - name: Update package list
       run: dnf update -y
@@ -100,12 +98,8 @@ jobs:
         ctest-options: ${{ env.CTEST_OPTIONS }}
 
   clang-tidy:
-    strategy:
-      matrix:
-        container: ["fedora:latest"]
-        buildType: [Debug]
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: "fedora:latest"
     steps:
     - name: Update package list
       run: sudo dnf update -y
@@ -124,13 +118,13 @@ jobs:
         source-dir: ${{github.workspace}}
         cc: clang
         cxx: clang++
-        build-type: ${{ matrix.buildType }}
+        build-type: Debug
         run-test: false
         configure-options: -DCPR_ENABLE_LINTING=ON
 
   clang-format:
     runs-on: ubuntu-latest
-    container: fedora:latest
+    container: "fedora:latest"
     steps:
     - name: Update package list
       run: sudo dnf update -y
@@ -142,12 +136,8 @@ jobs:
       run: bash scripts/check_clang_format.sh
 
   cppcheck:
-    strategy:
-      matrix:
-        container: ["fedora:latest"]
-        buildType: [Release]
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: "fedora:latest"
     steps:
     - name: Update package list
       run: dnf update -y
@@ -168,5 +158,5 @@ jobs:
         source-dir: ${{ github.workspace }}
         cc: gcc
         cxx: g++
-        build-type: ${{ matrix.buildType }}
+        build-type: Release
         run-test: false
