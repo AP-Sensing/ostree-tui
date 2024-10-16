@@ -70,6 +70,35 @@ jobs:
         run-test: false # true
         ctest-options: ${{ env.CTEST_OPTIONS }}
 
+  fedora-gcc-sanitizer:
+    strategy:
+      matrix:
+        buildType: [UdefSan, LeakSan, AddrSan, ThreadSan]
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    steps:
+    - name: Update package list
+      run: dnf update -y
+    - name: Install Dependencies
+      run: |
+        sudo dnf install -y ${{ env.BUILD_DEPENDENCIES }}
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
+        sudo dnf install -y libasan libubsan liblsan libtsan
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: "Build" # & Test
+      env:
+        CPR_BUILD_TESTS: OFF
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{ github.workspace }}/build
+        source-dir: ${{ github.workspace }}
+        cc: gcc
+        cxx: g++
+        build-type: ${{ matrix.buildType }}
+        run-test: false # true
+        ctest-options: ${{ env.CTEST_OPTIONS }}
+
   clang-tidy:
     strategy:
       matrix:
@@ -82,7 +111,7 @@ jobs:
       run: sudo dnf update -y
     - name: Install dependencies
       run: |
-        sudo dnf install -y cmake git gcc clang ninja-build automake autoconf clang-tools-extra
+        sudo dnf install -y cmake git gcc-c++ clang ninja-build automake autoconf clang-tools-extra
         sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
     - name: Checkout
       uses: actions/checkout@v3
