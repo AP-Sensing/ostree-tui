@@ -26,9 +26,6 @@ jobs:
     - name: "Build" # & Test"
       env:
         CPR_BUILD_TESTS: OFF # ON
-        CPR_BUILD_TESTS_SSL: OFF # ON
-        CPR_FORCE_OPENSSL_BACKEND: ON
-        USE_SYSTEM_CURL: OFF
       uses: ashutoshvarma/action-cmake-build@master
       with:
         build-dir: ${{ github.workspace }}/build
@@ -58,8 +55,6 @@ jobs:
     - name: "Build" # & Test"
       env:
         CPR_BUILD_TESTS: OFF # ON
-        CPR_BUILD_TESTS_SSL: OFF # ON
-        CPR_FORCE_OPENSSL_BACKEND: ON
       uses: ashutoshvarma/action-cmake-build@master
       with:
         build-dir: ${{ github.workspace }}/build
@@ -112,3 +107,33 @@ jobs:
       uses: actions/checkout@v3
     - name: Check format
       run: bash scripts/check_clang_format.sh
+
+  cppcheck:
+    strategy:
+      matrix:
+        container: ["fedora:latest"]
+        buildType: [Release]
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    steps:
+    - name: Update package list
+      run: dnf update -y
+    - name: Install Dependencies
+      run: |
+        sudo dnf install -y gcc-c++ clang git gcc gdb make cmake automake autoconf
+        sudo dnf install -y glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel
+        sudo dnf install -y cppcheck
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: "Build"
+      env:
+        CPR_BUILD_TESTS: OFF
+        CPR_ENABLE_CPPCHECK: ON
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{ github.workspace }}/build
+        source-dir: ${{ github.workspace }}
+        cc: gcc
+        cxx: g++
+        build-type: ${{ matrix.buildType }}
+        run-test: false
