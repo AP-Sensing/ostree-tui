@@ -1,0 +1,151 @@
+# Github CI config
+# Inspired by https://github.com/libcpr/cpr/blob/master/.github/workflows/ci.yml
+# Runs: clang format check, g++ & clang, release & debug, on Fedora
+
+name: OSTree-TUI CI
+
+on: [push, workflow_dispatch, pull_request]
+
+env:
+  # ctest not used yet
+  # standard dependencies for building & project
+  BUILD_DEPENDENCIES: "gcc-c++ clang git gcc gdb make cmake automake autoconf"
+  OSTREE_TUI_DEPENDENCIES: "glib2-devel gtk-doc ostree-devel libtool bison liblzf e2fsprogs-devel xz-devel gpgme-devel fuse-devel"
+
+jobs:
+  fedora-clang:
+    strategy:
+      matrix:
+        buildType: [Debug, Release]
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    steps:
+    - name: Update package list
+      run: dnf update -y
+    - name: Install Dependencies
+      run: |
+        sudo dnf install -y ${{ env.BUILD_DEPENDENCIES }}
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: "Build" # & Test"
+      env:
+        CPR_BUILD_TESTS: OFF # ON
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{ github.workspace }}/build
+        source-dir: ${{ github.workspace }}
+        cc: clang
+        cxx: clang++
+        build-type: Release
+        run-test: false # true
+        # ctest-options: ${{ env.CTEST_OPTIONS }}
+
+  fedora-gcc:
+    strategy:
+      matrix:
+        buildType: [Debug, Release]
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    steps:
+    - name: Update package list
+      run: dnf update -y
+    - name: Install Dependencies
+      run: |
+        sudo dnf install -y ${{ env.BUILD_DEPENDENCIES }}
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: "Build" # & Test"
+      env:
+        CPR_BUILD_TESTS: OFF # ON
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{ github.workspace }}/build
+        source-dir: ${{ github.workspace }}
+        cc: gcc
+        cxx: g++
+        build-type: ${{ matrix.buildType }}
+        run-test: false # true
+        # ctest-options: ${{ env.CTEST_OPTIONS }}
+
+  fedora-gcc-sanitizer:
+    strategy:
+      matrix:
+        buildType: [UdefSan, LeakSan, AddrSan, ThreadSan]
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    steps:
+    - name: Update package list
+      run: dnf update -y
+    - name: Install Dependencies
+      run: |
+        sudo dnf install -y ${{ env.BUILD_DEPENDENCIES }}
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
+        sudo dnf install -y libasan libubsan liblsan libtsan
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: "Build" # & Test
+      env:
+        CPR_BUILD_TESTS: OFF
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{ github.workspace }}/build
+        source-dir: ${{ github.workspace }}
+        cc: gcc
+        cxx: g++
+        build-type: ${{ matrix.buildType }}
+        run-test: false # true
+        # ctest-options: ${{ env.CTEST_OPTIONS }}
+
+  clang-tidy:
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    steps:
+    - name: Update package list
+      run: sudo dnf update -y
+    - name: Install dependencies
+      run: |
+        sudo dnf install -y cmake git gcc-c++ clang ninja-build automake autoconf clang-tools-extra
+        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: "Build Debug" # & Test"
+      env:
+        CPR_BUILD_TESTS: OFF # ON
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{github.workspace}}/build
+        source-dir: ${{github.workspace}}
+        cc: clang
+        cxx: clang++
+        build-type: Debug
+        run-test: false
+        configure-options: -DCPR_ENABLE_LINTING=ON
+
+  clang-format:
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    steps:
+    - name: Update package list
+      run: sudo dnf update -y
+    - name: Install clang-format
+      run: sudo dnf install -y clang-tools-extra
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Check format
+      run: bash scripts/check_clang_format.sh
+
+  cppcheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: "Run cppcheck"
+      uses: deep5050/cppcheck-action@main
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        check_library: enable
+        enable: warning,style,performance,missingInclude
+        output_file: cppcheck_report.txt
+    - name: "Print report"
+      run: cat cppcheck_report.txt
