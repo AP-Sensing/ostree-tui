@@ -138,26 +138,14 @@ jobs:
 
   cppcheck:
     runs-on: ubuntu-latest
-    container: "fedora:latest"
     steps:
-    - name: Update package list
-      run: dnf update -y
-    - name: Install Dependencies
-      run: |
-        sudo dnf install -y ${{ env.BUILD_DEPENDENCIES }}
-        sudo dnf install -y ${{ env.OSTREE_TUI_DEPENDENCIES }}
-        sudo dnf install -y cppcheck
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: "Build"
-      env:
-        CPR_BUILD_TESTS: OFF
-        CPR_ENABLE_CPPCHECK: ON
-      uses: ashutoshvarma/action-cmake-build@master
+    - uses: actions/checkout@v2
+    - name: "Run cppcheck"
+      uses: deep5050/cppcheck-action@main
       with:
-        build-dir: ${{ github.workspace }}/build
-        source-dir: ${{ github.workspace }}
-        cc: gcc
-        cxx: g++
-        build-type: Release
-        run-test: false
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        check_library: enable
+        enable: warning,style,performance,missingInclude
+        output_file: cppcheck_report.txt
+    - name: "Print report"
+      run: cat cppcheck_report.txt
