@@ -1,5 +1,5 @@
-#ifndef SCROLLER_H
-#define SCROLLER_H
+#ifndef SNAPPYWINDOW_H
+#define SNAPPYWINDOW_H
 
 #include <ftxui/component/component.hpp>
 
@@ -7,17 +7,11 @@
 
 namespace ftxui {
     /**
-     * @brief This Scroller Element is a modified version of the Scroller in the following repository:
-     *    Title: git-tui
-     *    Author: Arthur Sonzogni
-     *    Date: 2021
-     *    Availability: https://github.com/ArthurSonzogni/git-tui/blob/master/src/scroller.cpp
+     * @brief
      *
-     * @param selectedCommit 
-     * @param child 
      * @return Component
      */
     Component SnappyWindow();
 
 } // namespace ftxui
-#endif /* end of include guard: SCROLLER_H */
+#endif /* end of include guard: SNAPPYWINDOW_H */
