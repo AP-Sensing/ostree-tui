@@ -54,9 +54,7 @@ int main(int argc, const char** argv) {
 	std::string repo = args.at(0);
 	// -r, --refs
 	std::vector<std::string> startupBranches = getArgOptions(args, {"-r", "--refs"});
-	// -n, --no-tooltips
-	bool hideTooltips = argExists(args, "-n") || argExists(args, "--no-tooltips");
 
 	// OSTree TUI
-	return OSTreeTUI::main(repo, startupBranches, !hideTooltips);
+	return OSTreeTUI::main(repo, startupBranches);
 }

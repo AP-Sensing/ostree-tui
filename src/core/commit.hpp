@@ -11,15 +11,18 @@
 
 #pragma once
 
-#include <ftxui/dom/elements.hpp>
 #include <string>
 #include <vector>
+
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/component/component.hpp>
+#include "ftxui/component/component_base.hpp"
 
 #include "../util/cpplibostree.hpp"
 
 namespace CommitRender {
 
-    constexpr size_t COMMIT_DETAIL_LEVEL     {3}; // lines per commit
+    constexpr size_t COMMIT_DETAIL_LEVEL     {4}; // lines per commit
 
     constexpr std::string COMMIT_NODE        {" ☐"};
     constexpr std::string COMMIT_TREE        {" │"};
@@ -42,6 +45,27 @@ namespace CommitRender {
     };
 
     /**
+     * @brief Creates a window, containing a hash and some of its details.
+     *        The window has a pre-defined position and snaps back to it,
+     *        after being dragged & let go. When hovering over a branch,
+     *        defined in `columnToBranchMap`, the window expands to a commit
+     *        promotion window.
+     *        To be used with other windows, use a ftxui::Component::Stacked.
+     *
+     * @return Component
+     */
+    ftxui::Component CommitComponent(int position,
+                            int& scrollOffset,
+                            bool& inPromotionSelection,
+                            std::string& promotionHash,
+                            std::string& promotionBranch,
+                            std::unordered_map<std::string, bool>& visibleBranches,
+                            std::vector<std::string>& columnToBranchMap,
+                            std::string commit,
+                            cpplibostree::OSTreeRepo& ostreerepo,
+                            bool& refresh);
+
+    /**
      * @brief create a Renderer for the commit section
      * 
      * @param repo OSTree repository
@@ -54,28 +78,10 @@ namespace CommitRender {
     ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
                                 const std::vector<std::string>& visibleCommitMap,
                                 const std::unordered_map<std::string, bool>& visibleBranches,
+                                std::vector<std::string>& columnToBranchMap,
                                 const std::unordered_map<std::string, ftxui::Color>& branchColorMap,
+                                int scrollOffset,
                                 size_t selectedCommit = 0);
-
-    /**
-     * @brief Add a line to a commit-tree-column and commit-info-column.
-     *        Both are built and set using addTreeLine() and addTreeLine().
-     * 
-     * @param treeLineType      type of commit_tree
-     * @param lineType          type of commit_info (e.g. hash, date,...)
-     * @param treeElements     commit tree column
-     * @param commElements     commit info column
-     * @param commit            commit to render / get info from
-     * @param highlight         should commit be highlighted (as selected)
-     * @param usedBranches     branches to render
-     * @param branchColorMap  branch colors
-     */
-    void addLine(const RenderTree& treeLineType, const RenderLine& lineType,
-			 ftxui::Elements& treeElements, ftxui::Elements& commElements,
-			 const cpplibostree::Commit& commit,
-			 const bool& highlight,
-			 const std::unordered_map<std::string, int>& usedBranches,
-			 const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
 
     /**
      * @brief build a commit-tree line
@@ -90,19 +96,5 @@ namespace CommitRender {
 				 const cpplibostree::Commit& commit,
 				 const std::unordered_map<std::string, int>& usedBranches,
 				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
-    
-    /**
-     * @brief build a commit-info line
-     * 
-     * @param lineType          type of commit-info
-     * @param commit            commit to render / get info from
-     * @param highlight         should commit be highlighted (as selected)
-     * @param branchColorMap  branch colors
-     * @return ftxui::Element   commit-info line
-     */
-    ftxui::Element addCommLine(RenderLine lineType,
-				 const cpplibostree::Commit& commit,
-				 const bool& highlight,
-				 const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
-    
+
 } // namespace CommitRender
