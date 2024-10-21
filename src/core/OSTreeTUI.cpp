@@ -7,17 +7,14 @@
 #include <string>
 #include <unordered_map>
 #include <thread>
-
 #include <fcntl.h>
 
-#include "commit.hpp"
 #include "ftxui/component/component.hpp"  // for Renderer, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 
-#include "scroller.hpp"
-
+#include "commit.hpp"
 #include "footer.hpp"
 #include "manager.hpp"
 
@@ -45,7 +42,7 @@ std::vector<std::string> OSTreeTUI::parseVisibleCommitMap(cpplibostree::OSTreeRe
 	return visibleCommitViewMap;
 }
 
-int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& startupBranches, bool showTooltips) {
+int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& startupBranches) {
 	using namespace ftxui;
 
 	// - STATES ---------- ----------
@@ -55,6 +52,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	// View
 	size_t selectedCommit{0};									// view-index
 	std::unordered_map<std::string, bool>  visibleBranches{};	// map branch visibility to branch
+	std::vector<std::string> columnToBranchMap{};				// map column in commit-tree to branch (may be merged into one data-structure with visibleBranches)
 	std::vector<std::string> visibleCommitViewMap{};			// map from view-index to commit-hash
 	std::unordered_map<std::string, Color> branchColorMap{};	// map branch to color
 	std::string notificationText = "";							// footer notification
@@ -76,38 +74,136 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		}
 	}
 
-	// - UPDATES ---------- ----------
-
-	auto refresh_repository = [&] {
-		ostreeRepo.updateData();
-		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
-		return true;
-	};
-	auto next_commit = [&] {
-		if (selectedCommit + 1 >= visibleCommitViewMap.size()) {
-			selectedCommit = visibleCommitViewMap.size() - 1;
-			return false;
-		}
-		++selectedCommit;
-		return true;
-	};
-	auto prev_commit = [&] {
-		if (selectedCommit <= 0) {
-			selectedCommit = 0;
-			return false;
-		}
-		--selectedCommit;
-		return true;
-	};
-
 	// - UI ELEMENTS ---------- ----------
 	auto screen = ScreenInteractive::Fullscreen();
 	
 	std::vector<std::string> allBranches = ostreeRepo.getBranches();
  
+	visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches); // TODO This update shouldn't be made here...
+	
+	// COMMIT TREE
+/* The commit-tree is currentrly under a heavy rebuild, see implementation To-Dos below.
+ * For a general list of To-Dos refer to https://github.com/AP-Sensing/ostree-tui/pull/21
+ *
+ * TODO extend with keyboard functionality:
+ *      normal scrolling through commits (should also highlight selected commit)
+ *      if 'p' is pressed: start promotion
+ *      if 'd' is pressed: open deletion window
+ * TODO add commit deletion
+ *      add deletion button & ask for confirmation (also add keyboard functionality)
+ */
+	// commit promotion state
+	// TODO especially needed for keyboard shortcuts
+	//      store shared information about which commit is in which state
+	//      each commit can then display itself the way it should
+	//      * is promotion action active?
+	//      *   keyboard or mouse?
+	//      *   which commit?
+	//      * is deletion action active?
+	//      *   keyboard or mouse?
+	//      *   which commit?
+	bool inPromotionSelection{false};
+	bool refresh{false};
+	std::string promotionHash{""};
+	std::string promotionBranch{""};
+	// parse all commits
+	Components commitComponents;
+	Component commitList;
+	Component tree;
+	
+	int scrollOffset{0};
+	
+	auto refresh_commitComponents = [&] {
+		commitComponents.clear();
+		int i{0};
+		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
+		for (auto& hash : visibleCommitViewMap) {
+			commitComponents.push_back(
+				CommitRender::CommitComponent(i, scrollOffset, inPromotionSelection, promotionHash, promotionBranch, visibleBranches, columnToBranchMap, hash, ostreeRepo, refresh)
+			);
+			i++;
+		}
+		//
+		commitList = commitComponents.size() == 0
+			? Renderer([&] { return text(" no commits to be shown ") | color(Color::Red); })
+			: Container::Stacked(commitComponents);
+		//
+	};
+	refresh_commitComponents();
+
+	tree = Renderer([&] {
+			refresh_commitComponents();
+			selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
+			// TODO check for promotion & pass information if needed
+			if (inPromotionSelection && promotionBranch.size() != 0) {
+				std::unordered_map<std::string, Color> promotionBranchColorMap{};
+				for (auto& [str,col] : branchColorMap) {
+					if (str == promotionBranch) {
+						promotionBranchColorMap.insert({str,col});
+					} else {
+						promotionBranchColorMap.insert({str,Color::GrayDark});
+					}
+				}
+				return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, columnToBranchMap, promotionBranchColorMap, scrollOffset, selectedCommit);	
+			}
+			return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, columnToBranchMap, branchColorMap, scrollOffset, selectedCommit);
+		});
+
+	Component commitListComponent = Container::Horizontal({
+		tree,
+		commitList
+	});
+
+	/// refresh all graphical components in the commit-tree
+	auto refresh_commitListComoponent = [&] {
+		commitListComponent->DetachAllChildren();
+		refresh_commitComponents();
+		Component tmp = Container::Horizontal({
+			tree,
+			commitList
+		});
+		commitListComponent->Add(tmp);
+	};
+	/// refresh ostree-repository and graphical components
+	auto refresh_repository = [&] {
+		ostreeRepo.updateData();
+		refresh_commitListComoponent();
+		return true;
+	};
+
+	// window specific shortcuts
+	commitListComponent = CatchEvent(commitListComponent, [&](Event event) {
+		// scroll
+    	if (event.is_mouse() && event.mouse().button == Mouse::WheelUp) {
+    	  	if (scrollOffset < 0) {
+				++scrollOffset;
+			}
+			selectedCommit = -scrollOffset / 4;
+			return true;
+    	}
+    	if (event.is_mouse() && event.mouse().button == Mouse::WheelDown) {
+    	  	--scrollOffset;
+			selectedCommit = -scrollOffset / 4;
+			return true;
+    	}
+		// switch through commits
+    	if (event == Event::ArrowUp || event == Event::Character('k')) {
+			scrollOffset = std::min(0, scrollOffset + 4);
+			selectedCommit = -scrollOffset / 4;
+			return true;
+    	}
+    	if (event == Event::ArrowDown || event == Event::Character('j')) {
+    	  	scrollOffset -= 4;
+			selectedCommit = -scrollOffset / 4;
+			return true;
+    	}
+		return false;
+	});
+
 	// INTERCHANGEABLE VIEW
 	// info
 	Component infoView = Renderer([&] {
+		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches); // TODO This update shouldn't be made here...
 		if (visibleCommitViewMap.size() <= 0) {
 			return text(" no commit info available ") | color(Color::RedLight) | bold | center;
 		}
@@ -119,36 +215,16 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	Component filterView = Renderer(filterManager.branchBoxes, [&] {
 		return filterManager.branchBoxRender();
 	});
-
-	// promotion
-	ContentPromotionManager promotionManager(showTooltips);
-	promotionManager.setBranchRadiobox(Radiobox(&allBranches, &promotionManager.selectedBranch));
-	promotionManager.setApplyButton(Button(" Apply ", [&] {
-		ostreeRepo.promoteCommit(visibleCommitViewMap.at(selectedCommit),
-								  ostreeRepo.getBranches().at(static_cast<size_t>(promotionManager.selectedBranch)),
-								  {}, promotionManager.newSubject,
-								  true);
-		refresh_repository();
-		notificationText = " Applied content promotion. ";
-	}, ButtonOption::Simple()));
-	Component promotionView = Renderer(promotionManager.composePromotionComponent(), [&] {
-		if (visibleCommitViewMap.size() <= 0) {
-			return text(" please select a commit to continue commit-promotion... ") | color(Color::RedLight) | bold | center;
-		}
-		return promotionManager.renderPromotionView(ostreeRepo, screen.dimy(),
-			ostreeRepo.getCommitList().at(visibleCommitViewMap.at(selectedCommit)));
-    });
+	filterView = CatchEvent(filterView, [&](Event event) {
+    	if (event.is_mouse() && event.mouse().button == Mouse::Button::Left) {
+    	  	refresh_commitListComoponent();
+    	}
+		return false;
+	});
 
 	// interchangeable view (composed)
-	Manager manager(infoView, filterView, promotionView);
+	Manager manager(infoView, filterView);
   	Component managerRenderer = manager.managerRenderer;
-	
-	// COMMIT TREE
-	Component logRenderer = Scroller(&selectedCommit, CommitRender::COMMIT_DETAIL_LEVEL, Renderer([&] {
-		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
-		selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
-		return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
-	}));
 
 	// FOOTER
 	Footer footer;
@@ -156,28 +232,22 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		return footer.footerRender();
 	});
 
-	// window specific shortcuts
-	logRenderer = CatchEvent(logRenderer, [&](Event event) {
-		// switch through commits
-    	if (event == Event::ArrowUp || event == Event::Character('k') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
-    	  	return prev_commit();
-    	}
-    	if (event == Event::ArrowDown || event == Event::Character('j') || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
-    	  	return next_commit();
-    	}
-		return false;
-	});
-
+	// build together all components
   	int logSize{45};
   	int footerSize{1};
   	Component container{managerRenderer};
-  	container = ResizableSplitLeft(logRenderer, container, &logSize);
+  	container = ResizableSplitLeft(commitListComponent, container, &logSize);
   	container = ResizableSplitBottom(footerRenderer, container, &footerSize);
 	
-	logRenderer->TakeFocus();
+	commitListComponent->TakeFocus();
 
 	// add application shortcuts
 	Component mainContainer = CatchEvent(container | border, [&](const Event& event) {
+		//if (event == Event::Character('p')) {
+		//	inPromotionSelection = true;
+		//	promotionHash = visibleCommitViewMap.at(selectedCommit);
+		//	promotionBranch = columnToBranchMap.at(0);
+		//}
 		// copy commit id
     	if (event == Event::AltC) {
 			std::string hash = visibleCommitViewMap.at(selectedCommit);
@@ -186,9 +256,10 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
     	  	return true;
     	}
 		// refresh repository
-		if (event == Event::AltR) {
+		if (event == Event::AltR || refresh) {
 			refresh_repository();
 			notificationText = " Refreshed Repository Data ";
+			refresh = false;
 			return true;
 		}
 		// exit
@@ -236,7 +307,6 @@ int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessa
 		// option, arguments, meaning
 		{"-h, --help", "", "Show help options. The REPOSITORY_PATH can be omitted"},
 		{"-r, --refs", "REF [REF...]", "Specify a list of visible refs at startup if not specified, show all refs"},
-		{"-n, --no-tooltips", "", "Hide Tooltips in promotion view."}
 	};
 
 	Elements options   {text("Options:")};

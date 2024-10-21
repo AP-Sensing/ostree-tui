@@ -15,7 +15,7 @@ namespace OSTreeTUI {
      * 
      * @param repo ostree repository path
      */
-    int main(const std::string& repo, const std::vector<std::string>& startupBranches = {}, bool showTooltips = true);
+    int main(const std::string& repo, const std::vector<std::string>& startupBranches = {});
 
     /**
      * @brief Print help page

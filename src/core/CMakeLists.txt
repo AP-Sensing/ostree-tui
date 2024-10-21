@@ -10,8 +10,7 @@ add_library(ostree-tui_core commit.cpp
                             manager.hpp
                             OSTreeTUI.cpp
                             OSTreeTUI.hpp
-                            scroller.cpp
-                            scroller.hpp)
+)
 
 target_link_libraries(ostree-tui_core
   PRIVATE clip
