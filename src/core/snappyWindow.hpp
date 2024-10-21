@@ -17,7 +17,7 @@ namespace ftxui {
      * @param child 
      * @return Component
      */
-    Component SnappyWindow(size_t *selectedCommit, size_t elementLength, Component child);
+    Component SnappyWindow();
 
 } // namespace ftxui
 #endif /* end of include guard: SCROLLER_H */
