@@ -142,19 +142,27 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	// interchangeable view (composed)
 	Manager manager(infoView, filterView, promotionView);
   	Component managerRenderer = manager.managerRenderer;
-	
-	// COMMIT TREE
-	Component logRenderer = Scroller(&selectedCommit, CommitRender::COMMIT_DETAIL_LEVEL, Renderer([&] {
-		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
-		selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
-		return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
-	}));
 
 	// FOOTER
 	Footer footer;
   	Component footerRenderer = Renderer([&] {
 		return footer.footerRender();
 	});
+
+	// COMMIT TREE
+/* TODO - The commit-tree is currentrly under a heavy rebuild, see implementation To-Dos below.
+ * 	      For a general list of To-Dos refer to https://github.com/AP-Sensing/ostree-tui/pull/21
+ * 
+ * > Component commitTree should be a Stacked(...) to allow for snappy windows to be arranged with
+ *   a drag & drop funcitonality.
+ * > Snappy Windows should be an abstracted element, similar to windows, but snapping back to their
+ *   place after being dropped.
+ */
+	Component logRenderer = Scroller(&selectedCommit, CommitRender::COMMIT_DETAIL_LEVEL, Renderer([&] {
+		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
+		selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
+		return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
+	}));
 
 	// window specific shortcuts
 	logRenderer = CatchEvent(logRenderer, [&](Event event) {
@@ -167,6 +175,11 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
     	}
 		return false;
 	});
+
+/*
+ * END of commit-tree TODO
+ * Probably shouldn't have to change anything outside of this. 
+ */
 
   	int logSize{45};
   	int footerSize{1};
