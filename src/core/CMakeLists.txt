@@ -11,7 +11,10 @@ add_library(ostree-tui_core commit.cpp
                             OSTreeTUI.cpp
                             OSTreeTUI.hpp
                             scroller.cpp
-                            scroller.hpp)
+                            scroller.hpp
+                            snappyWindow.cpp
+                            snappyWindow.hpp
+)
 
 target_link_libraries(ostree-tui_core
   PRIVATE clip

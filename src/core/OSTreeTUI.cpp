@@ -17,6 +17,7 @@
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 
 #include "scroller.hpp"
+#include "snappyWindow.hpp"
 
 #include "footer.hpp"
 #include "manager.hpp"
@@ -191,7 +192,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	
 	int i{0};
 	for (auto& [hash,commit] : ostreeRepo.getCommitList()) {
-		windows.push_back(Window({
+		windows.push_back(SnappyWindow({ // SnappyWindow
     		.inner = DummyWindowContent(commit),
     		.title = hash.substr(0, 8),
     		.left = 20,

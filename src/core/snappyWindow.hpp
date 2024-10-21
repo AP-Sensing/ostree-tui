@@ -11,7 +11,7 @@ namespace ftxui {
      *
      * @return Component
      */
-    Component SnappyWindow();
+    Component SnappyWindow(WindowOptions option);
 
 } // namespace ftxui
 #endif /* end of include guard: SNAPPYWINDOW_H */
