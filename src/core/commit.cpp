@@ -18,7 +18,7 @@ void addLine(const RenderTree& treeLineType, const RenderLine& lineType,
 			 const std::unordered_map<std::string, int>& usedBranches,
 			 const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
 	treeElements.push_back(addTreeLine(treeLineType, commit, usedBranches, branchColorMap));
-	commElements.push_back(addCommLine(lineType, commit, highlight, branchColorMap));
+	//commElements.push_back(addCommLine(lineType, commit, highlight, branchColorMap));
 }
 
 ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
@@ -55,11 +55,13 @@ ftxui::Element commitRender(cpplibostree::OSTreeRepo& repo,
 		std::string relevantBranch = commit.branch;
 		if (usedBranches.at(relevantBranch) == -1) {
 			usedBranches.at(relevantBranch) = nextAvailableSpace--;
-			addLine(RenderTree::TREE_LINE_IGNORE_BRANCH, RenderLine::BRANCH_HEAD,
-					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
+			//addLine(RenderTree::TREE_LINE_IGNORE_BRANCH, RenderLine::BRANCH_HEAD,
+			//		treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
 		}
 		// commit
 		addLine(RenderTree::TREE_LINE_NODE, RenderLine::COMMIT_HASH,
+					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
+		addLine(RenderTree::TREE_LINE_TREE, RenderLine::COMMIT_DATE,
 					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);
 		addLine(RenderTree::TREE_LINE_TREE, RenderLine::COMMIT_DATE,
 					treeElements, commElements, commit, highlight, usedBranches, branchColorMap);

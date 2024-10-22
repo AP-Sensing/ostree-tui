@@ -128,7 +128,9 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
  
 	// INTERCHANGEABLE VIEW
 	// info
+	visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches); // TODO This update shouldn't be made here...
 	Component infoView = Renderer([&] {
+		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches); // TODO This update shouldn't be made here...
 		if (visibleCommitViewMap.size() <= 0) {
 			return text(" no commit info available ") | color(Color::RedLight) | bold | center;
 		}
@@ -195,7 +197,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		windows.push_back(SnappyWindow({ // SnappyWindow
     		.inner = DummyWindowContent(commit),
     		.title = hash.substr(0, 8),
-    		.left = 20,
+    		.left = 1,
     		.top = i * 4,
 			.width = 30,
       		.height = 4,
@@ -207,7 +209,14 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		i++;
 	}
 
-	Component commitTree = Container::Stacked(windows);
+	Component commitTree = Container::Horizontal({
+		Renderer([&] {
+			visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
+			selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
+			return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
+		}),
+		Container::Stacked(windows)
+	});
 
 	// TODO add commit tree
 
