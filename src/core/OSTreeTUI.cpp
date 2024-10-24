@@ -179,7 +179,12 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
  * > Component commitTree should be a Stacked(...) to allow for snappy windows to be arranged with
  *   a drag & drop funcitonality.
  * > Snappy Windows should be an abstracted element, similar to windows, but snapping back to their
- *   place after being dropped. Possibly also omit the window border (only show when dragged).
+ *   place after being dropped.
+ * > While dragging a window, the branches should be greyed out, only coloring the branch that the
+ *   mouse dragging a commit hovers over
+ *   * switch to drag-mode when commit is taken
+ *   * let mouse event through to branches
+ *   * if commit is dropped on branch, start promotion dialogue
  * > There should obviously still be a commit tree on the left side. How the exact implementation
  *   would go is still to be figured out. It this would be one, or many different elements mainly
  *   depends on how the overlap detection with branches would work, when dragging commits.
@@ -194,7 +199,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	
 	int i{0};
 	for (auto& [hash,commit] : ostreeRepo.getCommitList()) {
-		windows.push_back(SnappyWindow({ // SnappyWindow
+		windows.push_back(SnappyWindow({
     		.inner = DummyWindowContent(commit),
     		.title = hash.substr(0, 8),
     		.left = 1,
@@ -210,22 +215,19 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	}
 
 	Component commitTree = Container::Horizontal({
+		// commit tree
+		// TODO check for mouse overlap, while commit is dragged
+		// maybe could also be checked by commit component, if a list of branches with x coordinates is passed
+		// commit could then handle everything, including the commit-promotion call back to the window
 		Renderer([&] {
 			visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
 			selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
 			return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
 		}),
+		// commit list
+		// TODO make the commits scrollable (maybe common y offset variable)
 		Container::Stacked(windows)
 	});
-
-	// TODO add commit tree
-
-	// old component:
-	//Component logRenderer = Scroller(&selectedCommit, CommitRender::COMMIT_DETAIL_LEVEL, Renderer([&] {
-	//	visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
-	//	selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
-	//	return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
-	//}));
 
 	// window specific shortcuts
 	commitTree = CatchEvent(commitTree, [&](Event event) {
