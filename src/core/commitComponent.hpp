@@ -13,7 +13,12 @@ namespace ftxui {
      *
      * @return Component
      */
-    Component CommitComponent(int& scroll_offset, cpplibostree::Commit& commit, WindowOptions option);
+    Component CommitComponent(int& scroll_offset,
+                            bool& inPromotionSelection,
+                            std::string& promotionHash,
+                            std::string& promotionBranch,
+                            cpplibostree::Commit& commit,
+                            WindowOptions option);
 
 } // namespace ftxui
 #endif /* end of include guard: COMMITCOMPONENT_H */

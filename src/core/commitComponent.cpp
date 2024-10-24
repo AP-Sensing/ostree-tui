@@ -73,7 +73,12 @@ Element DefaultRenderState(const WindowRenderState& state) {
 /// @brief Draggable commit window, including ostree-tui logic for overlap detection, etc.
 class CommitComponentImpl : public ComponentBase, public WindowOptions {
  public:
-  explicit CommitComponentImpl(int& scroll_offset, cpplibostree::Commit& commit, WindowOptions option) : scroll_offset(scroll_offset), WindowOptions(std::move(option)) {
+  explicit CommitComponentImpl(int& scroll_offset, bool& inPromotionSelection, std::string& promotionHash, std::string& promotionBranch, cpplibostree::Commit& commit, WindowOptions option) :
+            scroll_offset(scroll_offset),
+            inPromotionSelection(inPromotionSelection),
+            promotionHash(promotionHash),
+            promotionBranch(promotionBranch),
+            WindowOptions(std::move(option)) {
     //inner = Renderer([&] {
     //  return vbox({
     //    text(commit.subject),
@@ -147,9 +152,19 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
 
     if (captured_mouse_) {
       if (event.mouse().motion == Mouse::Released) {
+        // reset mouse
         captured_mouse_ = nullptr;
+        // reset window position
         left() = drag_initial_x;
         top() = drag_initial_y;
+        // TODO check if position matches branch & do something if it does
+        if (false) {
+          // initiate promotion
+        } else {
+          // not promotion
+          inPromotionSelection = false;
+          promotionBranch = "";
+        }
         return true;
       }
 
@@ -174,6 +189,22 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
       if (drag_) {
         left() = event.mouse().x - drag_start_x - box_.x_min;
         top() = event.mouse().y - drag_start_y - box_.y_min;
+        // promotion
+        inPromotionSelection = true;
+        // calculate which branch currently is hovered over
+        // TODO proper check, not hardcoded
+        std::vector<std::string> branch_mapping{
+          "", "oof", "foo", "fo/of/x86_64"
+        };
+        if (event.mouse().x < branch_mapping.size() * 2) {
+          promotionBranch = branch_mapping.at(event.mouse().x / 2);
+        } else {
+          promotionBranch = "";
+        }
+      } else {
+        // not promotion
+        inPromotionSelection = false;
+        promotionBranch = "";
       }
 
       // Clamp the window size.
@@ -258,14 +289,16 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
   int& scroll_offset;
 
   // ostree-tui specific members
-  
+  bool& inPromotionSelection;
+	std::string& promotionHash;
+	std::string& promotionBranch;
 };
 
 }  // namespace
 
 
-Component CommitComponent(int& scroll_offset, cpplibostree::Commit& commit, WindowOptions option) {
-  return Make<CommitComponentImpl>(scroll_offset, commit, std::move(option));
+Component CommitComponent(int& scroll_offset, bool& inPromotionSelection, std::string& promotionHash, std::string& promotionBranch, cpplibostree::Commit& commit, WindowOptions option) {
+  return Make<CommitComponentImpl>(scroll_offset, inPromotionSelection, promotionHash, promotionBranch, commit, std::move(option));
 }
 
 };  // namespace ftxui

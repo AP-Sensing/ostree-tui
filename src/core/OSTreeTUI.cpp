@@ -169,6 +169,12 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
  *   would go is still to be figured out. It this would be one, or many different elements mainly
  *   depends on how the overlap detection with branches would work, when dragging commits.
  */
+	// commit promotion state
+	// shared with all relevant components to monitor and react to
+	// TODO extend with keyboard functionality
+	bool inPromotionSelection{false};
+	std::string promotionHash{""};
+	std::string promotionBranch{""};
 	// parse all commits
 	Components commitComponents;
 	int scroll_offset{0};
@@ -178,7 +184,7 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 			cpplibostree::Commit& commit = ostreeRepo.getCommitList().at(hash);
 			commitComponents.push_back(
 				// TODO make the commits scrollable (maybe common y offset variable)
-				CommitComponent(scroll_offset, commit, {
+				CommitComponent(scroll_offset, inPromotionSelection, promotionHash, promotionBranch, commit, {
 					.inner = Renderer([commit] {
     							return vbox({
     						    	text(commit.subject),
@@ -210,6 +216,18 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 			visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
 			refresh_commitComponents();
 			selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
+			// TODO check for promotion & pass information if needed
+			if (inPromotionSelection && promotionBranch.size() != 0) {
+				std::unordered_map<std::string, Color> promotionBranchColorMap{};
+				for (auto& [str,col] : branchColorMap) {
+					if (str == promotionBranch) {
+						promotionBranchColorMap.insert({str,col});
+					} else {
+						promotionBranchColorMap.insert({str,Color::Black});
+					}
+				}
+				return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, promotionBranchColorMap, selectedCommit);	
+			}
 			return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
 		}),
 		// commit list
