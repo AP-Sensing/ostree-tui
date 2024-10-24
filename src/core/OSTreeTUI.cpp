@@ -17,6 +17,7 @@
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 
 #include "scroller.hpp"
+#include "commitComponent.hpp"
 
 #include "footer.hpp"
 #include "manager.hpp"
@@ -107,7 +108,9 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
  
 	// INTERCHANGEABLE VIEW
 	// info
+	visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches); // TODO This update shouldn't be made here...
 	Component infoView = Renderer([&] {
+		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches); // TODO This update shouldn't be made here...
 		if (visibleCommitViewMap.size() <= 0) {
 			return text(" no commit info available ") | color(Color::RedLight) | bold | center;
 		}
@@ -142,13 +145,6 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 	// interchangeable view (composed)
 	Manager manager(infoView, filterView, promotionView);
   	Component managerRenderer = manager.managerRenderer;
-	
-	// COMMIT TREE
-	Component logRenderer = Scroller(&selectedCommit, CommitRender::COMMIT_DETAIL_LEVEL, Renderer([&] {
-		visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
-		selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
-		return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
-	}));
 
 	// FOOTER
 	Footer footer;
@@ -156,8 +152,90 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		return footer.footerRender();
 	});
 
+	// COMMIT TREE
+/* TODO - The commit-tree is currentrly under a heavy rebuild, see implementation To-Dos below.
+ * 	      For a general list of To-Dos refer to https://github.com/AP-Sensing/ostree-tui/pull/21
+ * 
+ * > Component commitTree should be a Stacked(...) to allow for snappy windows to be arranged with
+ *   a drag & drop funcitonality.
+ * > Snappy Windows should be an abstracted element, similar to windows, but snapping back to their
+ *   place after being dropped.
+ * > While dragging a window, the branches should be greyed out, only coloring the branch that the
+ *   mouse dragging a commit hovers over
+ *   * switch to drag-mode when commit is taken
+ *   * let mouse event through to branches
+ *   * if commit is dropped on branch, start promotion dialogue
+ * > There should obviously still be a commit tree on the left side. How the exact implementation
+ *   would go is still to be figured out. It this would be one, or many different elements mainly
+ *   depends on how the overlap detection with branches would work, when dragging commits.
+ */
+	// commit promotion state
+	// shared with all relevant components to monitor and react to
+	// TODO extend with keyboard functionality
+	bool inPromotionSelection{false};
+	std::string promotionHash{""};
+	std::string promotionBranch{""};
+	// parse all commits
+	Components commitComponents;
+	int scroll_offset{0};
+	int i{0};
+	auto refresh_commitComponents = [&] {
+		for (auto& hash : visibleCommitViewMap) {
+			cpplibostree::Commit& commit = ostreeRepo.getCommitList().at(hash);
+			commitComponents.push_back(
+				// TODO make the commits scrollable (maybe common y offset variable)
+				CommitComponent(scroll_offset, inPromotionSelection, promotionHash, promotionBranch, commit, {
+					.inner = Renderer([commit] {
+    							return vbox({
+    						    	text(commit.subject),
+							 		text(std::format("{:%Y-%m-%d %T %Ez}", std::chrono::time_point_cast<std::chrono::seconds>(commit.timestamp))),
+    							});
+    						}),
+    				.title = hash.substr(0, 8),
+    				.left = 1,
+    				.top = i * 4,
+					.width = 30,
+    	  			.height = 4,
+					.resize_left = false,
+					.resize_right = false,
+					.resize_top = false,
+					.resize_down = false,
+				})
+			);
+			i++;
+		}
+	};
+	refresh_commitComponents();
+
+	Component commitTree = Container::Horizontal({
+		// commit tree
+		// TODO check for mouse overlap, while commit is dragged
+		// maybe could also be checked by commit component, if a list of branches with x coordinates is passed
+		// commit could then handle everything, including the commit-promotion call back to the window
+		Renderer([&] {
+			visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
+			refresh_commitComponents();
+			selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
+			// TODO check for promotion & pass information if needed
+			if (inPromotionSelection && promotionBranch.size() != 0) {
+				std::unordered_map<std::string, Color> promotionBranchColorMap{};
+				for (auto& [str,col] : branchColorMap) {
+					if (str == promotionBranch) {
+						promotionBranchColorMap.insert({str,col});
+					} else {
+						promotionBranchColorMap.insert({str,Color::Black});
+					}
+				}
+				return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, promotionBranchColorMap, selectedCommit);	
+			}
+			return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
+		}),
+		// commit list
+		commitComponents.size() == 0 ? Renderer([&] { return text(" no commits to be shown ") | color(Color::Red); }) : Container::Stacked(commitComponents)
+	});
+
 	// window specific shortcuts
-	logRenderer = CatchEvent(logRenderer, [&](Event event) {
+	commitTree = CatchEvent(commitTree, [&](Event event) {
 		// switch through commits
     	if (event == Event::ArrowUp || event == Event::Character('k') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
     	  	return prev_commit();
@@ -168,13 +246,18 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		return false;
 	});
 
+/*
+ * END of commit-tree TODO
+ * Probably shouldn't have to change anything outside of this. 
+ */
+
   	int logSize{45};
   	int footerSize{1};
   	Component container{managerRenderer};
-  	container = ResizableSplitLeft(logRenderer, container, &logSize);
+  	container = ResizableSplitLeft(commitTree, container, &logSize);
   	container = ResizableSplitBottom(footerRenderer, container, &footerSize);
 	
-	logRenderer->TakeFocus();
+	commitTree->TakeFocus();
 
 	// add application shortcuts
 	Component mainContainer = CatchEvent(container | border, [&](const Event& event) {

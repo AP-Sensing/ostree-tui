@@ -19,7 +19,7 @@
 
 namespace CommitRender {
 
-    constexpr size_t COMMIT_DETAIL_LEVEL     {3}; // lines per commit
+    constexpr size_t COMMIT_DETAIL_LEVEL     {4}; // lines per commit
 
     constexpr std::string COMMIT_NODE        {" ☐"};
     constexpr std::string COMMIT_TREE        {" │"};
