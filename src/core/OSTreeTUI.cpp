@@ -17,7 +17,7 @@
 #include "ftxui/dom/elements.hpp"  // for Element, operator|, text, center, border
 
 #include "scroller.hpp"
-#include "snappyWindow.hpp"
+#include "commitComponent.hpp"
 
 #include "footer.hpp"
 #include "manager.hpp"
@@ -44,26 +44,6 @@ std::vector<std::string> OSTreeTUI::parseVisibleCommitMap(cpplibostree::OSTreeRe
 	});
 
 	return visibleCommitViewMap;
-}
-
-/// temporary place holder commit entry
-/// modified dummy window from FTXUI window example: https://arthursonzogni.github.io/FTXUI/examples_2component_2window_8cpp-example.html
-ftxui::Component DummyWindowContent(cpplibostree::Commit commit) {
-	using namespace ftxui;
-	class Impl : public ComponentBase {
-	private:
-		bool checked[3] = {false, false, false};
-		float slider = 50;
-	public:
-		Impl(cpplibostree::Commit commit) {
-			Add(Container::Vertical({
-				Checkbox(commit.subject, &checked[0]),
-				Checkbox(std::format("{:%Y-%m-%d %T %Ez}", std::chrono::time_point_cast<std::chrono::seconds>(commit.timestamp)), &checked[0]),
-		    	//Slider("Slider", &slider, 0.f, 100.f),
-			}));
-		}
-	};
-	return Make<Impl>(commit);
 }
 
 int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& startupBranches, bool showTooltips) {
@@ -189,30 +169,37 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
  *   would go is still to be figured out. It this would be one, or many different elements mainly
  *   depends on how the overlap detection with branches would work, when dragging commits.
  */
-	Components windows;
-	// TODO parse actual commits
-	if (ostreeRepo.getCommitList().size() <= 0) {
-		windows.push_back(Renderer([&] {
-			return text("no commits to show");
-		}));
-	}
-	
+	// parse all commits
+	Components commitComponents;
+	int scroll_offset{0};
 	int i{0};
-	for (auto& [hash,commit] : ostreeRepo.getCommitList()) {
-		windows.push_back(SnappyWindow({
-    		.inner = DummyWindowContent(commit),
-    		.title = hash.substr(0, 8),
-    		.left = 1,
-    		.top = i * 4,
-			.width = 30,
-      		.height = 4,
-			.resize_left = false,
-			.resize_right = false,
-			.resize_top = false,
-			.resize_down = false,
-		}));
-		i++;
-	}
+	auto refresh_commitComponents = [&] {
+		for (auto& hash : visibleCommitViewMap) {
+			cpplibostree::Commit& commit = ostreeRepo.getCommitList().at(hash);
+			commitComponents.push_back(
+				// TODO make the commits scrollable (maybe common y offset variable)
+				CommitComponent(scroll_offset, commit, {
+					.inner = Renderer([commit] {
+    							return vbox({
+    						    	text(commit.subject),
+							 		text(std::format("{:%Y-%m-%d %T %Ez}", std::chrono::time_point_cast<std::chrono::seconds>(commit.timestamp))),
+    							});
+    						}),
+    				.title = hash.substr(0, 8),
+    				.left = 1,
+    				.top = i * 4,
+					.width = 30,
+    	  			.height = 4,
+					.resize_left = false,
+					.resize_right = false,
+					.resize_top = false,
+					.resize_down = false,
+				})
+			);
+			i++;
+		}
+	};
+	refresh_commitComponents();
 
 	Component commitTree = Container::Horizontal({
 		// commit tree
@@ -221,12 +208,12 @@ int OSTreeTUI::main(const std::string& repo, const std::vector<std::string>& sta
 		// commit could then handle everything, including the commit-promotion call back to the window
 		Renderer([&] {
 			visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches);
+			refresh_commitComponents();
 			selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
 			return CommitRender::commitRender(ostreeRepo, visibleCommitViewMap, visibleBranches, branchColorMap, selectedCommit);
 		}),
 		// commit list
-		// TODO make the commits scrollable (maybe common y offset variable)
-		Container::Stacked(windows)
+		commitComponents.size() == 0 ? Renderer([&] { return text(" no commits to be shown ") | color(Color::Red); }) : Container::Stacked(commitComponents)
 	});
 
 	// window specific shortcuts
