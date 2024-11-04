@@ -15,3 +15,7 @@ ftxui::Element Footer::footerRender() {
 void Footer::resetContent() {
 	content = DEFAULT_CONTENT;
 }
+
+void Footer::setContent(std::string content) {
+	this->content = content;
+}

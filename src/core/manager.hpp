@@ -5,6 +5,7 @@
  |   different modes should be supported (like a rebase mode
  |   exchangeable with the commit info)
  |___________________________________________________________*/
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -13,9 +14,16 @@
 
 #include "../util/cpplibostree.hpp"
 
+class OSTreeTUI;
+
 /// Interchangeable View
 class Manager {
 public:
+    Manager(OSTreeTUI& ostreetui, const ftxui::Component& infoView, const ftxui::Component& filterView);
+
+private:
+    OSTreeTUI& ostreetui;
+
     int tab_index{0};
 
     std::vector<std::string> tab_entries = {
@@ -25,12 +33,10 @@ public:
     ftxui::Component tabSelection;
     ftxui::Component tabContent;
 
+public:
     // because the combination of all interchangeable views is very simple,
     // we can (in contrast to the other ones) render this one immediately
     ftxui::Component managerRenderer;
-
-public:
-    Manager(const ftxui::Component& infoView, const ftxui::Component& filterView);
 };
 
 class CommitInfoManager {
