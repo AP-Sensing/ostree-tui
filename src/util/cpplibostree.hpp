@@ -92,11 +92,11 @@ namespace cpplibostree {
         OstreeRepo* _c();
 
         /// Getter
-        std::string getRepoPath();
+        const std::string& getRepoPath() const;
         /// Getter
-        CommitList getCommitList();
+        const CommitList& getCommitList() const;
         /// Getter
-        std::vector<std::string> getBranches();
+        const std::vector<std::string>& getBranches() const;
 
         // Methods
 
@@ -143,6 +143,7 @@ namespace cpplibostree {
          * 
          * @param hash hash of the commit to promote
          * @param newRef branch to promote to
+         * @param addMetadataStrings list of metadata strings to add -> KEY=VALUE
          * @param newSubject new commit subject, it needed
          * @param keepMetadata should new commit keep metadata of old commit
          * @return true on success

@@ -10,9 +10,11 @@
 
 #include "../util/cpplibostree.hpp"
 
+#include "OSTreeTUI.hpp"
+
 // Manager
 
-Manager::Manager(const ftxui::Component& infoView, const ftxui::Component& filterView) {
+Manager::Manager(OSTreeTUI& ostreetui, const ftxui::Component& infoView, const ftxui::Component& filterView) : ostreetui(ostreetui) {
 	using namespace ftxui;
 
 	tabSelection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
@@ -25,7 +27,17 @@ Manager::Manager(const ftxui::Component& infoView, const ftxui::Component& filte
 
 	managerRenderer = Container::Vertical({
         tabSelection,
-      	tabContent
+      	tabContent,
+		Renderer([] {return vbox({filler()}) | flex;}), // push elements apart
+		Renderer([&] {
+			Elements branches;
+			for (size_t i{ostreetui.getColumnToBranchMap().size()}; i > 0; i--) {
+				std::string branch = ostreetui.getColumnToBranchMap().at(i - 1);
+				std::string line = "――☐――― " + branch;
+				branches.push_back(text(line) | color(ostreetui.getBranchColorMap().at(branch)));
+			}
+			return vbox(branches);
+		})
   	});
 }
 

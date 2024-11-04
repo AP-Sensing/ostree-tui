@@ -52,15 +52,15 @@ namespace cpplibostree {
         return repo;
     }
 
-    std::string OSTreeRepo::getRepoPath() {
+    const std::string& OSTreeRepo::getRepoPath() const {
         return repoPath;
     }
 
-    CommitList OSTreeRepo::getCommitList() {
+    const CommitList& OSTreeRepo::getCommitList() const {
         return commitList;
     }
 
-    std::vector<std::string> OSTreeRepo::getBranches() {
+    const std::vector<std::string>& OSTreeRepo::getBranches() const {
         return branches;
     }
 
@@ -320,7 +320,7 @@ namespace cpplibostree {
                             ? ""
                             : " --keep-metadata");
         for (auto str : addMetadataStrings) {
-            command += "--add-metadata-string=\"" + str + "\"";
+            command += " --add-metadata-string=\"" + str + "\"";
         }
         command += " --tree=ref=" + hash;
         

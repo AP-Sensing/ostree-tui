@@ -56,5 +56,6 @@ int main(int argc, const char** argv) {
 	std::vector<std::string> startupBranches = getArgOptions(args, {"-r", "--refs"});
 
 	// OSTree TUI
-	return OSTreeTUI::main(repo, startupBranches);
+	OSTreeTUI ostreetui(repo, startupBranches);
+	return ostreetui.run();
 }

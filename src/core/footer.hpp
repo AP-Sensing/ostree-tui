@@ -7,10 +7,6 @@
 
 class Footer {
 public:
-    const std::string DEFAULT_CONTENT   {"  || Alt+Q / Esc : Quit || Alt+R : Refresh || Alt+C : Copy commit hash || "};
-    std::string content                 {DEFAULT_CONTENT};
-
-public:
     Footer() = default;
     
     /// reset footer text to default string
@@ -18,4 +14,12 @@ public:
 
     /// create a Renderer for the footer section
     ftxui::Element footerRender();
+
+    // Setter
+    void setContent(std::string content);
+
+private:
+    const std::string DEFAULT_CONTENT   {"  || Alt+Q : Quit || Alt+R : Refresh || Alt+C : Copy commit hash || Alt+P : Promote Commit "};
+    std::string content                 {DEFAULT_CONTENT};
+
 };
