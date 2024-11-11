@@ -25,18 +25,19 @@ private:
     OSTreeTUI& ostreetui;
 
     int tab_index{0};
-
     std::vector<std::string> tab_entries = {
     	" Info ", " Filter "
   	};
 
+    // because the combination of all interchangeable views is very simple,
+    // we can (in contrast to the other ones) render this one here
+    ftxui::Component managerRenderer;
     ftxui::Component tabSelection;
     ftxui::Component tabContent;
 
 public:
-    // because the combination of all interchangeable views is very simple,
-    // we can (in contrast to the other ones) render this one immediately
-    ftxui::Component managerRenderer;
+    ftxui::Component getManagerRenderer();
+    const int& getTabIndex() const;
 };
 
 class CommitInfoManager {

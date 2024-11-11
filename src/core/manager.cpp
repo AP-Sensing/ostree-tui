@@ -41,6 +41,14 @@ Manager::Manager(OSTreeTUI& ostreetui, const ftxui::Component& infoView, const f
   	});
 }
 
+ftxui::Component Manager::getManagerRenderer() {
+	return managerRenderer;
+}
+
+const int& Manager::getTabIndex() const {
+	return tab_index;
+}
+
 // BranchBoxManager
 
 BranchBoxManager::BranchBoxManager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visibleBranches) {

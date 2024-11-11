@@ -60,7 +60,7 @@ namespace CommitRender {
      * @return ftxui::Element
      */
     ftxui::Element commitRender(OSTreeTUI& ostreetui, const std::unordered_map<std::string,
-                                ftxui::Color>& branchColorMap, size_t selectedCommit = 0);
+                                ftxui::Color>& branchColorMap);
 
     /**
      * @brief build a commit-tree line

@@ -49,11 +49,17 @@ Decorator PositionAndSize(int left, int top, int width, int height) {
 }
 
 /// Partially inspired from https://github.com/ArthurSonzogni/FTXUI/blob/main/src/ftxui/component/window.cpp
-Element DefaultRenderState(const WindowRenderState& state) {
+Element DefaultRenderState(const WindowRenderState& state, ftxui::Color selectedColor = Color::White, bool dimmable = true) {
 	Element element = state.inner;
-	//if (!state.active) {
-	//	element |= dim;
-	//}
+	if (! dimmable) {
+		selectedColor = Color::White;
+	}
+	if (selectedColor == Color::White & dimmable) {
+		element |= dim;
+	} else {
+		element |= bold;
+	}
+	element |= color(selectedColor);
 
 	element = window(text(state.title), element);
 	element |= clear_under;
@@ -66,7 +72,8 @@ Element DefaultRenderState(const WindowRenderState& state) {
 class CommitComponentImpl : public ComponentBase, public WindowOptions {
 public:
 	explicit CommitComponentImpl(int position, std::string commit, OSTreeTUI& ostreetui) :
-        hash(std::move(commit)),
+        commitPosition(position),
+		hash(std::move(commit)),
 		ostreetui(ostreetui),
 		commit(ostreetui.getOstreeRepo().getCommitList().at(hash)),
 		newVersion(this->commit.version),
@@ -90,9 +97,11 @@ public:
 	}
 
 private:
-	void resetWindow() {
-    	left() = drag_initial_x;
-    	top() = drag_initial_y;
+	void resetWindow(bool positionReset = true) {
+    	if (positionReset) {
+			left() = drag_initial_x;
+    		top() = drag_initial_y;
+		}
     	width() = width_initial;
     	height() = height_initial;
     	// reset window contents
@@ -108,7 +117,16 @@ private:
     	simpleCommit = inner;
     	DetachAllChildren();
     	Add(promotionView);
-		TakeFocus();
+		if (! Focused()) {
+			TakeFocus();
+			// manually fix focus issues
+			// change to proper control layout if possible...
+			ostreetui.getScreen().Post(Event::ArrowDown);
+			ostreetui.getScreen().Post(Event::ArrowRight);
+			ostreetui.getScreen().Post(Event::ArrowDown);
+			ostreetui.getScreen().Post(Event::ArrowRight);
+			ostreetui.getScreen().Post(Event::ArrowUp);
+		}
 	}
 
 	void executePromotion() {
@@ -129,7 +147,11 @@ private:
 	Element Render() final {
 		// check if promotion was started not from drag & drop, but from ostreetui
 		if (ostreetui.getInPromotionSelection() && ostreetui.getPromotionHash() == hash) {
-			startPromotionWindow();
+			if (! ostreetui.getPromotionBranch().empty()) {
+				startPromotionWindow();
+			} else {
+				resetWindow(false);
+			}
 		}
 
     	auto element = ComponentBase::Render();
@@ -141,7 +163,11 @@ private:
     	    drag_
     	};
 
-    	element = render ? render(state) : DefaultRenderState(state);
+		if (commitPosition == ostreetui.getSelectedCommit()) { // selected & not in promotion
+    		element = render ? render(state) : DefaultRenderState(state, ostreetui.getBranchColorMap().at(commit.branch), ostreetui.getPromotionHash() != hash);
+		} else {
+			element = render ? render(state) : DefaultRenderState(state, Color::White, ostreetui.getPromotionHash() != hash);
+		}
 
     	// Position and record the drawn area of the window.
     	element |= reflect(box_window_);
@@ -188,6 +214,11 @@ private:
     		return true;
     	}
 
+		if (event.mouse().button == Mouse::Left) {
+			// update ostreetui
+			ostreetui.setSelectedCommit(commitPosition);
+		}
+
     	mouse_hover_ = box_window_.Contain(event.mouse().x, event.mouse().y);
 		// potentially indicate mouse hover
     	//if (box_window_.Contain(event.mouse().x, event.mouse().y)) {}
@@ -209,8 +240,8 @@ private:
     		if (drag_) {
     	    	left() = event.mouse().x - drag_start_x - box_.x_min;
     	    	top() = event.mouse().y - drag_start_y - box_.y_min;
-    	    	// promotion
-    	    	ostreetui.setPromotionMode(true, hash); // TODO switch to ostreetui call
+				// potential promotion
+				ostreetui.setPromotionMode(true, hash, false);
     	    	// calculate which branch currently is hovered over
     	    	ostreetui.setPromotionBranch("");
     	    	const int branch_pos = event.mouse().x / 2;
@@ -226,7 +257,7 @@ private:
     	    	}
     	  	} else {
     	    	// not promotion
-    	    	ostreetui.setPromotionMode(false, hash);
+    	    	ostreetui.setPromotionMode(false);
     		}
 
     		// Clamp the window size.
@@ -287,6 +318,7 @@ private:
 	bool drag_ = false;
 
 	// ostree-tui specific members
+	int commitPosition;
 	std::string hash;
 	OSTreeTUI& ostreetui;
 
@@ -303,7 +335,7 @@ private:
 	    		text(""),
 	    		text(" Promote Commit...") | bold,
 	    		text(""),
-	    		text(" ☐ todocommithash") | bold,
+	    		text(" ☐ " + hash.substr(0, 8)) | bold,
 	    	});
 	    }),
 	    Container::Horizontal({
@@ -346,7 +378,7 @@ ftxui::Component CommitComponent(int position, const std::string& commit, OSTree
 	return ftxui::Make<CommitComponentImpl>(position, commit, ostreetui);
 }
 
-ftxui::Element commitRender(OSTreeTUI& ostreetui, const std::unordered_map<std::string, ftxui::Color>& branchColorMap, size_t selectedCommit) {
+ftxui::Element commitRender(OSTreeTUI& ostreetui, const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
 	using namespace ftxui;
 
 	int scrollOffset = ostreetui.getScrollOffset();
