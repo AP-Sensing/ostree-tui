@@ -52,7 +52,7 @@ public:
      * @param hash provide if setting mode to true
      * @return false, if other promotion gets overwritten
      */
-    bool setPromotionMode(bool active, std::string hash = "");
+    bool setPromotionMode(bool active, std::string hash = "", bool setPromotionBranch = true);
 
     /** @brief promote a commit
      * @param hash 
@@ -71,13 +71,23 @@ private:
      */
     std::vector<std::string> parseVisibleCommitMap(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visibleBranches);
 
+    /**
+     * @brief Adjust scroll offset to fit the selected commit
+     */
+    void adjustScrollToSelectedCommit();
+
 public:
-    // "SETTER" & non-const GETTER
+    // SETTER
     void setPromotionBranch(std::string promotionBranch);
+    void setSelectedCommit(size_t selectedCommit);
+
+    // non-const GETTER
     std::vector<std::string>& getColumnToBranchMap();
+    ftxui::ScreenInteractive& getScreen();
     
     // GETTER
     const cpplibostree::OSTreeRepo& getOstreeRepo() const;
+    const size_t& getSelectedCommit() const;
     const std::string& getPromotionBranch() const;
     const std::unordered_map<std::string, bool>& getVisibleBranches() const;
     const std::vector<std::string>& getColumnToBranchMap() const;

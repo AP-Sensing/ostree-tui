@@ -41,36 +41,26 @@ OSTreeTUI::OSTreeTUI (const std::string& repo, const std::vector<std::string> st
 
 	// - UI ELEMENTS ---------- ----------
  
-	visibleCommitViewMap = parseVisibleCommitMap(ostreeRepo, visibleBranches); // TODO This update shouldn't be made here...
-	
-	// COMMIT TREE
-	/* The commit-tree is currentrly under a heavy rebuild, see implementation To-Dos below.
-	 * For a general list of To-Dos refer to https://github.com/AP-Sensing/ostree-tui/pull/21
-	 *
-	 * TODO bug fixes:
-	 * 		> keyboard functionality (especially in-app navigation)
-	 */
-	
-	// parse all commits
+	// COMMIT TREE	
 	refresh_commitComponents();
 
 	tree = Renderer([&] {
-			refresh_commitComponents();
-			selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
-			// TODO check for promotion & pass information if needed
-			if (inPromotionSelection && promotionBranch.size() != 0) {
-				std::unordered_map<std::string, Color> promotionBranchColorMap{};
-				for (auto& [str,col] : branchColorMap) {
-					if (str == promotionBranch) {
-						promotionBranchColorMap.insert({str,col});
-					} else {
-						promotionBranchColorMap.insert({str,Color::GrayDark});
-					}
+		refresh_commitComponents();
+		selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
+		// TODO check for promotion & pass information if needed
+		if (inPromotionSelection && promotionBranch.size() != 0) {
+			std::unordered_map<std::string, Color> promotionBranchColorMap{};
+			for (auto& [str,col] : branchColorMap) {
+				if (str == promotionBranch) {
+					promotionBranchColorMap.insert({str,col});
+				} else {
+					promotionBranchColorMap.insert({str,Color::GrayDark});
 				}
-				return CommitRender::commitRender(*this, promotionBranchColorMap, selectedCommit);	
 			}
-			return CommitRender::commitRender(*this, branchColorMap, selectedCommit);
-		});
+			return CommitRender::commitRender(*this, promotionBranchColorMap);	
+		}
+		return CommitRender::commitRender(*this, branchColorMap);
+	});
 
 	commitListComponent = Container::Horizontal({
 		tree,
@@ -79,28 +69,15 @@ OSTreeTUI::OSTreeTUI (const std::string& repo, const std::vector<std::string> st
 
 	// window specific shortcuts
 	commitListComponent = CatchEvent(commitListComponent, [&](Event event) {
-		// scroll
-    	if (event.is_mouse() && event.mouse().button == Mouse::WheelUp) {
-    	  	if (scrollOffset < 0) {
-				++scrollOffset;
-			}
-			selectedCommit = -scrollOffset / 4;
-			return true;
-    	}
-    	if (event.is_mouse() && event.mouse().button == Mouse::WheelDown) {
-    	  	--scrollOffset;
-			selectedCommit = -scrollOffset / 4;
-			return true;
-    	}
 		// switch through commits
-    	if (event == Event::ArrowUp) {
-			scrollOffset = std::min(0, scrollOffset + 4);
-			selectedCommit = -scrollOffset / 4;
+    	if ((! inPromotionSelection && event == Event::ArrowUp) || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
+			selectedCommit = std::max(0, static_cast<int>(selectedCommit) - 1);
+			adjustScrollToSelectedCommit();
 			return true;
     	}
-    	if (event == Event::ArrowDown) {
-    	  	scrollOffset -= 4;
-			selectedCommit = -scrollOffset / 4;
+    	if ((! inPromotionSelection && event == Event::ArrowDown) || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
+    	  	selectedCommit = std::min(selectedCommit + 1, getVisibleCommitViewMap().size() - 1);
+			adjustScrollToSelectedCommit();
 			return true;
     	}
 		return false;
@@ -130,14 +107,14 @@ OSTreeTUI::OSTreeTUI (const std::string& repo, const std::vector<std::string> st
 
 	// interchangeable view (composed)
 	manager = std::unique_ptr<Manager>(new Manager(*this, infoView, filterView));
-  	managerRenderer = manager->managerRenderer;
+  	managerRenderer = manager->getManagerRenderer();
 
 	// FOOTER
   	footerRenderer = Renderer([&] {
 		return footer.footerRender();
 	});
 
-	// build together all components
+	// BUILD MAIN CONTAINER
   	container = Component(managerRenderer);
   	container = ResizableSplitLeft(commitListComponent, container, &logSize);
   	container = ResizableSplitBottom(footerRenderer, container, &footerSize);
@@ -165,6 +142,11 @@ OSTreeTUI::OSTreeTUI (const std::string& repo, const std::vector<std::string> st
 		// exit
     	if (event == Event::AltQ) {
 			screen.ExitLoopClosure()();
+    	  	return true;
+    	}
+		// make commit list focussable
+    	if (event == Event::ArrowLeft && managerRenderer->Focused() && manager->getTabIndex() == 0) {
+			commitListComponent->TakeFocus();
     	  	return true;
     	}
     	return false;
@@ -237,7 +219,7 @@ bool OSTreeTUI::refresh_repository() {
 	return true;
 }
 
-bool OSTreeTUI::setPromotionMode(bool active, std::string hash) {
+bool OSTreeTUI::setPromotionMode(bool active, std::string hash, bool setPromotionBranch) {
 	// deactivate promotion mode
 	if (!active) {
 		inPromotionSelection = false;
@@ -248,7 +230,9 @@ bool OSTreeTUI::setPromotionMode(bool active, std::string hash) {
 	// set promotion mode
 	if (!inPromotionSelection || hash != promotionHash) {
 		inPromotionSelection = true;
-		promotionBranch = promotionBranch.empty() ? columnToBranchMap.at(0) : promotionBranch;
+		if (setPromotionBranch) {
+			promotionBranch = promotionBranch.empty() ? columnToBranchMap.at(0) : promotionBranch;
+		}
 		promotionHash = hash;
 		return true;
 	}
@@ -288,18 +272,43 @@ std::vector<std::string> OSTreeTUI::parseVisibleCommitMap(cpplibostree::OSTreeRe
 	return visibleCommitViewMap;
 }
 
+void OSTreeTUI::adjustScrollToSelectedCommit() {
+	// try to scroll it to the middle
+	int windowHeight = screen.dimy() - 4;
+	int scollOffsetToFitCommitToTop = - selectedCommit * CommitRender::COMMIT_WINDOW_HEIGHT;
+	int newScroll = scollOffsetToFitCommitToTop + windowHeight / 2 - CommitRender::COMMIT_WINDOW_HEIGHT;
+	// adjust if on edges
+	int min = 0;
+	int max = - windowHeight - static_cast<int>(visibleCommitViewMap.size() - 1) * CommitRender::COMMIT_WINDOW_HEIGHT;
+	scrollOffset = std::max(newScroll, max);
+	scrollOffset = std::min(min, newScroll);
+}
+
 // SETTER & non-const GETTER
 void OSTreeTUI::setPromotionBranch(std::string promotionBranch) {
 	this->promotionBranch = promotionBranch;
+}
+
+void OSTreeTUI::setSelectedCommit(size_t selectedCommit) {
+	this->selectedCommit = selectedCommit;
+	adjustScrollToSelectedCommit();
 }
 
 std::vector<std::string>& OSTreeTUI::getColumnToBranchMap() {
 	return columnToBranchMap;
 }
 
+ftxui::ScreenInteractive& OSTreeTUI::getScreen() {
+	return screen;
+}
+
 // GETTER
 const cpplibostree::OSTreeRepo& OSTreeTUI::getOstreeRepo() const {
 	return ostreeRepo;
+}
+
+const size_t& OSTreeTUI::getSelectedCommit() const {
+	return selectedCommit;
 }
 
 const std::string& OSTreeTUI::getPromotionBranch() const {
