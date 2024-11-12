@@ -9,8 +9,7 @@ add_library(ostree-tui_core commit.cpp
                             manager.cpp
                             manager.hpp
                             OSTreeTUI.cpp
-                            OSTreeTUI.hpp
-)
+                            OSTreeTUI.hpp)
 
 target_link_libraries(ostree-tui_core
   PRIVATE clip

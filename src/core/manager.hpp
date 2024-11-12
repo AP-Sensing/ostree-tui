@@ -1,9 +1,7 @@
 /*_____________________________________________________________
  | Manager Render
  |   Right portion of main window, includes branch filter &
- |   detailed commit info of the selected commit. In future
- |   different modes should be supported (like a rebase mode
- |   exchangeable with the commit info)
+ |   detailed commit info of the selected commit.
  |___________________________________________________________*/
 #pragma once
 
@@ -37,7 +35,7 @@ class Manager {
 
    public:
     ftxui::Component getManagerRenderer();
-    const int& getTabIndex() const;
+    int getTabIndex() const;
 };
 
 class CommitInfoManager {
@@ -48,15 +46,13 @@ class CommitInfoManager {
      * @param displayCommit Commit to display the information of.
      * @return ftxui::Element
      */
-    static ftxui::Element renderInfoView(const cpplibostree::Commit& displayCommit);
+    [[nodiscard]] static ftxui::Element renderInfoView(const cpplibostree::Commit& displayCommit);
 };
 
 class BranchBoxManager {
    public:
-    ftxui::Component branchBoxes = ftxui::Container::Vertical({});
-
-   public:
-    BranchBoxManager(cpplibostree::OSTreeRepo& repo,
+    BranchBoxManager(OSTreeTUI& ostreetui,
+                     cpplibostree::OSTreeRepo& repo,
                      std::unordered_map<std::string, bool>& visibleBranches);
 
     /**
@@ -64,5 +60,8 @@ class BranchBoxManager {
      *
      * @return ftxui::Element
      */
-    ftxui::Element branchBoxRender();
+    [[nodiscard]] ftxui::Element branchBoxRender();
+
+   public:
+    ftxui::Component branchBoxes = ftxui::Container::Vertical({});
 };

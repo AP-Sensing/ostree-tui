@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 // C
-#include <assert.h>
+#include <cassert>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <ostree.h>
@@ -314,7 +314,7 @@ std::string OSTreeRepo::getBranchesAsString() {
 }
 
 /// TODO This implementation should not rely on the ostree CLI -> change to libostree usage.
-bool OSTreeRepo::promoteCommit(const std::string& hash,
+bool OSTreeRepo::PromoteCommit(const std::string& hash,
                                const std::string& newRef,
                                const std::vector<std::string> addMetadataStrings,
                                const std::string& newSubject,

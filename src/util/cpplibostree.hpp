@@ -148,7 +148,7 @@ class OSTreeRepo {
      * @return true on success
      * @return false on failed promotion
      */
-    bool promoteCommit(const std::string& hash,
+    bool PromoteCommit(const std::string& hash,
                        const std::string& newRef,
                        const std::vector<std::string> addMetadataStrings,
                        const std::string& newSubject = "",

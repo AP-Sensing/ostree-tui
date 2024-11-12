@@ -2,7 +2,7 @@
 
 #include "footer.hpp"
 
-ftxui::Element Footer::footerRender() {
+ftxui::Element Footer::FooterRender() {
     using namespace ftxui;
 
     return hbox({
@@ -13,10 +13,10 @@ ftxui::Element Footer::footerRender() {
     });
 }
 
-void Footer::resetContent() {
+void Footer::ResetContent() {
     content = DEFAULT_CONTENT;
 }
 
-void Footer::setContent(std::string content) {
+void Footer::SetContent(std::string content) {
     this->content = content;
 }

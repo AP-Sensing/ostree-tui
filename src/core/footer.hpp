@@ -8,14 +8,14 @@ class Footer {
    public:
     Footer() = default;
 
-    /// reset footer text to default string
-    void resetContent();
+    /// @brief Resets footer text to default string.
+    void ResetContent();
 
-    /// create a Renderer for the footer section
-    ftxui::Element footerRender();
+    /// @brief Creates a Renderer for the footer section.
+    ftxui::Element FooterRender();
 
     // Setter
-    void setContent(std::string content);
+    void SetContent(std::string content);
 
    private:
     const std::string DEFAULT_CONTENT{

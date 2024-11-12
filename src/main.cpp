@@ -58,5 +58,5 @@ int main(int argc, const char** argv) {
 
     // OSTree TUI
     OSTreeTUI ostreetui(repo, startupBranches);
-    return ostreetui.run();
+    return ostreetui.Run();
 }

@@ -29,10 +29,10 @@ Manager::Manager(OSTreeTUI& ostreetui,
          Renderer([] { return vbox({filler()}) | flex; }),  // push elements apart
          Renderer([&] {
              Elements branches;
-             for (size_t i{ostreetui.getColumnToBranchMap().size()}; i > 0; i--) {
-                 std::string branch = ostreetui.getColumnToBranchMap().at(i - 1);
+             for (size_t i{ostreetui.GetColumnToBranchMap().size()}; i > 0; i--) {
+                 std::string branch = ostreetui.GetColumnToBranchMap().at(i - 1);
                  std::string line = "――☐――― " + branch;
-                 branches.push_back(text(line) | color(ostreetui.getBranchColorMap().at(branch)));
+                 branches.push_back(text(line) | color(ostreetui.GetBranchColorMap().at(branch)));
              }
              return vbox(branches);
          })});
@@ -42,19 +42,22 @@ ftxui::Component Manager::getManagerRenderer() {
     return managerRenderer;
 }
 
-const int& Manager::getTabIndex() const {
+int Manager::getTabIndex() const {
     return tab_index;
 }
 
 // BranchBoxManager
 
-BranchBoxManager::BranchBoxManager(cpplibostree::OSTreeRepo& repo,
+BranchBoxManager::BranchBoxManager(OSTreeTUI& ostreetui,
+                                   cpplibostree::OSTreeRepo& repo,
                                    std::unordered_map<std::string, bool>& visibleBranches) {
     using namespace ftxui;
 
+    CheckboxOption cboption = {.on_change = [&] { ostreetui.RefreshCommitListComponent(); }};
+
     // branch visibility
     for (const auto& branch : repo.getBranches()) {
-        branchBoxes->Add(Checkbox(branch, &(visibleBranches.at(branch))));
+        branchBoxes->Add(Checkbox(branch, &(visibleBranches.at(branch)), cboption));
     }
 }
 
