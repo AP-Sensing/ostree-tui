@@ -18,16 +18,16 @@ class OSTreeTUI;
 
 /// Interchangeable View
 class Manager {
-public:
-    Manager(OSTreeTUI& ostreetui, const ftxui::Component& infoView, const ftxui::Component& filterView);
+   public:
+    Manager(OSTreeTUI& ostreetui,
+            const ftxui::Component& infoView,
+            const ftxui::Component& filterView);
 
-private:
+   private:
     OSTreeTUI& ostreetui;
 
     int tab_index{0};
-    std::vector<std::string> tab_entries = {
-    	" Info ", " Filter "
-  	};
+    std::vector<std::string> tab_entries = {" Info ", " Filter "};
 
     // because the combination of all interchangeable views is very simple,
     // we can (in contrast to the other ones) render this one here
@@ -35,33 +35,34 @@ private:
     ftxui::Component tabSelection;
     ftxui::Component tabContent;
 
-public:
+   public:
     ftxui::Component getManagerRenderer();
     const int& getTabIndex() const;
 };
 
 class CommitInfoManager {
-public:
+   public:
     /**
      * @brief Build the info view Element.
-     * 
+     *
      * @param displayCommit Commit to display the information of.
-     * @return ftxui::Element 
+     * @return ftxui::Element
      */
     static ftxui::Element renderInfoView(const cpplibostree::Commit& displayCommit);
 };
 
 class BranchBoxManager {
-public:
+   public:
     ftxui::Component branchBoxes = ftxui::Container::Vertical({});
 
-public:
-    BranchBoxManager(cpplibostree::OSTreeRepo& repo, std::unordered_map<std::string, bool>& visibleBranches);
-    
+   public:
+    BranchBoxManager(cpplibostree::OSTreeRepo& repo,
+                     std::unordered_map<std::string, bool>& visibleBranches);
+
     /**
      * @brief Build the branch box Element.
-     * 
-     * @return ftxui::Element 
+     *
+     * @return ftxui::Element
      */
     ftxui::Element branchBoxRender();
 };
