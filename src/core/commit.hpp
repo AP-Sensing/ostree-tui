@@ -45,35 +45,39 @@ enum RenderTree : uint8_t {
  *        after being dragged & let go. When hovering over a branch,
  *        defined in `columnToBranchMap`, the window expands to a commit
  *        promotion window.
- *        To be used with other windows, use a ftxui::Component::Stacked.
+ *        To be used with other windows, use a `ftxui::Component::Stacked`.
  *
- * @return Component
+ * @return UI Component
  */
-ftxui::Component CommitComponent(int position, const std::string& commit, OSTreeTUI& ostreetui);
+[[nodiscard]] ftxui::Component CommitComponent(int position,
+                                               const std::string& commit,
+                                               OSTreeTUI& ostreetui);
 
 /**
- * @brief create a Renderer for the commit section
+ * @brief Creates a Renderer for the commit section.
  *
- * @param ostreetui OSTreeTUI containing OSTreeRepo and UI info
- * @param branchColorMap Map from branch to its display color
- * @param selectedCommit Commit that should be marked as selected
- * @return ftxui::Element
+ * @param ostreetui OSTreeTUI containing OSTreeRepo and UI info.
+ * @param branchColorMap Map from branch to its display color.
+ * @param selectedCommit Commit that should be marked as selected.
+ * @return UI Element
  */
-ftxui::Element commitRender(OSTreeTUI& ostreetui,
-                            const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
+[[nodiscard]] ftxui::Element commitRender(
+    OSTreeTUI& ostreetui,
+    const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
 
 /**
- * @brief build a commit-tree line
+ * @brief Builds a commit-tree line.
  *
- * @param treeLineType      type of commit-tree
- * @param commit            commit to render / get info from
- * @param usedBranches     branches to render
- * @param branchColorMap  branch colors
- * @return ftxui::Element   commit-tree line
+ * @param treeLineType      Type of commit-tree.
+ * @param commit            Commit to get the information from (to render).
+ * @param usedBranches      Branches, that should be rendered (visible).
+ * @param branchColorMap    Branch colors to use.
+ * @return UI Element, one commit-tree line.
  */
-ftxui::Element addTreeLine(const RenderTree& treeLineType,
-                           const cpplibostree::Commit& commit,
-                           const std::unordered_map<std::string, int>& usedBranches,
-                           const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
+[[nodiscard]] ftxui::Element addTreeLine(
+    const RenderTree& treeLineType,
+    const cpplibostree::Commit& commit,
+    const std::unordered_map<std::string, int>& usedBranches,
+    const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
 
 }  // namespace CommitRender

@@ -25,85 +25,86 @@ class OSTreeTUI {
     /**
      * @brief Constructs, builds and assembles all components of the OSTreeTUI.
      *
-     * @param repo ostree repository (OSTreeRepo)
-     * @param startupBranches optional list of branches to pre-select at startup (providing nothing
-     * will display all branches)
+     * @param repo Path to the OSTree repository directory.
+     * @param startupBranches Optional list of branches to pre-select at startup (providing nothing
+     * will display all branches).
      */
     explicit OSTreeTUI(const std::string& repo,
-                       const std::vector<std::string> startupBranches = {});
+                       const std::vector<std::string>& startupBranches = {});
 
     /**
      * @brief Runs the OSTreeTUI (starts the ftxui screen loop).
      *
-     * @return exit code
+     * @return Exit Code
      */
-    int run();
+    int Run();
 
-    /// @brief Refresh Level 3: Refreshes the commit components
-    void refresh_commitComponents();
+    /// @brief OSTreeTUI Refresh Level 3: Refreshes the commit components.
+    void RefreshCommitComponents();
 
-    /// @brief Refresh Level 2: Refreshes the commit list component & upper levels
-    void refresh_commitListComoponent();
+    /// @brief OSTreeTUI Refresh Level 2: Refreshes the commit list component & upper levels.
+    void RefreshCommitListComponent();
 
-    /// @brief Refresh Level 1: Refreshes complete repository & upper levels
-    bool refresh_repository();
+    /// @brief OSTreeTUI Refresh Level 1: Refreshes complete repository & upper levels.
+    bool RefreshOSTreeRepository();
 
     /**
-     * @brief sets the promotion mode
-     * @param active activate (true), or deactivate (false) promotion mode
-     * @param hash provide if setting mode to true
+     * @brief Sets the promotion mode: Defines if the ostree-tui currently displays a commit
+     * promotion window.
+     *
+     * @param active Activate (true), or deactivate (false) the promotion mode.
+     * @param hash Must only be provided, if `active` is set to true.
+     * @param SetPromotionBranch If `active` is true, this defines, if the promotino Branch should
+     * be reset to the first visible branch.
      * @return false, if other promotion gets overwritten
      */
-    bool setPromotionMode(bool active, std::string hash = "", bool setPromotionBranch = true);
+    bool SetPromotionMode(bool active,
+                          const std::string& hash = "",
+                          bool SetPromotionBranch = true);
 
-    /** @brief promote a commit
-     * @param hash
-     * @param branch
+    /**
+     * @brief Promotes a commit, by passing it to the cpplibostree and refreshing the UI.
+     *
+     * @param hash Hash of commit to be promoted.
+     * @param targetBranch Branch to promote the commit to.
+     * @param metadataStrings Optional additional metadata-strings to be set.
+     * @param newSubject New commit subject.
+     * @param keepMetadata Keep metadata of old commit.
      * @return promotion success
      */
-    bool promoteCommit(std::string hash,
-                       std::string branch,
-                       std::vector<std::string> metadataStrings = {},
-                       std::string newSubject = "",
+    bool PromoteCommit(const std::string& hash,
+                       const std::string& targetBranch,
+                       const std::vector<std::string>& metadataStrings = {},
+                       const std::string& newSubject = "",
                        bool keepMetadata = true);
 
    private:
-    /**
-     * @brief Calculates all visible commits from an OSTreeRepo and a list of branches.
-     *
-     * @param repo OSTreeRepo
-     * @param visibleBranches Map: branch name -> visible
-     * @return Complete list of commit hashes in repo, that are part of the given branches
-     */
-    std::vector<std::string> parseVisibleCommitMap(
-        cpplibostree::OSTreeRepo& repo,
-        std::unordered_map<std::string, bool>& visibleBranches);
+    /// @brief Calculates all visible commits from an OSTreeRepo and a list of branches.
+    void parseVisibleCommitMap();
 
-    /**
-     * @brief Adjust scroll offset to fit the selected commit
-     */
+    /// @brief Adjust scroll offset to fit the selected commit.
     void adjustScrollToSelectedCommit();
 
    public:
     // SETTER
-    void setPromotionBranch(std::string promotionBranch);
-    void setSelectedCommit(size_t selectedCommit);
+    void SetPromotionBranch(const std::string& promotionBranch);
+    void SetSelectedCommit(size_t selectedCommit);
 
     // non-const GETTER
-    std::vector<std::string>& getColumnToBranchMap();
-    ftxui::ScreenInteractive& getScreen();
+    [[nodiscard]] std::vector<std::string>& GetColumnToBranchMap();
+    [[nodiscard]] ftxui::ScreenInteractive& GetScreen();
 
     // GETTER
-    const cpplibostree::OSTreeRepo& getOstreeRepo() const;
-    const size_t& getSelectedCommit() const;
-    const std::string& getPromotionBranch() const;
-    const std::unordered_map<std::string, bool>& getVisibleBranches() const;
-    const std::vector<std::string>& getColumnToBranchMap() const;
-    const std::vector<std::string>& getVisibleCommitViewMap() const;
-    const std::unordered_map<std::string, ftxui::Color>& getBranchColorMap() const;
-    const int& getScrollOffset() const;
-    const bool& getInPromotionSelection() const;
-    const std::string& getPromotionHash() const;
+    [[nodiscard]] const cpplibostree::OSTreeRepo& GetOstreeRepo() const;
+    [[nodiscard]] const size_t& GetSelectedCommit() const;
+    [[nodiscard]] const std::string& GetPromotionBranch() const;
+    [[nodiscard]] const std::unordered_map<std::string, bool>& GetVisibleBranches() const;
+    [[nodiscard]] const std::vector<std::string>& GetColumnToBranchMap() const;
+    [[nodiscard]] const std::vector<std::string>& GetVisibleCommitViewMap() const;
+    [[nodiscard]] const std::unordered_map<std::string, ftxui::Color>& GetBranchColorMap() const;
+    [[nodiscard]] int GetScrollOffset() const;
+    [[nodiscard]] bool GetInPromotionSelection() const;
+    [[nodiscard]] const std::string& GetPromotionHash() const;
 
    private:
     // model
@@ -112,10 +113,8 @@ class OSTreeTUI {
     // backend states
     size_t selectedCommit;
     std::unordered_map<std::string, bool> visibleBranches;  // map branch -> visibe
-    std::vector<std::string>
-        columnToBranchMap;  // map branch -> column in commit-tree (may be merged into one
-                            // data-structure with visibleBranches)
-    std::vector<std::string> visibleCommitViewMap;                 // map view-index -> commit-hash
+    std::vector<std::string> columnToBranchMap;             // map branch -> column in commit-tree
+    std::vector<std::string> visibleCommitViewMap;          // map view-index -> commit-hash
     std::unordered_map<std::string, ftxui::Color> branchColorMap;  // map branch -> color
     std::string notificationText;                                  // footer notification
 
@@ -142,24 +141,23 @@ class OSTreeTUI {
     ftxui::Component infoView;
     ftxui::Component filterView;
     ftxui::Component managerRenderer;
-    ftxui::Component footerRenderer;
+    ftxui::Component FooterRenderer;
     ftxui::Component container;
 
    public:
     /**
-     * @brief Print help page
+     * @brief Print a help page including usage, options, etc.
      *
      * @param caller argv[0]
-     * @param errorMessage optional error message to print on top
-     * @return 0, if no error message provided
-     * @return 1, if error message is provided, assuming bad program stop
+     * @param errorMessage Optional error message to print on top.
+     * @return Exit Code
      */
     static int showHelp(const std::string& caller, const std::string& errorMessage = "");
 
     /**
      * @brief Print the application version
      *
-     * @return int
+     * @return Exit Code
      */
     static int showVersion();
 };
