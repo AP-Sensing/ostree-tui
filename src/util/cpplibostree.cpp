@@ -333,9 +333,35 @@ bool OSTreeRepo::PromoteCommit(const std::string& hash,
     }
     command += " --tree=ref=" + hash;
 
-    // run as CLI command
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+    return runCLICommand(command);
+}
 
+/// TODO This implementation should not rely on the ostree CLI -> change to libostree usage.
+bool OSTreeRepo::DropLastCommit(const Commit& commit) {
+    // TODO check if it is last commit on branch
+
+    // reset head
+    std::string command = "ostree reset";
+    command += " --repo=" + repoPath;
+    command += " " + commit.branch;
+    command += " " + commit.branch + "^";
+    if (!runCLICommand(command)) {
+        return false;
+    }
+
+    // remove orphaned commit
+    std::string command2 = "ostree prune";
+    command2 += " --repo=" + repoPath;
+    command2 += " --delete-commit=" + commit.hash;
+    if (!runCLICommand(command2)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool OSTreeRepo::runCLICommand(const std::string& command) {
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
     if (!pipe) {
         return false;
     }

@@ -145,8 +145,7 @@ class OSTreeRepo {
      * @param addMetadataStrings list of metadata strings to add -> KEY=VALUE
      * @param newSubject new commit subject, it needed
      * @param keepMetadata should new commit keep metadata of old commit
-     * @return true on success
-     * @return false on failed promotion
+     * @return true on success, false on failed promotion
      */
     bool PromoteCommit(const std::string& hash,
                        const std::string& newRef,
@@ -154,7 +153,27 @@ class OSTreeRepo {
                        const std::string& newSubject = "",
                        bool keepMetadata = true);
 
+    /**
+     * @brief Drops commit, if it is the last commit on this branch. Similar to:
+     *  ostree reset --repo=<repo> <ref> <ref>^
+     *  ostree prune --repo=<repo> --delete-commit=<hash>
+     *
+     * @param commit Commit to drop (must match an element in the `getCommitList()`).
+     * @return True on success.
+     */
+    bool DropLastCommit(const Commit& commit);
+
    private:
+    /**
+     * @brief Execute a command on the CLI.
+     *
+     * @warning If possible, use proper `libostree` access, not per command line access.
+     *
+     * @param command Command to execute.
+     * @return true on success
+     */
+    [[deprecated]] bool runCLICommand(const std::string& command);
+
     /**
      * @brief Get all branches as a single string, separated by spaces.
      *
