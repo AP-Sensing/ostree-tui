@@ -397,7 +397,7 @@ int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessa
 int OSTreeTUI::showVersion() {
     using namespace ftxui;
 
-    auto versionText = text("ostree-tui 0.3.0");
+    auto versionText = text("ostree-tui 0.3.1");
 
     auto screen = Screen::Create(Dimension::Fit(versionText));
     Render(screen, versionText);
