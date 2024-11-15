@@ -1,6 +1,7 @@
 #include "cpplibostree.hpp"
 
 // C++
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <sstream>
@@ -338,7 +339,13 @@ bool OSTreeRepo::PromoteCommit(const std::string& hash,
 
 /// TODO This implementation should not rely on the ostree CLI -> change to libostree usage.
 bool OSTreeRepo::DropLastCommit(const Commit& commit) {
-    // TODO check if it is last commit on branch
+    // check if it is last commit on branch
+    auto it = std::find_if(
+        commitList.begin(), commitList.end(),
+        [&](std::pair<std::string, Commit> c) { return c.second.branch == commit.branch; });
+    if (it == commitList.end() || commit.hash != it->second.hash) {
+        return false;
+    }
 
     // reset head
     std::string command = "ostree reset";

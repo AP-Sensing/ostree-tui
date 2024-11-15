@@ -32,6 +32,8 @@ constexpr int COMMIT_WINDOW_HEIGHT{4};
 constexpr int COMMIT_WINDOW_WIDTH{32};
 constexpr int PROMOTION_WINDOW_HEIGHT{COMMIT_WINDOW_HEIGHT + 11};
 constexpr int PROMOTION_WINDOW_WIDTH{COMMIT_WINDOW_WIDTH + 8};
+constexpr int DELETION_WINDOW_HEIGHT{COMMIT_WINDOW_HEIGHT + 11};
+constexpr int DELETION_WINDOW_WIDTH{COMMIT_WINDOW_WIDTH + 8};
 // render tree types
 enum RenderTree : uint8_t {
     TREE_LINE_NODE,          // ☐ | |
