@@ -20,6 +20,8 @@
 
 #include "../util/cpplibostree.hpp"
 
+enum ViewMode : uint8_t { DEFAULT, COMMIT_PROMOTION, COMMIT_DROP };
+
 class OSTreeTUI {
    public:
     /**
@@ -49,18 +51,19 @@ class OSTreeTUI {
     bool RefreshOSTreeRepository();
 
     /**
-     * @brief Sets the promotion mode: Defines if the ostree-tui currently displays a commit
-     * promotion window.
+     * @brief Sets the view mode: Defines if the ostree-tui currently displays a commit
+     * promotion window, deletion window, ...
      *
-     * @param active Activate (true), or deactivate (false) the promotion mode.
-     * @param hash Must only be provided, if `active` is set to true.
-     * @param SetPromotionBranch If `active` is true, this defines, if the promotino Branch should
-     * be reset to the first visible branch.
-     * @return false, if other promotion gets overwritten
+     * @param viewMode View mode to set the OSTreeTUI to.
+     * @param targetCommitHash Commit, that is influenced by the view mode (e.g. commit to promote,
+     * or delete).
+     * @param setTargetBranch True = Reset branch, that might be influenced by the view mode (e.g.
+     * selected promotion branch).
+     * @return true, if view mode changed.
      */
-    bool SetPromotionMode(bool active,
-                          const std::string& hash = "",
-                          bool SetPromotionBranch = true);
+    bool SetViewMode(ViewMode viewMode,
+                     const std::string& targetCommitHash = "",
+                     bool targetBranch = true);
 
     /**
      * @brief Promotes a commit, by passing it to the cpplibostree and refreshing the UI.
@@ -78,6 +81,15 @@ class OSTreeTUI {
                        const std::string& newSubject = "",
                        bool keepMetadata = true);
 
+    /**
+     * @brief Deleted a commit, if it is the last commit on a branch (= reset branch head) and
+     * refresh the UI.
+     *
+     * @param commit Commit to drop.
+     * @return True on success.
+     */
+    bool DropLastCommit(const cpplibostree::Commit& commit);
+
    private:
     /// @brief Calculates all visible commits from an OSTreeRepo and a list of branches.
     void parseVisibleCommitMap();
@@ -87,7 +99,7 @@ class OSTreeTUI {
 
    public:
     // SETTER
-    void SetPromotionBranch(const std::string& promotionBranch);
+    void SetModeBranch(const std::string& modeBranch);
     void SetSelectedCommit(size_t selectedCommit);
 
     // non-const GETTER
@@ -97,14 +109,14 @@ class OSTreeTUI {
     // GETTER
     [[nodiscard]] const cpplibostree::OSTreeRepo& GetOstreeRepo() const;
     [[nodiscard]] const size_t& GetSelectedCommit() const;
-    [[nodiscard]] const std::string& GetPromotionBranch() const;
+    [[nodiscard]] const std::string& GetModeBranch() const;
     [[nodiscard]] const std::unordered_map<std::string, bool>& GetVisibleBranches() const;
     [[nodiscard]] const std::vector<std::string>& GetColumnToBranchMap() const;
     [[nodiscard]] const std::vector<std::string>& GetVisibleCommitViewMap() const;
     [[nodiscard]] const std::unordered_map<std::string, ftxui::Color>& GetBranchColorMap() const;
     [[nodiscard]] int GetScrollOffset() const;
-    [[nodiscard]] bool GetInPromotionSelection() const;
-    [[nodiscard]] const std::string& GetPromotionHash() const;
+    [[nodiscard]] ViewMode GetViewMode() const;
+    [[nodiscard]] const std::string& GetModeHash() const;
 
    private:
     // model
@@ -120,9 +132,9 @@ class OSTreeTUI {
 
     // view states
     int scrollOffset{0};
-    bool inPromotionSelection{false};
-    std::string promotionHash;
-    std::string promotionBranch;
+    ViewMode viewMode = DEFAULT;
+    std::string modeHash;
+    std::string modeBranch;
 
     // view constants
     int logSize{45};
