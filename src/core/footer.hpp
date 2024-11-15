@@ -19,7 +19,7 @@ class Footer {
 
    private:
     const std::string DEFAULT_CONTENT{
-        "  || Alt+Q : Quit || Alt+R : Refresh || Alt+C : Copy commit hash || Alt+P : Promote "
-        "Commit "};
+        "  || Alt+Q : Quit || Alt+R : Refresh || Alt+C : Copy Hash || Alt+P : Promote || Alt+D: "
+        "Drop || "};
     std::string content{DEFAULT_CONTENT};
 };

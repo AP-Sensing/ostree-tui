@@ -112,8 +112,13 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
 
     // add application shortcuts
     mainContainer = CatchEvent(container | border, [&](const Event& event) {
+        // start commit promotion window
         if (event == Event::AltP) {
             SetViewMode(ViewMode::COMMIT_PROMOTION, visibleCommitViewMap.at(selectedCommit));
+        }
+        // start commit deletion window
+        if (event == Event::AltD) {
+            SetViewMode(ViewMode::COMMIT_DROP, visibleCommitViewMap.at(selectedCommit));
         }
         // copy commit id
         if (event == Event::AltC) {
@@ -208,6 +213,10 @@ bool OSTreeTUI::RefreshOSTreeRepository() {
 }
 
 bool OSTreeTUI::SetViewMode(ViewMode newViewMode, const std::string& hash, bool setModeBranch) {
+    // nothing to change
+    if (newViewMode == viewMode && hash == modeHash) {
+        return false;
+    }
     // deactivate promotion mode
     if (newViewMode == ViewMode::DEFAULT) {
         viewMode = ViewMode::DEFAULT;
@@ -216,13 +225,18 @@ bool OSTreeTUI::SetViewMode(ViewMode newViewMode, const std::string& hash, bool 
         return true;
     }
     // set promotion mode
-    if (viewMode == ViewMode::DEFAULT || hash != modeHash) {
+    if (newViewMode == ViewMode::COMMIT_PROMOTION) {
         viewMode = ViewMode::COMMIT_PROMOTION;
         if (setModeBranch) {
             modeBranch = modeBranch.empty() ? columnToBranchMap.at(0) : modeBranch;
         }
         modeHash = hash;
         return true;
+    }
+    // set deletion mode
+    if (newViewMode == ViewMode::COMMIT_DROP) {
+        viewMode = newViewMode;
+        modeHash = hash;
     }
     // nothing to update
     return false;
@@ -248,14 +262,16 @@ bool OSTreeTUI::PromoteCommit(const std::string& hash,
 
 bool OSTreeTUI::DropLastCommit(const cpplibostree::Commit& commit) {
     bool success = ostreeRepo.DropLastCommit(commit);
-    // SetDeletionMode(false);
+    SetViewMode(ViewMode::DEFAULT);
     // reload repository
     if (success) {
         scrollOffset = 0;
         selectedCommit = 0;
         screen.PostEvent(ftxui::Event::AltR);
         notificationText =
-            "Removed commit " + commit.hash.substr(0, 8) + " from branch " + commit.branch;
+            "Dropped commit " + commit.hash.substr(0, 8) + " from branch " + commit.branch;
+    } else {
+        notificationText = "Failed to drop commit";
     }
     return success;
 }

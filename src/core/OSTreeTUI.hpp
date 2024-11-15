@@ -132,7 +132,7 @@ class OSTreeTUI {
 
     // view states
     int scrollOffset{0};
-    ViewMode viewMode = DEFAULT;
+    ViewMode viewMode = ViewMode::DEFAULT;
     std::string modeHash;
     std::string modeBranch;
 

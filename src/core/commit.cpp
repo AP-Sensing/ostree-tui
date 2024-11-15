@@ -120,7 +120,6 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
         width() = PROMOTION_WINDOW_WIDTH;
         height() = PROMOTION_WINDOW_HEIGHT;
         // change inner to promotion layout
-        simpleCommit = inner;
         DetachAllChildren();
         Add(promotionView);
         if (!Focused()) {
@@ -135,6 +134,16 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
         }
     }
 
+    void startDeletionWindow() {
+        left() = std::max(left(), -2);
+        width() = DELETION_WINDOW_WIDTH;
+        height() = DELETION_WINDOW_HEIGHT;
+        // change inner to deletion layout
+        DetachAllChildren();
+        Add(deletionView);
+        TakeFocus();
+    }
+
     void executePromotion() {
         // promote on the ostree repo
         std::vector<std::string> metadataStrings;
@@ -145,7 +154,13 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
         resetWindow();
     }
 
-    void cancelPromotion() {
+    void executeDeletion() {
+        // delete on the ostree repo
+        ostreetui.DropLastCommit(ostreetui.GetOstreeRepo().getCommitList().at(hash));
+        resetWindow();
+    }
+
+    void cancelSpecialWindow() {
         ostreetui.SetViewMode(ViewMode::DEFAULT);
         resetWindow();
     }
@@ -159,6 +174,9 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             } else {
                 resetWindow(false);
             }
+        } else if (ostreetui.GetViewMode() == ViewMode::COMMIT_DROP &&
+                   ostreetui.GetModeHash() == hash) {
+            startDeletionWindow();
         }
 
         auto element = ComponentBase::Render();
@@ -189,6 +207,13 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             return true;
         }
 
+        // exit special window
+        if (ostreetui.GetViewMode() != ViewMode::DEFAULT && event == Event::Escape) {
+            cancelSpecialWindow();
+            return true;
+        }
+
+        // promotion window specific
         if (ostreetui.GetViewMode() == ViewMode::COMMIT_PROMOTION) {
             // navigate promotion branches
             if (event == Event::ArrowLeft) {
@@ -207,11 +232,6 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                     ostreetui.GetColumnToBranchMap().begin();
                 ostreetui.SetModeBranch(ostreetui.GetColumnToBranchMap().at(
                     (it + 1) % ostreetui.GetColumnToBranchMap().size()));
-                return true;
-            }
-            // cancel
-            if (event == Event::Escape) {
-                cancelPromotion();
                 return true;
             }
         }
@@ -356,8 +376,27 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                           text(" ☐ " + ostreetui.GetModeBranch()) | bold, text(" │") | bold});
          }),
          Container::Horizontal({
-             Button(" Cancel ", [&] { cancelPromotion(); }) | color(Color::Red) | flex,
+             Button(" Cancel ", [&] { cancelSpecialWindow(); }) | color(Color::Red) | flex,
              Button(" Promote ", [&] { executePromotion(); }) | color(Color::Green) | flex,
+         })});
+    Component deletionView = Container::Vertical(
+        {Renderer([&] {
+             return vbox({text(""), text(" Remove Commit...") | bold, text(""),
+                          hbox({
+                              text(" ✖ ") | color(Color::Red),
+                              text(hash.substr(0, 8)) | bold | color(Color::Red),
+                          }),
+                          text(" ✖ " + commit.subject) | color(Color::Red),
+                          text(" ✖") | color(Color::Red),
+                          hbox({
+                              text(" ✖ ") | color(Color::Red),
+                              text("from branch:") | dim,
+                          }),
+                          text(" ☐ " + ostreetui.GetModeBranch()) | dim, text(" │") | dim});
+         }),
+         Container::Horizontal({
+             Button(" Cancel ", [&] { cancelSpecialWindow(); }) | color(Color::Red) | flex,
+             Button(" Remove ", [&] { executeDeletion(); }) | color(Color::Green) | flex,
          })});
 };
 
