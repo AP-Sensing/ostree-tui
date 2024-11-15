@@ -141,20 +141,20 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
         if (!newVersion.empty()) {
             metadataStrings.push_back("version=" + newVersion);
         }
-        ostreetui.PromoteCommit(hash, ostreetui.GetPromotionBranch(), metadataStrings, newSubject,
-                                true);
+        ostreetui.PromoteCommit(hash, ostreetui.GetModeBranch(), metadataStrings, newSubject, true);
         resetWindow();
     }
 
     void cancelPromotion() {
-        ostreetui.SetPromotionMode(false);
+        ostreetui.SetViewMode(ViewMode::DEFAULT);
         resetWindow();
     }
 
     Element Render() final {
         // check if promotion was started not from drag & drop, but from ostreetui
-        if (ostreetui.GetInPromotionSelection() && ostreetui.GetPromotionHash() == hash) {
-            if (!ostreetui.GetPromotionBranch().empty()) {
+        if (ostreetui.GetViewMode() == ViewMode::COMMIT_PROMOTION &&
+            ostreetui.GetModeHash() == hash) {
+            if (!ostreetui.GetModeBranch().empty()) {
                 startPromotionWindow();
             } else {
                 resetWindow(false);
@@ -169,11 +169,11 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             element =
                 render ? render(state)
                        : DefaultRenderState(state, ostreetui.GetBranchColorMap().at(commit.branch),
-                                            ostreetui.GetPromotionHash() != hash);
+                                            ostreetui.GetModeHash() != hash);
         } else {
-            element = render ? render(state)
-                             : DefaultRenderState(state, Color::White,
-                                                  ostreetui.GetPromotionHash() != hash);
+            element =
+                render ? render(state)
+                       : DefaultRenderState(state, Color::White, ostreetui.GetModeHash() != hash);
         }
 
         // Position and record the drawn area of the window.
@@ -189,23 +189,23 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             return true;
         }
 
-        if (ostreetui.GetInPromotionSelection()) {
+        if (ostreetui.GetViewMode() == ViewMode::COMMIT_PROMOTION) {
             // navigate promotion branches
             if (event == Event::ArrowLeft) {
-                const long int it = std::find(ostreetui.GetColumnToBranchMap().begin(),
-                                              ostreetui.GetColumnToBranchMap().end(),
-                                              ostreetui.GetPromotionBranch()) -
-                                    ostreetui.GetColumnToBranchMap().begin();
-                ostreetui.SetPromotionBranch(ostreetui.GetColumnToBranchMap().at(
+                const long int it =
+                    std::find(ostreetui.GetColumnToBranchMap().begin(),
+                              ostreetui.GetColumnToBranchMap().end(), ostreetui.GetModeBranch()) -
+                    ostreetui.GetColumnToBranchMap().begin();
+                ostreetui.SetModeBranch(ostreetui.GetColumnToBranchMap().at(
                     (it - 1) % ostreetui.GetColumnToBranchMap().size()));
                 return true;
             }
             if (event == Event::ArrowRight) {
-                const long int it = std::find(ostreetui.GetColumnToBranchMap().begin(),
-                                              ostreetui.GetColumnToBranchMap().end(),
-                                              ostreetui.GetPromotionBranch()) -
-                                    ostreetui.GetColumnToBranchMap().begin();
-                ostreetui.SetPromotionBranch(ostreetui.GetColumnToBranchMap().at(
+                const long int it =
+                    std::find(ostreetui.GetColumnToBranchMap().begin(),
+                              ostreetui.GetColumnToBranchMap().end(), ostreetui.GetModeBranch()) -
+                    ostreetui.GetColumnToBranchMap().begin();
+                ostreetui.SetModeBranch(ostreetui.GetColumnToBranchMap().at(
                     (it + 1) % ostreetui.GetColumnToBranchMap().size()));
                 return true;
             }
@@ -220,7 +220,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             return false;
         }
 
-        if (ostreetui.GetInPromotionSelection() && !drag_) {
+        if (ostreetui.GetViewMode() == ViewMode::COMMIT_PROMOTION && !drag_) {
             return true;
         }
 
@@ -235,11 +235,11 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                 // reset mouse
                 captured_mouse_ = nullptr;
                 // check if position matches branch & do something if it does
-                if (ostreetui.GetPromotionBranch().empty()) {
-                    ostreetui.SetPromotionMode(false, hash);
+                if (ostreetui.GetModeBranch().empty()) {
+                    ostreetui.SetViewMode(ViewMode::DEFAULT, hash);
                     resetWindow();
                 } else {
-                    ostreetui.SetPromotionMode(true, hash);
+                    ostreetui.SetViewMode(ViewMode::COMMIT_PROMOTION, hash);
                 }
                 return true;
             }
@@ -248,9 +248,9 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                 left() = event.mouse().x - drag_start_x - box_.x_min;
                 top() = event.mouse().y - drag_start_y - box_.y_min;
                 // potential promotion
-                ostreetui.SetPromotionMode(true, hash, false);
+                ostreetui.SetViewMode(ViewMode::COMMIT_PROMOTION, hash, false);
                 // calculate which branch currently is hovered over
-                ostreetui.SetPromotionBranch("");
+                ostreetui.SetModeBranch("");
                 const int branch_pos = event.mouse().x / 2;
                 int count{0};
                 for (const auto& [branch, visible] : ostreetui.GetVisibleBranches()) {
@@ -258,14 +258,14 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                         ++count;
                     }
                     if (count == branch_pos) {
-                        ostreetui.SetPromotionBranch(
+                        ostreetui.SetModeBranch(
                             ostreetui.GetColumnToBranchMap().at(event.mouse().x / 2 - 1));
                         break;
                     }
                 }
             } else {
                 // not promotion
-                ostreetui.SetPromotionMode(false);
+                ostreetui.SetViewMode(ViewMode::DEFAULT);
             }
 
             // Clamp the window size.
@@ -353,7 +353,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                                       Input(&newVersion, commit.version) | underlined}),
          Renderer([&] {
              return vbox({text(" ┆"), text(" ┆ to branch:"),
-                          text(" ☐ " + ostreetui.GetPromotionBranch()) | bold, text(" │") | bold});
+                          text(" ☐ " + ostreetui.GetModeBranch()) | bold, text(" │") | bold});
          }),
          Container::Horizontal({
              Button(" Cancel ", [&] { cancelPromotion(); }) | color(Color::Red) | flex,

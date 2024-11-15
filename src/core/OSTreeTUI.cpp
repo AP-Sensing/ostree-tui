@@ -45,10 +45,10 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
         RefreshCommitComponents();
         selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
         // check for promotion & gray-out branch-colors if needed
-        if (inPromotionSelection && promotionBranch.size() != 0) {
+        if (viewMode == ViewMode::COMMIT_PROMOTION && modeBranch.size() != 0) {
             std::unordered_map<std::string, Color> promotionBranchColorMap{};
-            for (const auto& [str, col] : branchColorMap) {
-                if (str == promotionBranch) {
+            for (auto& [str, col] : branchColorMap) {
+                if (str == modeBranch) {
                     promotionBranchColorMap.insert({str, col});
                 } else {
                     promotionBranchColorMap.insert({str, Color::GrayDark});
@@ -64,13 +64,13 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
     // window specific shortcuts
     commitListComponent = CatchEvent(commitListComponent, [&](Event event) {
         // switch through commits
-        if ((!inPromotionSelection && event == Event::ArrowUp) ||
+        if ((viewMode == ViewMode::DEFAULT && event == Event::ArrowUp) ||
             (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
             selectedCommit = std::max(0, static_cast<int>(selectedCommit) - 1);
             adjustScrollToSelectedCommit();
             return true;
         }
-        if ((!inPromotionSelection && event == Event::ArrowDown) ||
+        if ((viewMode == ViewMode::DEFAULT && event == Event::ArrowDown) ||
             (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
             selectedCommit = std::min(selectedCommit + 1, GetVisibleCommitViewMap().size() - 1);
             adjustScrollToSelectedCommit();
@@ -113,7 +113,7 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
     // add application shortcuts
     mainContainer = CatchEvent(container | border, [&](const Event& event) {
         if (event == Event::AltP) {
-            SetPromotionMode(true, visibleCommitViewMap.at(selectedCommit));
+            SetViewMode(ViewMode::COMMIT_PROMOTION, visibleCommitViewMap.at(selectedCommit));
         }
         // copy commit id
         if (event == Event::AltC) {
@@ -207,21 +207,21 @@ bool OSTreeTUI::RefreshOSTreeRepository() {
     return true;
 }
 
-bool OSTreeTUI::SetPromotionMode(bool active, const std::string& hash, bool SetPromotionBranch) {
+bool OSTreeTUI::SetViewMode(ViewMode newViewMode, const std::string& hash, bool setModeBranch) {
     // deactivate promotion mode
-    if (!active) {
-        inPromotionSelection = false;
-        promotionBranch = "";
-        promotionHash = "";
+    if (newViewMode == ViewMode::DEFAULT) {
+        viewMode = ViewMode::DEFAULT;
+        modeBranch = "";
+        modeHash = "";
         return true;
     }
     // set promotion mode
-    if (!inPromotionSelection || hash != promotionHash) {
-        inPromotionSelection = true;
-        if (SetPromotionBranch) {
-            promotionBranch = promotionBranch.empty() ? columnToBranchMap.at(0) : promotionBranch;
+    if (viewMode == ViewMode::DEFAULT || hash != modeHash) {
+        viewMode = ViewMode::COMMIT_PROMOTION;
+        if (setModeBranch) {
+            modeBranch = modeBranch.empty() ? columnToBranchMap.at(0) : modeBranch;
         }
-        promotionHash = hash;
+        modeHash = hash;
         return true;
     }
     // nothing to update
@@ -235,12 +235,27 @@ bool OSTreeTUI::PromoteCommit(const std::string& hash,
                               bool keepMetadata) {
     bool success =
         ostreeRepo.PromoteCommit(hash, targetBranch, metadataStrings, newSubject, keepMetadata);
-    SetPromotionMode(false);
+    SetViewMode(ViewMode::DEFAULT);
     // reload repository
     if (success) {
         scrollOffset = 0;
         selectedCommit = 0;
         screen.PostEvent(ftxui::Event::AltR);
+        notificationText = "Promoted commit " + hash.substr(0, 8) + " to branch " + targetBranch;
+    }
+    return success;
+}
+
+bool OSTreeTUI::DropLastCommit(const cpplibostree::Commit& commit) {
+    bool success = ostreeRepo.DropLastCommit(commit);
+    // SetDeletionMode(false);
+    // reload repository
+    if (success) {
+        scrollOffset = 0;
+        selectedCommit = 0;
+        screen.PostEvent(ftxui::Event::AltR);
+        notificationText =
+            "Removed commit " + commit.hash.substr(0, 8) + " from branch " + commit.branch;
     }
     return success;
 }
@@ -276,8 +291,8 @@ void OSTreeTUI::adjustScrollToSelectedCommit() {
 }
 
 // SETTER & non-const GETTER
-void OSTreeTUI::SetPromotionBranch(const std::string& promotionBranch) {
-    this->promotionBranch = promotionBranch;
+void OSTreeTUI::SetModeBranch(const std::string& modeBranch) {
+    this->modeBranch = modeBranch;
 }
 
 void OSTreeTUI::SetSelectedCommit(size_t selectedCommit) {
@@ -302,8 +317,8 @@ const size_t& OSTreeTUI::GetSelectedCommit() const {
     return selectedCommit;
 }
 
-const std::string& OSTreeTUI::GetPromotionBranch() const {
-    return promotionBranch;
+const std::string& OSTreeTUI::GetModeBranch() const {
+    return modeBranch;
 }
 
 const std::unordered_map<std::string, bool>& OSTreeTUI::GetVisibleBranches() const {
@@ -326,12 +341,12 @@ int OSTreeTUI::GetScrollOffset() const {
     return scrollOffset;
 }
 
-bool OSTreeTUI::GetInPromotionSelection() const {
-    return inPromotionSelection;
+ViewMode OSTreeTUI::GetViewMode() const {
+    return viewMode;
 }
 
-const std::string& OSTreeTUI::GetPromotionHash() const {
-    return promotionHash;
+const std::string& OSTreeTUI::GetModeHash() const {
+    return modeHash;
 }
 
 // STATIC
