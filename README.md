@@ -25,14 +25,15 @@
 Welcome to OSTree-TUI. This project provides a more user friendly approach to a OSTree interface. It's purpose is to assist developers when using the command line to interact with OSTree (not to replace the command line interface completely).
 
 ## Usage & Features
+ * **Navigate** all commits on all branches on a `git`-like commit tree
+ * **View** all details to the selected commit you would also get through an `ostree show`
+ * **Filter** branches, if the screen gets too buzy for you
+ * **Drag-and-drop** commits onto branches to promote them (or use `Alt+P`)
+ * Most features support keyboard input **and** mouse input
+
 To start the OSTree-TUI, simply type `ostree-tui <repo_path>` (replace `<repo_path>` with the path to the desired repository), or `ostree-tui --help` to see its options. Navigating the application is possible with the arrow keys, or mouse input. Special actions are described in the bottom-bar.
 
-The features currently include:
- * Display a commit tree on the left
- * Branch filter options on the top right
- * Display details to the selected commit on the right
-
-Upcoming features can be viewed in the [issues](https://github.com/AP-Sensing/ostree-tui/issues)!
+Upcoming features can be viewed in the [issues](https://github.com/AP-Sensing/ostree-tui/labels/%E2%9C%A8%20feature)!
 
 ## Installation / Build instructions
 
@@ -55,6 +56,7 @@ cmake --build . --parallel
 # To install, use `make install DESTDIR=<target_destination>`
 ```
 
+<!--
 **Webassembly build:**
 
 The Webassembly build has not been tested, or confirmed yet.
@@ -65,3 +67,4 @@ make -j
 ./run_webassembly.py
 (visit localhost:8000)
 ```
+-->
