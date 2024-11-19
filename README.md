@@ -1,7 +1,8 @@
 # OSTree-TUI
 *A terminal user interface for OSTree.*
 
-![ostree-tui preview](https://github.com/AP-Sensing/ostree-tui/assets/88790311/28f9ac99-d92b-411f-aab5-95d07e8916df)
+![ostree-tui preview](https://github.com/user-attachments/assets/e859febf-548e-425f-b6b7-dfde3be4f947)
+
 
 
 <p align="center">
