@@ -17,10 +17,11 @@
 #include "commit.hpp"
 #include "footer.hpp"
 #include "manager.hpp"
+#include "trashBin.hpp"
 
 #include "../util/cpplibostree.hpp"
 
-enum ViewMode : uint8_t { DEFAULT, COMMIT_PROMOTION, COMMIT_DROP };
+enum ViewMode : uint8_t { DEFAULT, COMMIT_DRAGGING, COMMIT_PROMOTION, COMMIT_DROP };
 
 class OSTreeTUI {
    public:
@@ -101,6 +102,7 @@ class OSTreeTUI {
     // SETTER
     void SetModeBranch(const std::string& modeBranch);
     void SetSelectedCommit(size_t selectedCommit);
+    void SetNotificationText(const std::string& notification);
 
     // non-const GETTER
     [[nodiscard]] std::vector<std::string>& GetColumnToBranchMap();
@@ -118,7 +120,7 @@ class OSTreeTUI {
     [[nodiscard]] ViewMode GetViewMode() const;
     [[nodiscard]] const std::string& GetModeHash() const;
 
-   public:
+   private:
     // model
     cpplibostree::OSTreeRepo ostreeRepo;
 

@@ -9,10 +9,10 @@
 #include <utility>
 #include <vector>
 // C
-#include <cassert>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <ostree.h>
+#include <cassert>
 #include <cstdio>
 
 namespace cpplibostree {
@@ -340,10 +340,7 @@ bool OSTreeRepo::PromoteCommit(const std::string& hash,
 /// TODO This implementation should not rely on the ostree CLI -> change to libostree usage.
 bool OSTreeRepo::DropLastCommit(const Commit& commit) {
     // check if it is last commit on branch
-    auto it = std::find_if(
-        commitList.begin(), commitList.end(),
-        [&](std::pair<std::string, Commit> c) { return c.second.branch == commit.branch; });
-    if (it == commitList.end() || commit.hash != it->second.hash) {
+    if (!IsMostRecentCommitOnBranch(commit)) {
         return false;
     }
 
@@ -373,6 +370,30 @@ bool OSTreeRepo::runCLICommand(const std::string& command) {
         return false;
     }
     return true;
+}
+
+bool OSTreeRepo::IsMostRecentCommitOnBranch(const Commit& commit) const {
+    Timepoint latestTimestamp;
+    std::string latestHash;
+
+    for (const auto& [hash, check] : commitList) {
+        if (check.timestamp <= latestTimestamp) {
+            continue;
+        }
+        if (check.branch == commit.branch) {
+            latestTimestamp = check.timestamp;
+            latestHash = check.hash;
+        }
+    }
+
+    return latestHash == commit.hash;
+}
+
+bool OSTreeRepo::IsMostRecentCommitOnBranch(const std::string& hash) const {
+    if (commitList.find(hash) == commitList.end()) {
+        return false;
+    }
+    return IsMostRecentCommitOnBranch(commitList.at(hash));
 }
 
 }  // namespace cpplibostree
