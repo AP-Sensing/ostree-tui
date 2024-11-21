@@ -176,7 +176,17 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             }
         } else if (ostreetui.GetViewMode() == ViewMode::COMMIT_DROP &&
                    ostreetui.GetModeHash() == hash) {
-            startDeletionWindow();
+			const auto& commitList = ostreetui.GetOstreeRepo().getCommitList();
+			auto commit = commitList.at(hash);
+			auto it = std::find_if(
+    		    commitList.begin(), commitList.end(),
+    		    [&](std::pair<std::string, cpplibostree::Commit> c) { return c.second.branch == commit.branch; });
+    		if (it != commitList.end() && commit.hash == it->second.hash) {
+    		    startDeletionWindow();
+    		} else {
+				ostreetui.notificationText = "Can't drop commit " + commit.hash.substr(0,8) + "... not last commit on branch " + commit.branch + " (which is " + it->second.hash.substr(0,8) + ")";
+				cancelSpecialWindow();
+			}
         }
 
         auto element = ComponentBase::Render();
@@ -388,10 +398,6 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                           }),
                           text(" ✖ " + commit.subject) | color(Color::Red),
                           text(" ✖") | color(Color::Red),
-                          hbox({
-                              text(" ✖ ") | color(Color::Red),
-                              text("from branch:") | dim,
-                          }),
                           text(" ☐ " + ostreetui.GetModeBranch()) | dim, text(" │") | dim});
          }),
          Container::Horizontal({

@@ -118,7 +118,7 @@ class OSTreeTUI {
     [[nodiscard]] ViewMode GetViewMode() const;
     [[nodiscard]] const std::string& GetModeHash() const;
 
-   private:
+   public:
     // model
     cpplibostree::OSTreeRepo ostreeRepo;
 
