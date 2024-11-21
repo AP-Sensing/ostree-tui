@@ -45,7 +45,8 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
         RefreshCommitComponents();
         selectedCommit = std::min(selectedCommit, visibleCommitViewMap.size() - 1);
         // check for promotion & gray-out branch-colors if needed
-        if (viewMode == ViewMode::COMMIT_PROMOTION && modeBranch.size() != 0) {
+        if ((viewMode == ViewMode::COMMIT_PROMOTION || viewMode == ViewMode::COMMIT_DRAGGING) &&
+            modeBranch.size() != 0) {
             std::unordered_map<std::string, Color> promotionBranchColorMap{};
             for (auto& [str, col] : branchColorMap) {
                 if (str == modeBranch) {
@@ -182,6 +183,7 @@ void OSTreeTUI::RefreshCommitComponents() {
     using namespace ftxui;
 
     commitComponents.clear();
+    commitComponents.push_back(TrashBin::TrashBinComponent(*this));
     int i{0};
     parseVisibleCommitMap();
     for (auto& hash : visibleCommitViewMap) {
@@ -190,7 +192,7 @@ void OSTreeTUI::RefreshCommitComponents() {
     }
 
     commitList =
-        commitComponents.size() == 0
+        commitComponents.size() <= 1
             ? Renderer([&] { return text(" no commits to be shown ") | color(Color::Red); })
             : Container::Stacked(commitComponents);
 }
@@ -224,9 +226,9 @@ bool OSTreeTUI::SetViewMode(ViewMode newViewMode, const std::string& hash, bool 
         modeHash = "";
         return true;
     }
-    // set promotion mode
-    if (newViewMode == ViewMode::COMMIT_PROMOTION) {
-        viewMode = ViewMode::COMMIT_PROMOTION;
+    // set promotion, or dragging mode
+    if (newViewMode == ViewMode::COMMIT_PROMOTION || newViewMode == ViewMode::COMMIT_DRAGGING) {
+        viewMode = newViewMode;
         if (setModeBranch) {
             modeBranch = modeBranch.empty() ? columnToBranchMap.at(0) : modeBranch;
         }
@@ -237,6 +239,7 @@ bool OSTreeTUI::SetViewMode(ViewMode newViewMode, const std::string& hash, bool 
     if (newViewMode == ViewMode::COMMIT_DROP) {
         viewMode = newViewMode;
         modeHash = hash;
+        return true;
     }
     // nothing to update
     return false;
@@ -314,6 +317,10 @@ void OSTreeTUI::SetModeBranch(const std::string& modeBranch) {
 void OSTreeTUI::SetSelectedCommit(size_t selectedCommit) {
     this->selectedCommit = selectedCommit;
     adjustScrollToSelectedCommit();
+}
+
+void OSTreeTUI::SetNotificationText(const std::string& notification) {
+    this->notificationText = notification;
 }
 
 std::vector<std::string>& OSTreeTUI::GetColumnToBranchMap() {

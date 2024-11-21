@@ -167,8 +167,11 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
 
     Element Render() final {
         // check if promotion was started not from drag & drop, but from ostreetui
-        if (ostreetui.GetViewMode() == ViewMode::COMMIT_PROMOTION &&
+        if (ostreetui.GetViewMode() == ViewMode::COMMIT_DRAGGING &&
             ostreetui.GetModeHash() == hash) {
+            resetWindow(false);
+        } else if (ostreetui.GetViewMode() == ViewMode::COMMIT_PROMOTION &&
+                   ostreetui.GetModeHash() == hash) {
             if (!ostreetui.GetModeBranch().empty()) {
                 startPromotionWindow();
             } else {
@@ -176,17 +179,15 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             }
         } else if (ostreetui.GetViewMode() == ViewMode::COMMIT_DROP &&
                    ostreetui.GetModeHash() == hash) {
-			const auto& commitList = ostreetui.GetOstreeRepo().getCommitList();
-			auto commit = commitList.at(hash);
-			auto it = std::find_if(
-    		    commitList.begin(), commitList.end(),
-    		    [&](std::pair<std::string, cpplibostree::Commit> c) { return c.second.branch == commit.branch; });
-    		if (it != commitList.end() && commit.hash == it->second.hash) {
-    		    startDeletionWindow();
-    		} else {
-				ostreetui.notificationText = "Can't drop commit " + commit.hash.substr(0,8) + "... not last commit on branch " + commit.branch + " (which is " + it->second.hash.substr(0,8) + ")";
-				cancelSpecialWindow();
-			}
+            const auto& commitList = ostreetui.GetOstreeRepo().getCommitList();
+            auto commit = commitList.at(hash);
+            if (ostreetui.GetOstreeRepo().IsMostRecentCommitOnBranch(hash)) {
+                startDeletionWindow();
+            } else {
+                ostreetui.SetNotificationText("Can't drop commit " + commit.hash.substr(0, 8) +
+                                             "... not last commit on branch ");
+                cancelSpecialWindow();
+            }
         }
 
         auto element = ComponentBase::Render();
@@ -250,7 +251,9 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             return false;
         }
 
-        if (ostreetui.GetViewMode() == ViewMode::COMMIT_PROMOTION && !drag_) {
+        if ((ostreetui.GetViewMode() == ViewMode::COMMIT_PROMOTION ||
+             ostreetui.GetViewMode() == ViewMode::COMMIT_DRAGGING) &&
+            !drag_) {
             return true;
         }
 
@@ -264,8 +267,13 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             if (event.mouse().motion == Mouse::Released) {
                 // reset mouse
                 captured_mouse_ = nullptr;
+                // drop commit
+                if (event.mouse().y > ostreetui.GetScreen().dimy() - 8) {
+                    ostreetui.SetViewMode(ViewMode::COMMIT_DROP, hash);
+                    top() = drag_initial_y;
+                }
                 // check if position matches branch & do something if it does
-                if (ostreetui.GetModeBranch().empty()) {
+                else if (ostreetui.GetModeBranch().empty()) {
                     ostreetui.SetViewMode(ViewMode::DEFAULT, hash);
                     resetWindow();
                 } else {
@@ -277,20 +285,27 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             if (drag_) {
                 left() = event.mouse().x - drag_start_x - box_.x_min;
                 top() = event.mouse().y - drag_start_y - box_.y_min;
-                // potential promotion
-                ostreetui.SetViewMode(ViewMode::COMMIT_PROMOTION, hash, false);
-                // calculate which branch currently is hovered over
-                ostreetui.SetModeBranch("");
-                const int branch_pos = event.mouse().x / 2;
-                int count{0};
-                for (const auto& [branch, visible] : ostreetui.GetVisibleBranches()) {
-                    if (visible) {
-                        ++count;
-                    }
-                    if (count == branch_pos) {
-                        ostreetui.SetModeBranch(
-                            ostreetui.GetColumnToBranchMap().at(event.mouse().x / 2 - 1));
-                        break;
+                ostreetui.SetViewMode(ViewMode::COMMIT_DRAGGING, hash);
+                // check if potential commit deletion
+                if (event.mouse().y > ostreetui.GetScreen().dimy() - 8) {
+                    ostreetui.SetModeBranch("");
+                } else {
+                    // potential promotion
+                    ostreetui.SetViewMode(ViewMode::COMMIT_DRAGGING, hash, false);
+                    // calculate which branch currently is hovered over
+                    ostreetui.SetModeBranch("");
+                    const int branch_pos = event.mouse().x / 2;
+                    int count{0};
+                    for (const auto& [branch, visible] : ostreetui.GetVisibleBranches()) {
+                        if (visible) {
+                            ++count;
+                        }
+                        if (count == branch_pos) {
+                            ostreetui.SetViewMode(ViewMode::COMMIT_PROMOTION, hash);
+                            ostreetui.SetModeBranch(
+                                ostreetui.GetColumnToBranchMap().at(event.mouse().x / 2 - 1));
+                            break;
+                        }
                     }
                 }
             } else {

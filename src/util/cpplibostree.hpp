@@ -163,6 +163,22 @@ class OSTreeRepo {
      */
     bool DropLastCommit(const Commit& commit);
 
+    /**
+     * @brief Checks if commit is the most recent commit on its branch
+     *
+     * @param commit Commit to check.
+     * @return True, if commit is most recent on its branch.
+     */
+    bool IsMostRecentCommitOnBranch(const Commit& commit) const;
+
+    /**
+     * @brief Checks if commit is the most recent commit on its branch
+     *
+     * @param hash Hash of the commit to check.
+     * @return True, if commit is most recent on its branch.
+     */
+    bool IsMostRecentCommitOnBranch(const std::string& hash) const;
+
    private:
     /**
      * @brief Execute a command on the CLI.
