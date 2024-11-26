@@ -263,8 +263,8 @@ bool OSTreeTUI::PromoteCommit(const std::string& hash,
     return success;
 }
 
-bool OSTreeTUI::DropLastCommit(const cpplibostree::Commit& commit) {
-    bool success = ostreeRepo.DropLastCommit(commit);
+bool OSTreeTUI::RemoveCommit(const cpplibostree::Commit& commit) {
+    bool success = ostreeRepo.RemoveCommitFromBranchAndPrune(commit);
     SetViewMode(ViewMode::DEFAULT);
     // reload repository
     if (success) {

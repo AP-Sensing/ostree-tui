@@ -134,13 +134,17 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
         }
     }
 
-    void startDeletionWindow() {
+    void startDeletionWindow(bool isMostRecentCommit) {
         left() = std::max(left(), -2);
         width() = DELETION_WINDOW_WIDTH;
         height() = DELETION_WINDOW_HEIGHT;
         // change inner to deletion layout
         DetachAllChildren();
-        Add(deletionView);
+        if (isMostRecentCommit) {
+            Add(deletionViewHead);
+        } else {
+            Add(deletionViewBody);
+        }
         TakeFocus();
     }
 
@@ -156,7 +160,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
 
     void executeDeletion() {
         // delete on the ostree repo
-        ostreetui.DropLastCommit(ostreetui.GetOstreeRepo().getCommitList().at(hash));
+        ostreetui.RemoveCommit(ostreetui.GetOstreeRepo().getCommitList().at(hash));
         resetWindow();
     }
 
@@ -181,13 +185,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                    ostreetui.GetModeHash() == hash) {
             const auto& commitList = ostreetui.GetOstreeRepo().getCommitList();
             auto commit = commitList.at(hash);
-            if (ostreetui.GetOstreeRepo().IsMostRecentCommitOnBranch(hash)) {
-                startDeletionWindow();
-            } else {
-                ostreetui.SetNotificationText("Can't drop commit " + commit.hash.substr(0, 8) +
-                                             "... not last commit on branch ");
-                cancelSpecialWindow();
-            }
+            startDeletionWindow(ostreetui.GetOstreeRepo().IsMostRecentCommitOnBranch(hash));
         }
 
         auto element = ComponentBase::Render();
@@ -404,7 +402,8 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
              Button(" Cancel ", [&] { cancelSpecialWindow(); }) | color(Color::Red) | flex,
              Button(" Promote ", [&] { executePromotion(); }) | color(Color::Green) | flex,
          })});
-    Component deletionView = Container::Vertical(
+    // deletion view, commit is at head of branch
+    Component deletionViewHead = Container::Vertical(
         {Renderer([&] {
              return vbox({text(""), text(" Remove Commit...") | bold, text(""),
                           hbox({
@@ -414,6 +413,27 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                           text(" ✖ " + commit.subject) | color(Color::Red),
                           text(" ✖") | color(Color::Red),
                           text(" ☐ " + ostreetui.GetModeBranch()) | dim, text(" │") | dim});
+         }),
+         Container::Horizontal({
+             Button(" Cancel ", [&] { cancelSpecialWindow(); }) | color(Color::Red) | flex,
+             Button(" Remove ", [&] { executeDeletion(); }) | color(Color::Green) | flex,
+         })});
+    // deletion view, if commit is not the most recent on its branch
+    Component deletionViewBody = Container::Vertical(
+        {Renderer([&] {
+             std::string parent = ostreetui.GetOstreeRepo().getCommitList().at(hash).parent;
+             return vbox({text(""), text(" Remove Commits...") | bold, text(""),
+                          text(" ☐ " + ostreetui.GetModeBranch()) | dim, text(" │") | dim,
+                          hbox({
+                              text(" ✖ ") | color(Color::Red),
+                              text(hash.substr(0, 8)) | bold | color(Color::Red),
+                          }),
+                          parent.empty()
+                              ? text(" ✖ ") | color(Color::Red)
+                              : vbox({
+                                    text(" ✖ " + parent.substr(0, 8)) | color(Color::Red),
+                                    text(" ✖ ...") | color(Color::Red),
+                                })});
          }),
          Container::Horizontal({
              Button(" Cancel ", [&] { cancelSpecialWindow(); }) | color(Color::Red) | flex,

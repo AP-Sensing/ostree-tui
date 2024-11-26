@@ -154,14 +154,36 @@ class OSTreeRepo {
                        bool keepMetadata = true);
 
     /**
-     * @brief Drops commit, if it is the last commit on this branch. Similar to:
-     *  ostree reset --repo=<repo> <ref> <ref>^
-     *  ostree prune --repo=<repo> --delete-commit=<hash>
+     * @brief Removes a commit (and all its predecessors, if they would)
+     *
+     * Synonym to:
+     *  [ `ostree reset --repo=<repo> <ref> <ref>^` ]
+     *  `ostree prune --repo=<repo> --delete-commit=<hash>`
+     *
+     * Effect:
+     *  If the commit is the most recent on its branch -> reset head of branch.
+     *  If not, then remove this commit and all predecessors (that would otherwise be unreachable).
+     *
+     * @param commit Commit to remove (must match an element in the `getCommitList()`).
+     * @return True on success.
+     */
+    bool RemoveCommitFromBranchAndPrune(const Commit& commit);
+
+    /**
+     * @brief Drops commit, if it is the last commit on this branch.
      *
      * @param commit Commit to drop (must match an element in the `getCommitList()`).
      * @return True on success.
      */
-    bool DropLastCommit(const Commit& commit);
+    bool ResetBranchHeadAndPrune(const Commit& commit);
+
+    /**
+     * @brief Checks if commit is the most recent commit on its branch
+     *
+     * @param branch Branch to get most recent commit from.
+     * @return Most recent commit of the specified branch.
+     */
+    const Commit& GetMostRecentCommitOfBranch(const std::string& branch) const;
 
     /**
      * @brief Checks if commit is the most recent commit on its branch

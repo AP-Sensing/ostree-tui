@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -338,7 +339,27 @@ bool OSTreeRepo::PromoteCommit(const std::string& hash,
 }
 
 /// TODO This implementation should not rely on the ostree CLI -> change to libostree usage.
-bool OSTreeRepo::DropLastCommit(const Commit& commit) {
+bool OSTreeRepo::RemoveCommitFromBranchAndPrune(const Commit& commit) {
+    // reset head if it is last commit on the branch
+    if (IsMostRecentCommitOnBranch(commit)) {
+        std::string command = "ostree reset";
+        command += " --repo=" + repoPath;
+        command += " " + commit.branch;
+        command += " " + commit.branch + "^";
+
+        return runCLICommand(command);
+    }
+
+    // prune commit
+    std::string command2 = "ostree prune";
+    command2 += " --repo=" + repoPath;
+    command2 += " --delete-commit=" + commit.hash;
+
+    return runCLICommand(command2);
+}
+
+/// TODO This implementation should not rely on the ostree CLI -> change to libostree usage.
+bool OSTreeRepo::ResetBranchHeadAndPrune(const Commit& commit) {
     // check if it is last commit on branch
     if (!IsMostRecentCommitOnBranch(commit)) {
         return false;
@@ -372,7 +393,7 @@ bool OSTreeRepo::runCLICommand(const std::string& command) {
     return true;
 }
 
-bool OSTreeRepo::IsMostRecentCommitOnBranch(const Commit& commit) const {
+const Commit& OSTreeRepo::GetMostRecentCommitOfBranch(const std::string& branch) const {
     Timepoint latestTimestamp;
     std::string latestHash;
 
@@ -380,19 +401,24 @@ bool OSTreeRepo::IsMostRecentCommitOnBranch(const Commit& commit) const {
         if (check.timestamp <= latestTimestamp) {
             continue;
         }
-        if (check.branch == commit.branch) {
+        if (check.branch == branch) {
             latestTimestamp = check.timestamp;
             latestHash = check.hash;
         }
     }
 
-    return latestHash == commit.hash;
+    if (latestHash.empty()) {
+        throw std::invalid_argument("no commit on specified branch " + branch);
+    }
+
+    return commitList.at(latestHash);
+}
+
+bool OSTreeRepo::IsMostRecentCommitOnBranch(const Commit& commit) const {
+    return GetMostRecentCommitOfBranch(commit.branch).hash == commit.hash;
 }
 
 bool OSTreeRepo::IsMostRecentCommitOnBranch(const std::string& hash) const {
-    if (commitList.find(hash) == commitList.end()) {
-        return false;
-    }
     return IsMostRecentCommitOnBranch(commitList.at(hash));
 }
 
