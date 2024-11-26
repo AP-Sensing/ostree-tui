@@ -83,13 +83,12 @@ class OSTreeTUI {
                        bool keepMetadata = true);
 
     /**
-     * @brief Deleted a commit, if it is the last commit on a branch (= reset branch head) and
-     * refresh the UI.
+     * @brief Remove a commit from the OSTree repo and refresh the UI.
      *
-     * @param commit Commit to drop.
+     * @param commit Commit to remove.
      * @return True on success.
      */
-    bool DropLastCommit(const cpplibostree::Commit& commit);
+    bool RemoveCommit(const cpplibostree::Commit& commit);
 
    private:
     /// @brief Calculates all visible commits from an OSTreeRepo and a list of branches.
