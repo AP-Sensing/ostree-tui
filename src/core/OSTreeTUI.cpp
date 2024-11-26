@@ -119,7 +119,9 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
         }
         // start commit deletion window
         if (event == Event::AltD) {
-            SetViewMode(ViewMode::COMMIT_DROP, visibleCommitViewMap.at(selectedCommit));
+            std::string hashToDrop = visibleCommitViewMap.at(selectedCommit);
+            SetViewMode(ViewMode::COMMIT_DROP, hashToDrop);
+            SetModeBranch(GetOstreeRepo().getCommitList().at(hashToDrop).branch);
         }
         // copy commit id
         if (event == Event::AltC) {

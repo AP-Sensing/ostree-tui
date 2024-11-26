@@ -268,6 +268,8 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                 // drop commit
                 if (event.mouse().y > ostreetui.GetScreen().dimy() - 8) {
                     ostreetui.SetViewMode(ViewMode::COMMIT_DROP, hash);
+                    ostreetui.SetModeBranch(
+                        ostreetui.GetOstreeRepo().getCommitList().at(hash).branch);
                     top() = drag_initial_y;
                 }
                 // check if position matches branch & do something if it does
@@ -405,7 +407,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
     // deletion view, commit is at head of branch
     Component deletionViewHead = Container::Vertical(
         {Renderer([&] {
-             return vbox({text(""), text(" Remove Commit...") | bold, text(""),
+             return vbox({text(" Remove Commit...") | bold, text(""),
                           hbox({
                               text(" ✖ ") | color(Color::Red),
                               text(hash.substr(0, 8)) | bold | color(Color::Red),
@@ -422,14 +424,14 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
     Component deletionViewBody = Container::Vertical(
         {Renderer([&] {
              std::string parent = ostreetui.GetOstreeRepo().getCommitList().at(hash).parent;
-             return vbox({text(""), text(" Remove Commits...") | bold, text(""),
+             return vbox({text(" Remove Commit (and preceding)...") | bold, text(""),
                           text(" ☐ " + ostreetui.GetModeBranch()) | dim, text(" │") | dim,
                           hbox({
                               text(" ✖ ") | color(Color::Red),
                               text(hash.substr(0, 8)) | bold | color(Color::Red),
                           }),
-                          parent.empty()
-                              ? text(" ✖ ") | color(Color::Red)
+                          parent == "(no parent)"
+                              ? text("")
                               : vbox({
                                     text(" ✖ " + parent.substr(0, 8)) | color(Color::Red),
                                     text(" ✖ ...") | color(Color::Red),
