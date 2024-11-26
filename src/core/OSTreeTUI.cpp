@@ -25,7 +25,7 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
     using namespace ftxui;
 
     // set all branches as visible and define a branch color
-    for (const auto& branch : ostreeRepo.getBranches()) {
+    for (const auto& branch : ostreeRepo.GetBranches()) {
         // if startupBranches are defined, set all as non-visible
         visibleBranches[branch] = startupBranches.size() == 0 ? true : false;
         std::hash<std::string> nameHash{};
@@ -88,7 +88,7 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
             return text(" no commit info available ") | color(Color::RedLight) | bold | center;
         }
         return CommitInfoManager::renderInfoView(
-            ostreeRepo.getCommitList().at(visibleCommitViewMap.at(selectedCommit)));
+            ostreeRepo.GetCommitList().at(visibleCommitViewMap.at(selectedCommit)));
     });
 
     // filter
@@ -121,7 +121,7 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
         if (event == Event::AltD) {
             std::string hashToDrop = visibleCommitViewMap.at(selectedCommit);
             SetViewMode(ViewMode::COMMIT_DROP, hashToDrop);
-            SetModeBranch(GetOstreeRepo().getCommitList().at(hashToDrop).branch);
+            SetModeBranch(GetOstreeRepo().GetCommitList().at(hashToDrop).branch);
         }
         // copy commit id
         if (event == Event::AltC) {
@@ -186,7 +186,7 @@ void OSTreeTUI::RefreshCommitComponents() {
 
     commitComponents.clear();
     commitComponents.push_back(TrashBin::TrashBinComponent(*this));
-    int i{0};
+    size_t i{0};
     parseVisibleCommitMap();
     for (auto& hash : visibleCommitViewMap) {
         commitComponents.push_back(CommitRender::CommitComponent(i, hash, *this));
@@ -211,7 +211,7 @@ void OSTreeTUI::RefreshCommitListComponent() {
 }
 
 bool OSTreeTUI::RefreshOSTreeRepository() {
-    ostreeRepo.updateData();
+    ostreeRepo.UpdateData();
     RefreshCommitListComponent();
     return true;
 }
@@ -284,7 +284,7 @@ bool OSTreeTUI::RemoveCommit(const cpplibostree::Commit& commit) {
 void OSTreeTUI::parseVisibleCommitMap() {
     // get filtered commits
     visibleCommitViewMap = {};
-    for (const auto& commitPair : ostreeRepo.getCommitList()) {
+    for (const auto& commitPair : ostreeRepo.GetCommitList()) {
         if (visibleBranches[commitPair.second.branch]) {
             visibleCommitViewMap.push_back(commitPair.first);
         }
@@ -292,15 +292,16 @@ void OSTreeTUI::parseVisibleCommitMap() {
     // sort by date
     std::sort(visibleCommitViewMap.begin(), visibleCommitViewMap.end(),
               [&](const std::string& a, const std::string& b) {
-                  return ostreeRepo.getCommitList().at(a).timestamp >
-                         ostreeRepo.getCommitList().at(b).timestamp;
+                  return ostreeRepo.GetCommitList().at(a).timestamp >
+                         ostreeRepo.GetCommitList().at(b).timestamp;
               });
 }
 
 void OSTreeTUI::adjustScrollToSelectedCommit() {
     // try to scroll it to the middle
     int windowHeight = screen.dimy() - 4;
-    int scollOffsetToFitCommitToTop = -selectedCommit * CommitRender::COMMIT_WINDOW_HEIGHT;
+    int scollOffsetToFitCommitToTop =
+        -static_cast<int>(selectedCommit) * CommitRender::COMMIT_WINDOW_HEIGHT;
     int newScroll =
         scollOffsetToFitCommitToTop + windowHeight / 2 - CommitRender::COMMIT_WINDOW_HEIGHT;
     // adjust if on edges
