@@ -75,21 +75,21 @@ Element DefaultRenderState(const WindowRenderState& state,
 /// https://github.com/ArthurSonzogni/FTXUI/blob/main/src/ftxui/component/window.cpp
 class CommitComponentImpl : public ComponentBase, public WindowOptions {
    public:
-    explicit CommitComponentImpl(int position, std::string commit, OSTreeTUI& ostreetui)
-        : commitPosition(position),
+    explicit CommitComponentImpl(size_t position, std::string commit, OSTreeTUI& ostreetui)
+        : drag_initial_x(1),
+          drag_initial_y(static_cast<int>(position) * COMMIT_WINDOW_HEIGHT),
+          commitPosition(position),
           hash(std::move(commit)),
           ostreetui(ostreetui),
-          commit(ostreetui.GetOstreeRepo().getCommitList().at(hash)),
-          newVersion(this->commit.version),
-          drag_initial_y(position * COMMIT_WINDOW_HEIGHT),
-          drag_initial_x(1) {
+          commit(ostreetui.GetOstreeRepo().GetCommitList().at(hash)),
+          newVersion(this->commit.version) {
         inner = Renderer([&] {
             return vbox({
-                text(ostreetui.GetOstreeRepo().getCommitList().at(hash).subject),
+                text(ostreetui.GetOstreeRepo().GetCommitList().at(hash).subject),
                 text(
                     std::format("{:%Y-%m-%d %T %Ez}",
                                 std::chrono::time_point_cast<std::chrono::seconds>(
-                                    ostreetui.GetOstreeRepo().getCommitList().at(hash).timestamp))),
+                                    ostreetui.GetOstreeRepo().GetCommitList().at(hash).timestamp))),
             });
         });
         simpleCommit = inner;
@@ -160,7 +160,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
 
     void executeDeletion() {
         // delete on the ostree repo
-        ostreetui.RemoveCommit(ostreetui.GetOstreeRepo().getCommitList().at(hash));
+        ostreetui.RemoveCommit(ostreetui.GetOstreeRepo().GetCommitList().at(hash));
         resetWindow();
     }
 
@@ -183,12 +183,10 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             }
         } else if (ostreetui.GetViewMode() == ViewMode::COMMIT_DROP &&
                    ostreetui.GetModeHash() == hash) {
-            const auto& commitList = ostreetui.GetOstreeRepo().getCommitList();
-            auto commit = commitList.at(hash);
             startDeletionWindow(ostreetui.GetOstreeRepo().IsMostRecentCommitOnBranch(hash));
         }
 
-        auto element = ComponentBase::Render();
+        ftxui::Element element = ComponentBase::Render();
 
         const WindowRenderState state = {element, title(), Active(), drag_};
 
@@ -269,7 +267,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
                 if (event.mouse().y > ostreetui.GetScreen().dimy() - 8) {
                     ostreetui.SetViewMode(ViewMode::COMMIT_DROP, hash);
                     ostreetui.SetModeBranch(
-                        ostreetui.GetOstreeRepo().getCommitList().at(hash).branch);
+                        ostreetui.GetOstreeRepo().GetCommitList().at(hash).branch);
                     top() = drag_initial_y;
                 }
                 // check if position matches branch & do something if it does
@@ -371,7 +369,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
     bool drag_ = false;
 
     // ostree-tui specific members
-    int commitPosition;
+    size_t commitPosition;
     std::string hash;
     OSTreeTUI& ostreetui;
 
@@ -423,7 +421,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
     // deletion view, if commit is not the most recent on its branch
     Component deletionViewBody = Container::Vertical(
         {Renderer([&] {
-             std::string parent = ostreetui.GetOstreeRepo().getCommitList().at(hash).parent;
+             std::string parent = ostreetui.GetOstreeRepo().GetCommitList().at(hash).parent;
              return vbox({text(" Remove Commit (and preceding)...") | bold, text(""),
                           text(" ☐ " + ostreetui.GetModeBranch()) | dim, text(" │") | dim,
                           hbox({
@@ -445,7 +443,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
 
 }  // namespace
 
-ftxui::Component CommitComponent(int position, const std::string& commit, OSTreeTUI& ostreetui) {
+ftxui::Component CommitComponent(size_t position, const std::string& commit, OSTreeTUI& ostreetui) {
     return ftxui::Make<CommitComponentImpl>(position, commit, ostreetui);
 }
 
@@ -475,7 +473,7 @@ ftxui::Element commitRender(OSTreeTUI& ostreetui,
     ostreetui.GetColumnToBranchMap().clear();
     for (const auto& visibleCommitIndex : ostreetui.GetVisibleCommitViewMap()) {
         const cpplibostree::Commit commit =
-            ostreetui.GetOstreeRepo().getCommitList().at(visibleCommitIndex);
+            ostreetui.GetOstreeRepo().GetCommitList().at(visibleCommitIndex);
         // branch head if it is first branch usage
         const std::string relevantBranch = commit.branch;
         if (usedBranches.at(relevantBranch) == -1) {

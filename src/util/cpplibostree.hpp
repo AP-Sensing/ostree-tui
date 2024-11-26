@@ -91,11 +91,11 @@ class OSTreeRepo {
     OstreeRepo* _c();
 
     /// Getter
-    const std::string& getRepoPath() const;
+    [[nodiscard]] const std::string& GetRepoPath() const;
     /// Getter
-    const CommitList& getCommitList() const;
+    [[nodiscard]] const CommitList& GetCommitList() const;
     /// Getter
-    const std::vector<std::string>& getBranches() const;
+    [[nodiscard]] const std::vector<std::string>& GetBranches() const;
 
     // Methods
 
@@ -105,7 +105,7 @@ class OSTreeRepo {
      * @return true if data was changed during the reload
      * @return false if nothing changed
      */
-    bool updateData();
+    bool UpdateData();
 
     /**
      * @brief Check if a certain commit is signed. This simply accesses the
@@ -115,24 +115,7 @@ class OSTreeRepo {
      * @return true if the commit is signed
      * @return false if the commit is not signed
      */
-    static bool isCommitSigned(const Commit& commit);
-
-    /**
-     * @brief Parse commits from a ostree log output to a commitList, mapping
-     * the hashes to commits.
-     *
-     * @param branch
-     * @return std::unordered_map<std::string,Commit>
-     */
-    CommitList parseCommitsOfBranch(const std::string& branch);
-
-    /**
-     * @brief Performs parseCommitsOfBranch() on all available branches and
-     * merges all commit lists into one.
-     *
-     * @return std::unordered_map<std::string,Commit>
-     */
-    CommitList parseCommitsAllBranches();
+    [[nodiscard]] static bool IsCommitSigned(const Commit& commit);
 
     // read & write access to OSTree repo:
 
@@ -164,18 +147,18 @@ class OSTreeRepo {
      *  If the commit is the most recent on its branch -> reset head of branch.
      *  If not, then remove this commit and all predecessors (that would otherwise be unreachable).
      *
-     * @param commit Commit to remove (must match an element in the `getCommitList()`).
+     * @param commit Commit to remove (must match an element in the `GetCommitList()`).
      * @return True on success.
      */
     bool RemoveCommitFromBranchAndPrune(const Commit& commit);
 
     /**
-     * @brief Drops commit, if it is the last commit on this branch.
+     * @brief Resets the specified branch head by one commit, similar to `git reset HEAD~`
      *
-     * @param commit Commit to drop (must match an element in the `getCommitList()`).
+     * @param branch Branch to reset.
      * @return True on success.
      */
-    bool ResetBranchHeadAndPrune(const Commit& commit);
+    bool ResetBranchHeadAndPrune(const std::string& branch);
 
     /**
      * @brief Checks if commit is the most recent commit on its branch
@@ -183,7 +166,7 @@ class OSTreeRepo {
      * @param branch Branch to get most recent commit from.
      * @return Most recent commit of the specified branch.
      */
-    const Commit& GetMostRecentCommitOfBranch(const std::string& branch) const;
+    [[nodiscard]] const Commit& GetMostRecentCommitOfBranch(const std::string& branch) const;
 
     /**
      * @brief Checks if commit is the most recent commit on its branch
@@ -191,7 +174,7 @@ class OSTreeRepo {
      * @param commit Commit to check.
      * @return True, if commit is most recent on its branch.
      */
-    bool IsMostRecentCommitOnBranch(const Commit& commit) const;
+    [[nodiscard]] bool IsMostRecentCommitOnBranch(const Commit& commit) const;
 
     /**
      * @brief Checks if commit is the most recent commit on its branch
@@ -199,9 +182,26 @@ class OSTreeRepo {
      * @param hash Hash of the commit to check.
      * @return True, if commit is most recent on its branch.
      */
-    bool IsMostRecentCommitOnBranch(const std::string& hash) const;
+    [[nodiscard]] bool IsMostRecentCommitOnBranch(const std::string& hash) const;
 
    private:
+    /**
+     * @brief Parse commits from a ostree log output to a commitList, mapping
+     * the hashes to commits.
+     *
+     * @param branch
+     * @return std::unordered_map<std::string,Commit>
+     */
+    CommitList parseCommitsOfBranch(const std::string& branch);
+
+    /**
+     * @brief Performs parseCommitsOfBranch() on all available branches and
+     * merges all commit lists into one.
+     *
+     * @return std::unordered_map<std::string,Commit>
+     */
+    CommitList parseCommitsAllBranches();
+
     /**
      * @brief Execute a command on the CLI.
      *
@@ -217,7 +217,7 @@ class OSTreeRepo {
      *
      * @return std::string All branch names, separated by spaces
      */
-    std::string getBranchesAsString();
+    [[nodiscard]] std::string getBranchesAsString();
 
     /**
      * @brief Parse a libostree GVariant commit to a C++ commit struct.

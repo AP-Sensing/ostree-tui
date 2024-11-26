@@ -71,8 +71,7 @@ class TrashBinComponentImpl : public ComponentBase, public WindowOptions {
 
     Element Render() final {
         // check if in deletion or stuff
-        if (ostreetui.GetViewMode() == ViewMode::COMMIT_DRAGGING &&
-            ostreetui.GetOstreeRepo().IsMostRecentCommitOnBranch(ostreetui.GetModeHash())) {
+        if (ostreetui.GetViewMode() == ViewMode::COMMIT_DRAGGING) {
             showBin();
         } else {
             hideBin();
@@ -88,7 +87,7 @@ class TrashBinComponentImpl : public ComponentBase, public WindowOptions {
         return element;
     }
 
-    bool OnEvent(Event event) final { return false; }
+    bool OnEvent(Event /*event*/) final { return false; }
 
    private:
     OSTreeTUI& ostreetui;

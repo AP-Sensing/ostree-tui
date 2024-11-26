@@ -53,10 +53,12 @@ BranchBoxManager::BranchBoxManager(OSTreeTUI& ostreetui,
                                    std::unordered_map<std::string, bool>& visibleBranches) {
     using namespace ftxui;
 
-    CheckboxOption cboption = {.on_change = [&] { ostreetui.RefreshCommitListComponent(); }};
+    CheckboxOption cboption = CheckboxOption::Simple();
+    cboption.on_change = [&] { ostreetui.RefreshCommitListComponent(); };
+    // CheckboxOption cboption = {.on_change = [&] { ostreetui.RefreshCommitListComponent(); }};
 
     // branch visibility
-    for (const auto& branch : repo.getBranches()) {
+    for (const auto& branch : repo.GetBranches()) {
         branchBoxes->Add(Checkbox(branch, &(visibleBranches.at(branch)), cboption));
     }
 }

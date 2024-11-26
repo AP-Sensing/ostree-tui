@@ -19,10 +19,10 @@
 namespace cpplibostree {
 
 OSTreeRepo::OSTreeRepo(std::string path) : repoPath(std::move(path)), commitList({}), branches({}) {
-    updateData();
+    UpdateData();
 }
 
-bool OSTreeRepo::updateData() {
+bool OSTreeRepo::UpdateData() {
     // parse branches
     std::string branchString = getBranchesAsString();
     std::stringstream bss(branchString);
@@ -51,19 +51,19 @@ OstreeRepo* OSTreeRepo::_c() {
     return repo;
 }
 
-const std::string& OSTreeRepo::getRepoPath() const {
+const std::string& OSTreeRepo::GetRepoPath() const {
     return repoPath;
 }
 
-const CommitList& OSTreeRepo::getCommitList() const {
+const CommitList& OSTreeRepo::GetCommitList() const {
     return commitList;
 }
 
-const std::vector<std::string>& OSTreeRepo::getBranches() const {
+const std::vector<std::string>& OSTreeRepo::GetBranches() const {
     return branches;
 }
 
-bool OSTreeRepo::isCommitSigned(const Commit& commit) {
+bool OSTreeRepo::IsCommitSigned(const Commit& commit) {
     return commit.signatures.size() > 0;
 }
 
@@ -347,7 +347,9 @@ bool OSTreeRepo::RemoveCommitFromBranchAndPrune(const Commit& commit) {
         command += " " + commit.branch;
         command += " " + commit.branch + "^";
 
-        return runCLICommand(command);
+        if (!runCLICommand(command)) {
+            return false;
+        };
     }
 
     // prune commit
@@ -358,35 +360,12 @@ bool OSTreeRepo::RemoveCommitFromBranchAndPrune(const Commit& commit) {
     return runCLICommand(command2);
 }
 
-/// TODO This implementation should not rely on the ostree CLI -> change to libostree usage.
-bool OSTreeRepo::ResetBranchHeadAndPrune(const Commit& commit) {
-    // check if it is last commit on branch
-    if (!IsMostRecentCommitOnBranch(commit)) {
-        return false;
-    }
-
-    // reset head
-    std::string command = "ostree reset";
-    command += " --repo=" + repoPath;
-    command += " " + commit.branch;
-    command += " " + commit.branch + "^";
-    if (!runCLICommand(command)) {
-        return false;
-    }
-
-    // remove orphaned commit
-    std::string command2 = "ostree prune";
-    command2 += " --repo=" + repoPath;
-    command2 += " --delete-commit=" + commit.hash;
-    if (!runCLICommand(command2)) {
-        return false;
-    }
-
-    return true;
+bool OSTreeRepo::ResetBranchHeadAndPrune(const std::string& branch) {
+    return RemoveCommitFromBranchAndPrune(GetMostRecentCommitOfBranch(branch));
 }
 
 bool OSTreeRepo::runCLICommand(const std::string& command) {
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+    std::unique_ptr<FILE, int (*)(FILE*)> pipe(popen(command.c_str(), "r"), &pclose);
     if (!pipe) {
         return false;
     }
