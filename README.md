@@ -3,8 +3,6 @@
 
 ![ostree-tui preview](https://github.com/user-attachments/assets/e859febf-548e-425f-b6b7-dfde3be4f947)
 
-
-
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/c++-%2300599C.svg?style=flat&logo=c%2B%2B&logoColor=white"></img></a>
   <a href="https://opensource.org/license/gpl-3-0"><img src="https://img.shields.io/github/license/AP-Sensing/ostree-tui?color=black"></img></a>
@@ -28,16 +26,15 @@ Welcome to OSTree-TUI. This project provides a more user friendly approach to a 
  * **Navigate** all commits on all branches on a `git`-like commit tree
  * **View** all details to the selected commit you would also get through an `ostree show`
  * **Filter** branches, if the screen gets too buzy for you
- * **Drag-and-drop** commits onto branches to promote them (or use `Alt+P`)
- * Most features support keyboard input **and** mouse input
+ * **Drag-and-drop** or use `Alt+P` / `Alt+D` to...
+   * ...**Promote** commits
+   * ...**Delete** commits
 
 To start the OSTree-TUI, simply type `ostree-tui <repo_path>` (replace `<repo_path>` with the path to the desired repository), or `ostree-tui --help` to see its options. Navigating the application is possible with the arrow keys, or mouse input. Special actions are described in the bottom-bar.
 
 Upcoming features can be viewed in the [issues](https://github.com/AP-Sensing/ostree-tui/labels/%E2%9C%A8%20feature)!
 
 ## Installation / Build instructions
-
-**Normal build:**
 
 To build OSTree-TUI on your system, just execute the following steps:
 1. Clone the repository:
