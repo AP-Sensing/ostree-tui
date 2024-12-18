@@ -17,7 +17,7 @@
 #include "commit.hpp"
 #include "footer.hpp"
 #include "manager.hpp"
-#include "trashBin.hpp"
+#include "trashbin.hpp"
 
 #include "../util/cpplibostree.hpp"
 

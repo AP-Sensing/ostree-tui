@@ -22,7 +22,7 @@
 
 #include "../util/cpplibostree.hpp"
 
-#include "OSTreeTUI.hpp"
+#include "ostreetui.hpp"
 
 namespace CommitRender {
 
@@ -76,8 +76,8 @@ Element DefaultRenderState(const WindowRenderState& state,
 class CommitComponentImpl : public ComponentBase, public WindowOptions {
    public:
     explicit CommitComponentImpl(size_t position, std::string commit, OSTreeTUI& ostreetui)
-        : drag_initial_x(1),
-          drag_initial_y(static_cast<int>(position) * COMMIT_WINDOW_HEIGHT),
+        : defaultX(1),
+          defaultY(static_cast<int>(position) * COMMIT_WINDOW_HEIGHT),
           commitPosition(position),
           hash(std::move(commit)),
           ostreetui(ostreetui),
@@ -96,8 +96,8 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
         Add(inner);
 
         title = hash.substr(0, 8);
-        top = drag_initial_y;
-        left = drag_initial_x;
+        top = defaultY;
+        left = defaultX;
         width = COMMIT_WINDOW_WIDTH;
         height = COMMIT_WINDOW_HEIGHT;
     }
@@ -105,11 +105,11 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
    private:
     void resetWindow(bool positionReset = true) {
         if (positionReset) {
-            left() = drag_initial_x;
-            top() = drag_initial_y;
+            left() = defaultX;
+            top() = defaultY;
         }
-        width() = width_initial;
-        height() = height_initial;
+        width() = defaultWidth;
+        height() = defaultHeight;
         // reset window contents
         DetachAllChildren();
         Add(simpleCommit);
@@ -202,7 +202,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
         }
 
         // Position and record the drawn area of the window.
-        element |= reflect(box_window_);
+        element |= reflect(boxWindow_);
         element |= PositionAndSize(left(), top() + ostreetui.GetScrollOffset(), width(), height());
         element |= reflect(box_);
 
@@ -253,22 +253,22 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             return true;
         }
 
-        mouse_hover_ = box_window_.Contain(event.mouse().x, event.mouse().y);
+        mouseHover_ = boxWindow_.Contain(event.mouse().x, event.mouse().y);
 
-        if (mouse_hover_ && event.mouse().button == Mouse::Left) {
+        if (mouseHover_ && event.mouse().button == Mouse::Left) {
             ostreetui.SetSelectedCommit(commitPosition);
         }
 
-        if (captured_mouse_) {
+        if (capturedMouse_) {
             if (event.mouse().motion == Mouse::Released) {
                 // reset mouse
-                captured_mouse_ = nullptr;
+                capturedMouse_ = nullptr;
                 // drop commit
                 if (event.mouse().y > ostreetui.GetScreen().dimy() - 8) {
                     ostreetui.SetViewMode(ViewMode::COMMIT_DROP, hash);
                     ostreetui.SetModeBranch(
                         ostreetui.GetOstreeRepo().GetCommitList().at(hash).branch);
-                    top() = drag_initial_y;
+                    top() = defaultY;
                 }
                 // check if position matches branch & do something if it does
                 else if (ostreetui.GetModeBranch().empty()) {
@@ -281,8 +281,8 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             }
 
             if (drag_) {
-                left() = event.mouse().x - drag_start_x - box_.x_min;
-                top() = event.mouse().y - drag_start_y - box_.y_min;
+                left() = event.mouse().x - dragStartX - box_.x_min;
+                top() = event.mouse().y - dragStartY - box_.y_min;
                 ostreetui.SetViewMode(ViewMode::COMMIT_DRAGGING, hash);
                 // check if potential commit deletion
                 if (event.mouse().y > ostreetui.GetScreen().dimy() - 8) {
@@ -318,7 +318,7 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
             return true;
         }
 
-        if (!mouse_hover_) {
+        if (!mouseHover_) {
             return false;
         }
 
@@ -335,38 +335,37 @@ class CommitComponentImpl : public ComponentBase, public WindowOptions {
 
         TakeFocus();
 
-        captured_mouse_ = CaptureMouse(event);
-        if (!captured_mouse_) {
+        capturedMouse_ = CaptureMouse(event);
+        if (!capturedMouse_) {
             return true;
         }
 
-        drag_start_x = event.mouse().x - left() - box_.x_min;
-        drag_start_y = event.mouse().y - top() - box_.y_min;
+        dragStartX = event.mouse().x - left() - box_.x_min;
+        dragStartY = event.mouse().y - top() - box_.y_min;
 
-        const bool drag_old = drag_;
+        const bool dragOld = drag_;
         drag_ = true;
-        if (!drag_old && drag_) {  // if we start dragging
-            drag_initial_x = left();
-            drag_initial_y = top();
+        if (!dragOld && drag_) {  // if we start dragging
+            defaultX = left();
+            defaultY = top();
         }
         return true;
     }
 
     // window specific members
     Box box_;
-    Box box_window_;
+    Box boxWindow_;
 
-    CapturedMouse captured_mouse_;
-    int drag_start_x = 0;
-    int drag_start_y = 0;
-
-    int drag_initial_x;
-    int drag_initial_y;
-    int width_initial = COMMIT_WINDOW_WIDTH;
-    int height_initial = COMMIT_WINDOW_HEIGHT;
-
-    bool mouse_hover_ = false;
+    bool mouseHover_ = false;
     bool drag_ = false;
+    CapturedMouse capturedMouse_;
+    int dragStartX = 0;
+    int dragStartY = 0;
+
+    int defaultX;
+    int defaultY;
+    int defaultWidth = COMMIT_WINDOW_WIDTH;
+    int defaultHeight = COMMIT_WINDOW_HEIGHT;
 
     // ostree-tui specific members
     size_t commitPosition;
@@ -447,7 +446,7 @@ ftxui::Component CommitComponent(size_t position, const std::string& commit, OST
     return ftxui::Make<CommitComponentImpl>(position, commit, ostreetui);
 }
 
-ftxui::Element commitRender(OSTreeTUI& ostreetui,
+ftxui::Element CommitRender(OSTreeTUI& ostreetui,
                             const std::unordered_map<std::string, ftxui::Color>& branchColorMap) {
     using namespace ftxui;
 

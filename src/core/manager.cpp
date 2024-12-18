@@ -10,7 +10,7 @@
 
 #include "../util/cpplibostree.hpp"
 
-#include "OSTreeTUI.hpp"
+#include "ostreetui.hpp"
 
 // Manager
 
@@ -20,9 +20,9 @@ Manager::Manager(OSTreeTUI& ostreetui,
     : ostreetui(ostreetui) {
     using namespace ftxui;
 
-    tabSelection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
+    tabSelection = Menu(&tabEntries, &tabIndex, MenuOption::HorizontalAnimated());
 
-    tabContent = Container::Tab({infoView, filterView}, &tab_index);
+    tabContent = Container::Tab({infoView, filterView}, &tabIndex);
 
     managerRenderer = Container::Vertical(
         {tabSelection, tabContent,
@@ -38,12 +38,12 @@ Manager::Manager(OSTreeTUI& ostreetui,
          })});
 }
 
-ftxui::Component Manager::getManagerRenderer() {
+ftxui::Component Manager::GetManagerRenderer() {
     return managerRenderer;
 }
 
-int Manager::getTabIndex() const {
-    return tab_index;
+int Manager::GetTabIndex() const {
+    return tabIndex;
 }
 
 // BranchBoxManager
@@ -63,21 +63,21 @@ BranchBoxManager::BranchBoxManager(OSTreeTUI& ostreetui,
     }
 }
 
-ftxui::Element BranchBoxManager::branchBoxRender() {
+ftxui::Element BranchBoxManager::BranchBoxRender() {
     using namespace ftxui;
 
     // branch filter
-    Elements bfb_elements = {
+    Elements bfbElements = {
         text(L"branches:") | bold,
         filler(),
         branchBoxes->Render() | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 10),
     };
-    return vbox(bfb_elements);
+    return vbox(bfbElements);
 }
 
 // CommitInfoManager
 
-ftxui::Element CommitInfoManager::renderInfoView(const cpplibostree::Commit& displayCommit) {
+ftxui::Element CommitInfoManager::RenderInfoView(const cpplibostree::Commit& displayCommit) {
     using namespace ftxui;
 
     // selected commit info

@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "core/OSTreeTUI.hpp"
+#include "core/ostreetui.hpp"
 
 /**
  * @brief Parse all options listed behind an argument
