@@ -1,4 +1,4 @@
-#include "OSTreeTUI.hpp"
+#include "ostreetui.hpp"
 
 #include <fcntl.h>
 #include <algorithm>
@@ -55,9 +55,9 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
                     promotionBranchColorMap.insert({str, Color::GrayDark});
                 }
             }
-            return CommitRender::commitRender(*this, promotionBranchColorMap);
+            return CommitRender::CommitRender(*this, promotionBranchColorMap);
         }
-        return CommitRender::commitRender(*this, branchColorMap);
+        return CommitRender::CommitRender(*this, branchColorMap);
     });
 
     commitListComponent = Container::Horizontal({tree, commitList});
@@ -87,7 +87,7 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
         if (visibleCommitViewMap.size() <= 0) {
             return text(" no commit info available ") | color(Color::RedLight) | bold | center;
         }
-        return CommitInfoManager::renderInfoView(
+        return CommitInfoManager::RenderInfoView(
             ostreeRepo.GetCommitList().at(visibleCommitViewMap.at(selectedCommit)));
     });
 
@@ -95,11 +95,11 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
     filterManager =
         std::unique_ptr<BranchBoxManager>(new BranchBoxManager(*this, ostreeRepo, visibleBranches));
     filterView =
-        Renderer(filterManager->branchBoxes, [&] { return filterManager->branchBoxRender(); });
+        Renderer(filterManager->branchBoxes, [&] { return filterManager->BranchBoxRender(); });
 
     // interchangeable view (composed)
     manager = std::unique_ptr<Manager>(new Manager(*this, infoView, filterView));
-    managerRenderer = manager->getManagerRenderer();
+    managerRenderer = manager->GetManagerRenderer();
 
     // FOOTER
     FooterRenderer = Renderer([&] { return footer.FooterRender(); });
@@ -143,7 +143,7 @@ OSTreeTUI::OSTreeTUI(const std::string& repo, const std::vector<std::string>& st
         }
         // make commit list focussable
         if (event == Event::ArrowLeft && managerRenderer->Focused() &&
-            manager->getTabIndex() == 0) {
+            manager->GetTabIndex() == 0) {
             commitListComponent->TakeFocus();
             return true;
         }
@@ -380,7 +380,7 @@ int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessa
     using namespace ftxui;
 
     // define command line options
-    std::vector<std::vector<std::string>> command_options{
+    std::vector<std::vector<std::string>> commandOptions{
         // option, arguments, meaning
         {"-h, --help", "", "Show help options. The REPOSITORY_PATH can be omitted"},
         {"-r, --refs", "REF [REF...]",
@@ -390,7 +390,7 @@ int OSTreeTUI::showHelp(const std::string& caller, const std::string& errorMessa
     Elements options{text("Options:")};
     Elements arguments{text("Arguments:")};
     Elements meanings{text("Meaning:")};
-    for (const auto& command : command_options) {
+    for (const auto& command : commandOptions) {
         options.push_back(text(command.at(0) + "  ") | color(Color::GrayLight));
         arguments.push_back(text(command.at(1) + "  ") | color(Color::GrayLight));
         meanings.push_back(text(command.at(2) + "  "));

@@ -8,10 +8,10 @@ add_library(ostree-tui_core commit.cpp
                             footer.hpp
                             manager.cpp
                             manager.hpp
-                            OSTreeTUI.cpp
-                            OSTreeTUI.hpp
-                            trashBin.cpp
-                            trashBin.hpp)
+                            ostreetui.cpp
+                            ostreetui.hpp
+                            trashbin.cpp
+                            trashbin.hpp)
 
 target_link_libraries(ostree-tui_core
   PRIVATE clip

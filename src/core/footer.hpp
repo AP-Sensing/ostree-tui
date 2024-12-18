@@ -12,7 +12,7 @@ class Footer {
     void ResetContent();
 
     /// @brief Creates a Renderer for the footer section.
-    ftxui::Element FooterRender();
+    [[nodiscard]] ftxui::Element FooterRender();
 
     // Setter
     void SetContent(std::string content);

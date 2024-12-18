@@ -21,21 +21,21 @@ class Manager {
             const ftxui::Component& infoView,
             const ftxui::Component& filterView);
 
+   public:
+    [[nodiscard]] ftxui::Component GetManagerRenderer();
+    [[nodiscard]] int GetTabIndex() const;
+
    private:
     OSTreeTUI& ostreetui;
 
-    int tab_index{0};
-    std::vector<std::string> tab_entries = {" Info ", " Filter "};
+    int tabIndex{0};
+    std::vector<std::string> tabEntries = {" Info ", " Filter "};
 
     // because the combination of all interchangeable views is very simple,
     // we can (in contrast to the other ones) render this one here
     ftxui::Component managerRenderer;
     ftxui::Component tabSelection;
     ftxui::Component tabContent;
-
-   public:
-    ftxui::Component getManagerRenderer();
-    int getTabIndex() const;
 };
 
 class CommitInfoManager {
@@ -46,7 +46,7 @@ class CommitInfoManager {
      * @param displayCommit Commit to display the information of.
      * @return ftxui::Element
      */
-    [[nodiscard]] static ftxui::Element renderInfoView(const cpplibostree::Commit& displayCommit);
+    [[nodiscard]] static ftxui::Element RenderInfoView(const cpplibostree::Commit& displayCommit);
 };
 
 class BranchBoxManager {
@@ -60,7 +60,7 @@ class BranchBoxManager {
      *
      * @return ftxui::Element
      */
-    [[nodiscard]] ftxui::Element branchBoxRender();
+    [[nodiscard]] ftxui::Element BranchBoxRender();
 
    public:
     ftxui::Component branchBoxes = ftxui::Container::Vertical({});

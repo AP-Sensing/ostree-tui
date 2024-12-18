@@ -1,4 +1,4 @@
-#include "trashBin.hpp"
+#include "trashbin.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -22,7 +22,7 @@
 
 #include "../util/cpplibostree.hpp"
 
-#include "OSTreeTUI.hpp"
+#include "ostreetui.hpp"
 
 namespace TrashBin {
 
@@ -35,13 +35,13 @@ Decorator PositionAndSize(int left, int top, int width, int height) {
         element |= size(WIDTH, EQUAL, width);
         element |= size(HEIGHT, EQUAL, height);
 
-        auto padding_left = emptyElement() | size(WIDTH, EQUAL, left);
-        auto padding_top = emptyElement() | size(HEIGHT, EQUAL, top);
+        auto paddingLeft = emptyElement() | size(WIDTH, EQUAL, left);
+        auto paddingTop = emptyElement() | size(HEIGHT, EQUAL, top);
 
         return vbox({
-            padding_top,
+            paddingTop,
             hbox({
-                padding_left,
+                paddingLeft,
                 element,
             }),
         });

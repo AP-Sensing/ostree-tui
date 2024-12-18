@@ -63,7 +63,7 @@ enum RenderTree : uint8_t {
  * @param selectedCommit Commit that should be marked as selected.
  * @return UI Element
  */
-[[nodiscard]] ftxui::Element commitRender(
+[[nodiscard]] ftxui::Element CommitRender(
     OSTreeTUI& ostreetui,
     const std::unordered_map<std::string, ftxui::Color>& branchColorMap);
 
